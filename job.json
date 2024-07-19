@@ -1,0 +1,10 @@
+{
+  "apps": [
+    {
+      "name": "migration",
+      "script": "yarn console migration",
+      "node_args": "",
+      "instances": 1
+    }
+  ]
+}
