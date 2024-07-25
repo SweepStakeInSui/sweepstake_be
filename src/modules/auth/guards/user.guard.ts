@@ -2,20 +2,20 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Forbi
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { JwtPayload } from '../types/jwt-payload';
-import { InvestorRepository } from '@models/repositories/investor.repository';
+import { WalletJwtPayload } from '../types/jwt-payload';
 import { Logger } from 'log4js';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
+import { UserRepository } from '@models/repositories/user.repository';
 
 @Injectable()
-export class InvestorGuard implements CanActivate {
+export class UserGuard implements CanActivate {
     constructor(
         private loggerService: LoggerService,
         private configService: ConfigService,
         private jwtService: JwtService,
-        private investorRepository: InvestorRepository,
+        private userRepository: UserRepository,
     ) {
-        this.logger = this.loggerService.getLogger(InvestorGuard.name);
+        this.logger = this.loggerService.getLogger(UserGuard.name);
     }
 
     private logger: Logger;
@@ -28,19 +28,19 @@ export class InvestorGuard implements CanActivate {
             throw new UnauthorizedException();
         }
         try {
-            const payload: JwtPayload = await this.jwtService.verifyAsync(token);
+            const payload: WalletJwtPayload = await this.jwtService.verifyAsync(token);
 
-            const investor = await this.investorRepository.findOneBy({
+            const user = await this.userRepository.findOneBy({
                 address: payload.address,
             });
 
-            if (!investor) {
+            if (!user) {
                 throw new ForbiddenException();
             }
 
             // 💡 We're assigning the payload to the request object here
             // so that we can access it in our route handlers
-            request['investor'] = investor;
+            request['user'] = user;
         } catch {
             throw new ForbiddenException();
         }
