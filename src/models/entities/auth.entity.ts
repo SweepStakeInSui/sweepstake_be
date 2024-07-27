@@ -1,23 +1,18 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 import BaseEntity from '@shared/base/models/base.entity';
+import { AuthType } from '@modules/auth/types/auth';
 import { v7 } from 'uuid';
 
-@Entity({ name: 'user' })
-export class UserEntity extends BaseEntity {
+@Entity({ name: 'auth' })
+export class AuthEntity extends BaseEntity {
     @PrimaryColumn()
     public id: string = v7();
 
-    @Column({ type: 'varchar', unique: true })
-    public username: string;
+    @Column()
+    public userId: string;
 
-    @Column({ type: 'varchar', nullable: true, unique: true })
-    public address: string;
-
-    @Column({ type: 'varchar', nullable: true, unique: true })
-    public email: string;
-
-    @Column({ type: 'varchar' })
-    public balance: bigint;
+    @Column({ type: 'enum', enum: AuthType, default: AuthType.Wallet })
+    public type: AuthType;
 
     @CreateDateColumn({ type: 'timestamp' })
     public createdAt: number;
