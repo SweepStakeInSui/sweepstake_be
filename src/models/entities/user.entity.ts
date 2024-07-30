@@ -1,12 +1,8 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
-import BaseEntity from '@shared/base/models/base.entity';
-import { v7 } from 'uuid';
+import { Column, Entity } from 'typeorm';
+import { BaseEntity } from '@shared/base/models/base.entity';
 
 @Entity({ name: 'user' })
 export class UserEntity extends BaseEntity {
-    @PrimaryColumn()
-    public id: string = v7();
-
     @Column({ type: 'varchar', unique: true })
     public username: string;
 
@@ -18,13 +14,4 @@ export class UserEntity extends BaseEntity {
 
     @Column({ type: 'varchar' })
     public balance: bigint;
-
-    @CreateDateColumn({ type: 'timestamp' })
-    public createdAt: number;
-
-    @UpdateDateColumn({ type: 'timestamp' })
-    public updatedAt: number;
-
-    @DeleteDateColumn({ type: 'timestamp' })
-    public deletedAt: number;
 }
