@@ -5,7 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Global()
 @Module({
-    imports: [TypeOrmModule.forFeature([...Entities, ...Repositories])],
-    exports: [TypeOrmModule],
+    imports: [TypeOrmModule.forFeature([...Entities])],
+    providers: [...Repositories],
+    exports: [TypeOrmModule, ...Repositories],
 })
 export class DatabaseModule {}
