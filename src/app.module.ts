@@ -10,13 +10,13 @@ import { LoggingModule } from '@shared/modules/loggers/logger.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MODULES } from './modules';
+import { Modules } from './modules';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmOptions } from '@config/database.config';
 import { RedisModule } from '@songkeys/nestjs-redis';
 import { redisOptions } from '@config/redis.config';
-import { RepositoryModule } from '@shared/modules/repository/repository.module';
+import { DatabaseModule } from '@shared/modules/database/database.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtOptions } from '@config/jwt.config';
 
@@ -42,14 +42,14 @@ import { jwtOptions } from '@config/jwt.config';
         TypeOrmModule.forRootAsync(typeOrmOptions),
         RedisModule.forRootAsync(redisOptions),
         JwtModule.registerAsync(jwtOptions),
-        RepositoryModule,
+        DatabaseModule,
         LoggingModule,
         ConsoleModule,
         MulterModule.register({
             storage: memoryStorage(),
         }),
         ScheduleModule.forRoot(),
-        ...MODULES,
+        ...Modules,
     ],
     controllers: [AppController],
     providers: [AppService],
