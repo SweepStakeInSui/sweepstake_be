@@ -46,18 +46,19 @@ export class AuthController {
         const { payload, type } = body;
         this.logger.info(body.payload);
         const token = await this.authService.login(type, payload);
-        return { token: token.access_token };
+        return { token: token.accessToken };
     }
 
     @Post('register')
     @ApiOperation({})
     async register(@Body() body: RegisterRequestDto): Promise<RegisterResponseDto> {
-        // const { payload, type } = body;
+        const { payload, type } = body;
         this.logger.info(body.payload);
-        // const token = await this.authService.register(type, payload);
+        const userInfo = await this.authService.register(type, payload);
         return {
-            id: 1,
-            username: 'test',
+            id: userInfo.id,
+            username: userInfo.username,
+            address: userInfo.address,
         };
     }
 }

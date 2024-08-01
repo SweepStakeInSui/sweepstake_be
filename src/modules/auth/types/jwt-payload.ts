@@ -1,6 +1,9 @@
-export interface JwtPayload {}
+export interface BaseJwtPayload {
+    userId: string;
+}
 
-export interface WalletJwtPayload extends JwtPayload {
-    // userId: string;
+export interface WalletJwtPayload extends BaseJwtPayload {
     address: string;
 }
+
+export type JwtPayload = BaseJwtPayload | WalletJwtPayload;
