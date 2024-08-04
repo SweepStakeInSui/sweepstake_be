@@ -35,3 +35,12 @@ export class RegisterRequestDto {
     })
     type: AuthType;
 }
+
+export class RegisterResponseDto {
+    @ApiProperty()
+    id: string;
+    @ApiProperty()
+    username: string;
+    @ApiProperty()
+    address: string;
+}

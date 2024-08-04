@@ -38,3 +38,8 @@ export class LoginRequestDto {
     })
     type: AuthType;
 }
+
+export class LoginResponseDto {
+    @ApiProperty()
+    token: string;
+}

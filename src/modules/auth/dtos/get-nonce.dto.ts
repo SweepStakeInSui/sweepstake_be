@@ -6,3 +6,8 @@ export class GetNonceRequestDto {
     @IsEthereumAddress()
     address: string;
 }
+
+export class GetNonceResponseDto {
+    @ApiProperty()
+    nonce: string;
+}

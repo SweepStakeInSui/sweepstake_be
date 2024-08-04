@@ -2,14 +2,11 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
-import { LoginRequestDto } from '../dtos/login-request.dto';
-import { GetNonceRequestDto } from '../dtos/get-nonce-request.dto';
+import { LoginRequestDto, LoginResponseDto } from '../dtos/login.dto';
+import { GetNonceRequestDto, GetNonceResponseDto } from '../dtos/get-nonce.dto';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { AuthService } from '../services/auth.service';
-import { LoginResponseDto } from '../dtos/login-response.dto';
-import { GetNonceResponseDto } from '../dtos/get-nonce-response.dto';
-import { RegisterRequestDto } from '../dtos/register-request.dto';
-import { RegisterResponseDto } from '../dtos/register-response.dto';
+import { RegisterRequestDto, RegisterResponseDto } from '../dtos/register.dto';
 
 @ApiTags('auth')
 @Controller('auth')
