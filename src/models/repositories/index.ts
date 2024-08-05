@@ -1,4 +1,6 @@
 import { AuthRepository } from './auth.repository';
+import { ConditionRepository } from './condition.repository';
+import { CriteriaRepository } from './criteria.repository';
 import { MarketRepository } from './market.repository';
 import { OrderRepository } from './order.repository';
 import { OutcomeRepository } from './outcome.repository';
@@ -10,6 +12,8 @@ export const Repositories = [
     UserRepository,
     MarketRepository,
     OutcomeRepository,
+    ConditionRepository,
+    CriteriaRepository,
     OrderRepository,
     TradeRepository,
 ];
