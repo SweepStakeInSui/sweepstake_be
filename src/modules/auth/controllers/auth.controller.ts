@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
@@ -7,6 +7,8 @@ import { GetNonceRequestDto, GetNonceResponseDto } from '../dtos/get-nonce.dto';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { AuthService } from '../services/auth.service';
 import { RegisterRequestDto, RegisterResponseDto } from '../dtos/register.dto';
+import { RefreshResponseDto, RefreshRequestDto } from '../dtos/refresh.dto';
+import { LoginGuard } from '../guards/login.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -34,16 +36,24 @@ export class AuthController {
         };
     }
 
+    @UseGuards(LoginGuard)
     @Post('login')
     @ApiOperation({
         description: 'Login with signature',
     })
     @ApiOkResponsePayload(LoginResponseDto, EApiOkResponsePayload.OBJECT)
-    async login(@Body() body: LoginRequestDto): Promise<LoginResponseDto> {
-        const { payload, type } = body;
-        this.logger.info(body.payload);
-        const token = await this.authService.login(type, payload);
-        return { token: token.accessToken };
+    async login(@Body() body: LoginRequestDto, @Request() req): Promise<LoginResponseDto> {
+        return await this.authService.login(req.userId);
+    }
+
+    @UseGuards(LoginGuard)
+    @Get('refresh')
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(RefreshResponseDto, EApiOkResponsePayload.OBJECT)
+    async refresh(@Body() body: RefreshRequestDto, @Request() req): Promise<RefreshResponseDto> {
+        return await this.authService.refresh(req.userId);
     }
 
     @Post('register')

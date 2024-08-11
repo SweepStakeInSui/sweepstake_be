@@ -14,19 +14,35 @@ export function getJwtConfig(configService: ConfigService): JwtConfig {
     };
 }
 
+export function getRefreshJwtConfig(configService: ConfigService): JwtConfig {
+    return {
+        secret: configService.get(EEnvKey.JWT_SECRET_REFRESH),
+        expiresIn: `${configService.get(EEnvKey.JWT_EXPIRE_REFRESH)}s`,
+    };
+}
+
 export const jwtConfig = getJwtConfig(configService);
 
-export const defaultConfig = {
-    ...jwtConfig,
-};
+export const jwtRefreshConfig = getRefreshJwtConfig(configService);
 
 export const jwtOptions: JwtModuleAsyncOptions = {
     inject: [ConfigService],
     useFactory: () =>
         ({
             global: true,
-            secret: defaultConfig.secret,
-            signOptions: { expiresIn: defaultConfig.expiresIn },
+            secret: jwtConfig.secret,
+            signOptions: { expiresIn: jwtConfig.expiresIn },
+        }) as JwtModuleOptions,
+    global: true,
+};
+
+export const jwtRefreshOptions: JwtModuleAsyncOptions = {
+    inject: [ConfigService],
+    useFactory: () =>
+        ({
+            global: true,
+            secret: jwtRefreshConfig.secret,
+            signOptions: { expiresIn: jwtRefreshConfig.expiresIn },
         }) as JwtModuleOptions,
     global: true,
 };

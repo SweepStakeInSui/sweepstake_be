@@ -3,7 +3,7 @@ export interface BaseJwtPayload {
 }
 
 export interface WalletJwtPayload extends BaseJwtPayload {
-    address: string;
+    // address: string;
 }
 
 export type JwtPayload = BaseJwtPayload | WalletJwtPayload;

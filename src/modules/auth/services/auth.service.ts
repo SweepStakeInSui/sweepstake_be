@@ -39,27 +39,26 @@ export class AuthService {
         return nonce;
     }
 
-    public async login(type: AuthType, payload: LoginPayload) {
-        switch (type) {
-            case AuthType.Email:
-                break;
-            case AuthType.Wallet: {
-                const { address, signature } = payload as WalletLoginPayload;
-                return this.loginWithWallet(address, signature);
-            }
-        }
-    }
-
-    async loginWithEmail(email: string, password: string) {
-        // TODO: implement login with email
-        const token = await this.getToken({
-            userId: '0',
-            address: email + password,
+    public async login(userId: string) {
+        const token = await this.generateToken({
+            userId: userId,
         });
         return token;
     }
 
-    async loginWithWallet(address: string, signature: string) {
+    public async refresh(userId: string) {
+        const token = await this.generateToken({
+            userId: userId,
+        });
+        return token;
+    }
+
+    async authenticateEmail(email: string, password: string) {
+        // TODO: implement login with email
+        return '0';
+    }
+
+    public async authenticateWallet(address: string, signature: string) {
         const nonce = await this.redis.get(`auth-nonce:${address}`);
         if (!nonce) {
             throw new BadRequestException('Nonce not found');
@@ -80,10 +79,7 @@ export class AuthService {
             throw new BadRequestException('Authentication info not found');
         }
 
-        const token = await this.getToken({
-            userId: authInfo.userId,
-        });
-        return token;
+        return authInfo.userId;
     }
 
     async register(type: AuthType, payload: RegisterPayload) {
@@ -146,9 +142,15 @@ export class AuthService {
         return userInfo;
     }
 
-    async getToken(payload: JwtPayload) {
+    async generateToken(payload: JwtPayload) {
+        const [accessToken, refreshToken] = await Promise.all([
+            await this.jwtService.signAsync(payload),
+            // TODO: replace with refresh token service
+            await this.jwtService.signAsync(payload),
+        ]);
         return {
-            accessToken: await this.jwtService.signAsync(payload),
+            accessToken,
+            refreshToken,
         };
     }
 }
