@@ -1,5 +1,6 @@
 import { ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { ethers } from 'ethers';
+import { isValidSuiAddress } from '@mysten/sui/utils';
 
 export function IsSuiAddress(validationOptions?: ValidationOptions) {
     return function (object: object, propertyName: string) {
@@ -10,10 +11,8 @@ export function IsSuiAddress(validationOptions?: ValidationOptions) {
             constraints: [],
             options: validationOptions,
             validator: {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 validate(value: string) {
-                    // TODO: Implement SUI address validation
-                    return true;
+                    return isValidSuiAddress(value);
                 },
                 defaultMessage: (args?: ValidationArguments) => {
                     return `${args.property} must be a sui address!`;

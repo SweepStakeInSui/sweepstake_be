@@ -7,3 +7,7 @@ export interface WalletJwtPayload extends BaseJwtPayload {
 }
 
 export type JwtPayload = BaseJwtPayload | WalletJwtPayload;
+
+export interface RefreshJwtPayload extends BaseJwtPayload {
+    fingerprint: string;
+}

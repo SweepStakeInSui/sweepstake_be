@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
@@ -7,13 +7,12 @@ import { JwtService } from '@nestjs/jwt';
 import { v4 } from 'uuid';
 import { InjectRedis } from '@songkeys/nestjs-redis';
 import { Redis } from 'ioredis';
-import { JwtPayload } from '../types/jwt-payload';
+import { JwtPayload, RefreshJwtPayload } from '../types/jwt-payload';
 import { AuthType } from '../types/auth';
 import { EmailRegisterPayload, RegisterPayload, WalletRegisterPayload } from '../dtos/register.dto';
-import { LoginPayload, WalletLoginPayload } from '../dtos/login.dto';
 import { AuthRepository } from '@models/repositories/auth.repository';
-// import { verifySignature } from '@shared/utils/ethereum';
 import { UserRepository } from '@models/repositories/user.repository';
+import { jwtRefreshConfig } from '@config/jwt.config';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +32,15 @@ export class AuthService {
         this.configService = configService;
     }
 
+    public async getUser(userId: string) {
+        const userInfo = await this.userRepository.findOne({
+            where: {
+                id: userId,
+            },
+        });
+        return userInfo;
+    }
+
     public async getNonce(address: string) {
         const nonce = v4();
         await this.redis.set(`auth-nonce:${address}`, nonce, 'EX', 60);
@@ -40,20 +48,16 @@ export class AuthService {
     }
 
     public async login(userId: string) {
-        const token = await this.generateToken({
-            userId: userId,
-        });
+        const token = await this.generateToken(userId);
         return token;
     }
 
-    public async refresh(userId: string) {
-        const token = await this.generateToken({
-            userId: userId,
-        });
+    public async refresh(userId: string, fingerprint: string) {
+        const token = await this.generateToken(userId, fingerprint);
         return token;
     }
 
-    async authenticateEmail(email: string, password: string) {
+    public async authenticateEmail(email: string, password: string) {
         // TODO: implement login with email
         return '0';
     }
@@ -82,7 +86,7 @@ export class AuthService {
         return authInfo.userId;
     }
 
-    async register(type: AuthType, payload: RegisterPayload) {
+    public async register(type: AuthType, payload: RegisterPayload) {
         switch (type) {
             case AuthType.Email: {
                 // eslint-disable-next-line no-empty-pattern
@@ -93,6 +97,7 @@ export class AuthService {
                 return await this.registerWallet(payload as WalletRegisterPayload);
         }
     }
+
     private async registerEmail(payload: EmailRegisterPayload) {
         return {};
     }
@@ -112,8 +117,6 @@ export class AuthService {
         let authInfo = await this.authRepository.findOneBy({
             address,
         });
-
-        console.log('authInfo', authInfo);
 
         if (authInfo) {
             throw new BadRequestException('Authentication info exists');
@@ -142,15 +145,39 @@ export class AuthService {
         return userInfo;
     }
 
-    async generateToken(payload: JwtPayload) {
+    private async generateToken(userId: string, oldFingerprint?: string) {
+        // TODO: implement refresh token fingerprint based on ip, etc
+        const newFingerprint = v4();
+
         const [accessToken, refreshToken] = await Promise.all([
-            await this.jwtService.signAsync(payload),
-            // TODO: replace with refresh token service
-            await this.jwtService.signAsync(payload),
+            await this.jwtService.signAsync({ userId } as JwtPayload),
+            await this.jwtService.signAsync(
+                {
+                    userId,
+                    fingerprint: newFingerprint,
+                } as RefreshJwtPayload,
+                {
+                    ...jwtRefreshConfig,
+                },
+            ),
         ]);
+        if (oldFingerprint) {
+            await this.validateRefreshToken(userId, oldFingerprint);
+            await this.redis.hdel(`auth-refresh:${userId}`, oldFingerprint);
+        }
+        await this.redis.hset(`auth-refresh:${userId}`, newFingerprint, '1');
+
         return {
             accessToken,
             refreshToken,
         };
+    }
+
+    public async validateRefreshToken(userId: string, fingerprint: string) {
+        const a = await this.redis.hget(`auth-refresh:${userId}`, fingerprint);
+
+        if (a !== '1') {
+            throw new UnauthorizedException();
+        }
     }
 }

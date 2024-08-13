@@ -9,6 +9,7 @@ import { AuthService } from '../services/auth.service';
 import { RegisterRequestDto, RegisterResponseDto } from '../dtos/register.dto';
 import { RefreshResponseDto, RefreshRequestDto } from '../dtos/refresh.dto';
 import { LoginGuard } from '../guards/login.guard';
+import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -43,17 +44,17 @@ export class AuthController {
     })
     @ApiOkResponsePayload(LoginResponseDto, EApiOkResponsePayload.OBJECT)
     async login(@Body() body: LoginRequestDto, @Request() req): Promise<LoginResponseDto> {
-        return await this.authService.login(req.userId);
+        return await this.authService.login(req.user.userId);
     }
 
-    @UseGuards(LoginGuard)
+    @UseGuards(RefreshTokenGuard)
     @Get('refresh')
     @ApiOperation({
         description: '',
     })
     @ApiOkResponsePayload(RefreshResponseDto, EApiOkResponsePayload.OBJECT)
     async refresh(@Body() body: RefreshRequestDto, @Request() req): Promise<RefreshResponseDto> {
-        return await this.authService.refresh(req.userId);
+        return await this.authService.refresh(req.user.userId, req.user.fingerprint);
     }
 
     @Post('register')

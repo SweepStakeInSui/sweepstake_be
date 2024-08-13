@@ -1,6 +1,7 @@
 import { EEnvKey } from '@constants/env.constant';
 import { ConfigService } from '@nestjs/config';
 import { JwtModuleAsyncOptions, JwtModuleOptions } from '@nestjs/jwt';
+
 const configService = new ConfigService();
 export interface JwtConfig {
     secret: string;

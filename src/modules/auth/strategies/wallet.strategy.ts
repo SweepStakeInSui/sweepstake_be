@@ -5,9 +5,10 @@ import { LoginRequestDto, WalletLoginPayload } from '../dtos/login.dto';
 import { Strategy } from 'passport-custom';
 import { Request } from 'express';
 import { AuthType } from '../types/auth';
+import { StrategyType } from '../types/strategy';
 
 @Injectable()
-export class WalletStrategy extends PassportStrategy(Strategy, 'wallet') {
+export class WalletStrategy extends PassportStrategy(Strategy, StrategyType.Wallet) {
     constructor(private authService: AuthService) {
         super();
     }
