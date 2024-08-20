@@ -9,11 +9,14 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     description: string;
 
-    @Column({ type: 'timestamp' })
-    startTime: string;
+    @Column({ type: 'int' })
+    startTime: number;
 
-    @Column({ type: 'timestamp' })
-    endTime: string;
+    @Column({ type: 'int' })
+    endTime: number;
+
+    @Column({ type: 'boolean', default: true })
+    isActive: boolean;
 
     @Column({ type: 'varchar' })
     colaterralToken: string;

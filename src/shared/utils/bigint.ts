@@ -4,3 +4,13 @@ Object.defineProperty(BigInt.prototype, 'toJSON', {
         return () => String(this);
     },
 });
+
+export class BigIntUtil {
+    static max(...args: bigint[]): bigint {
+        return args.reduce((m, e) => (e > m ? e : m));
+    }
+
+    static min(...args: bigint[]): bigint {
+        return args.reduce((m, e) => (e < m ? e : m));
+    }
+}

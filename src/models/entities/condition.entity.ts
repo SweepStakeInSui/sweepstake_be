@@ -2,7 +2,7 @@ import { Column, Entity } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { ConditionType } from '@modules/market/types/condition';
 
-@Entity({ name: 'criteria' })
+@Entity({ name: 'condition' })
 export class ConditionEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     marketId: string;
