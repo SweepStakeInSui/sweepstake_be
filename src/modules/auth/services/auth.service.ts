@@ -129,6 +129,7 @@ export class AuthService {
         });
 
         authInfo = this.authRepository.create({
+            userId: userInfo.id,
             address,
             isActive: true,
             type: AuthType.Wallet,
@@ -136,9 +137,6 @@ export class AuthService {
 
         await this.authRepository.manager.transaction(async manager => {
             await manager.save(userInfo);
-
-            authInfo.userId = userInfo.id;
-
             await manager.save(authInfo);
         });
 
