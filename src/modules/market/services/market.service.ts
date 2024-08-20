@@ -54,14 +54,15 @@ export class MarketService {
     }
 
     public async create(market: MarketInput, conditions: ConditionInput[]): Promise<MarketEntity> {
-        // TODO: create market
         const marketInfo = this.marketRepository.create(market);
 
         const outcomeYesInfo = this.outcomeRepository.create({
+            marketId: marketInfo.id,
             type: OutcomeType.Yes,
         });
 
         const outcomeNoInfo = this.outcomeRepository.create({
+            marketId: marketInfo.id,
             type: OutcomeType.No,
         });
 
@@ -72,33 +73,28 @@ export class MarketService {
             criteriaInfos.push(criteriaInfo);
 
             const conditionInfo = this.conditionRepository.create({
+                marketId: marketInfo.id,
+                criteriaId: criteriaInfo.id,
                 value: condition.value,
                 type: condition.type,
             });
             conditionInfos.push(conditionInfo);
         });
 
-        this.marketRepository.manager.transaction(async manager => {
-            await manager.save(marketInfo);
+        const infos = [marketInfo, outcomeYesInfo, outcomeNoInfo, ...conditionInfos, ...criteriaInfos];
 
-            outcomeYesInfo.marketId = marketInfo.id;
-            outcomeNoInfo.marketId = marketInfo.id;
-
-            await manager.save(outcomeYesInfo);
-            await manager.save(outcomeNoInfo);
-
-            await Promise.all(
-                conditionInfos.map(async (conditionInfo, index) => {
-                    const criteriaInfo = criteriaInfos[index];
-                    await manager.save(criteriaInfo);
-
-                    conditionInfo.marketId = marketInfo.id;
-                    conditionInfo.criteriaId = criteriaInfo.id;
-
-                    await manager.save(conditionInfo);
-                }),
-            );
-        });
+        await this.marketRepository.manager
+            .transaction(async manager => {
+                await Promise.all(
+                    infos.map(async info => {
+                        await manager.save(info);
+                    }),
+                );
+            })
+            .catch(err => {
+                this.logger.error(err);
+                throw new BadRequestException();
+            });
 
         return marketInfo;
     }

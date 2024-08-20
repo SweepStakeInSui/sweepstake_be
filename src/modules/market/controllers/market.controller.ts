@@ -1,12 +1,13 @@
 import { MarketService } from '../services/market.service';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
-import { Controller, Get, Query, ParseIntPipe, DefaultValuePipe, Param, Body, Post } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Query, ParseIntPipe, DefaultValuePipe, Param, Body, Post, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { GetMarketListRequestDto, GetMarketListResponseDto } from '../dtos/get-market-list.dto';
 import { GetMarketRequestDto, GetMarketResponseDto } from '../dtos/get-market.dto';
 import { CreateMarketRequestDto, CreateMarketResponseDto } from '../dtos/create-market.dto';
+import { AccessTokenGuard } from '@modules/auth/guards/access-token.guard';
 
 @ApiTags('market')
 // @UseGuards(UserGuard)
@@ -55,8 +56,9 @@ export class MarketController {
         };
     }
 
+    @UseGuards(AccessTokenGuard)
     @Post('/')
-    // @ApiBearerAuth()
+    @ApiBearerAuth()
     @ApiOperation({
         description: '',
     })

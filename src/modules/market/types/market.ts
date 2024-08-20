@@ -10,11 +10,11 @@ export class MarketInput {
 
     @ApiProperty()
     @IsNumber()
-    startTime: string;
+    startTime: number;
 
     @ApiProperty()
     @IsNumber()
-    endTime: string;
+    endTime: number;
 
     @ApiProperty()
     colaterralToken: string;
