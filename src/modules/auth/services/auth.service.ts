@@ -13,6 +13,7 @@ import { EmailRegisterPayload, RegisterPayload, WalletRegisterPayload } from '..
 import { AuthRepository } from '@models/repositories/auth.repository';
 import { UserRepository } from '@models/repositories/user.repository';
 import { jwtRefreshConfig } from '@config/jwt.config';
+import { verifySignature } from '@shared/utils/sui';
 
 @Injectable()
 export class AuthService {
@@ -69,10 +70,10 @@ export class AuthService {
         }
         await this.redis.del(`auth-nonce:${address}`);
 
-        // const verified = verifySignature(address, nonce, signature);
-        // if (!verified) {
-        //     throw new BadRequestException('Failed to verify signature');
-        // }
+        const verified = await verifySignature(address, nonce, signature);
+        if (!verified) {
+            throw new BadRequestException('Failed to verify signature');
+        }
 
         const authInfo = await this.authRepository.findOneBy({
             address,
@@ -109,10 +110,10 @@ export class AuthService {
             throw new BadRequestException('Nonce not found');
         }
 
-        // const verified = verifySignature(address, nonce, signature);
-        // if (!verified) {
-        //     throw new BadRequestException('Failed to verify signature');
-        // }
+        const verified = await verifySignature(address, nonce, signature);
+        if (!verified) {
+            throw new BadRequestException('Failed to verify signature');
+        }
 
         let authInfo = await this.authRepository.findOneBy({
             address,

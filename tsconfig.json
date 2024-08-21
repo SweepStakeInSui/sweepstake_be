@@ -26,7 +26,7 @@
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 	},
-	"include": ["src/**/*", "eslint.config.mjs"],
+	"include": ["src/**/*", "eslint.config.mjs", "scripts/**/*"],
 	"exclude": ["node_modules", "dist"],
 	"files": [
 		"node_modules/jest-extended/types/index.d.ts"
