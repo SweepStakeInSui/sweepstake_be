@@ -1,6 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { OrderSide, OrderStatus, OrderType } from '@modules/order/types/order';
+import { OutcomeEntity } from './outcome.entity';
 
 @Entity({ name: 'order' })
 export class OrderEntity extends BaseEntity {
@@ -9,6 +10,9 @@ export class OrderEntity extends BaseEntity {
 
     @Column({ type: 'varchar' })
     outcomeId: string;
+
+    @Column({ type: 'varchar' })
+    marketId: string;
 
     @Column({
         type: 'enum',
@@ -28,6 +32,9 @@ export class OrderEntity extends BaseEntity {
     amount: bigint;
 
     @Column({ type: 'bigint' })
+    fullfilled: bigint = 0n;
+
+    @Column({ type: 'bigint' })
     price: bigint;
 
     @Column({ type: 'varchar' })
@@ -42,4 +49,7 @@ export class OrderEntity extends BaseEntity {
 
     @Column({ type: 'int' })
     timestamp: number;
+
+    @ManyToOne(() => OutcomeEntity)
+    outcome: OutcomeEntity;
 }

@@ -1,5 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
+import { OutcomeEntity } from './outcome.entity';
+import { ConditionEntity } from './condition.entity';
 
 @Entity({ name: 'market' })
 export class MarketEntity extends BaseEntity {
@@ -20,4 +22,10 @@ export class MarketEntity extends BaseEntity {
 
     @Column({ type: 'varchar' })
     colaterralToken: string;
+
+    @OneToMany(() => OutcomeEntity, outcome => outcome.market)
+    outcomes: OutcomeEntity[];
+
+    @OneToMany(() => ConditionEntity, condition => condition.market)
+    conditions: ConditionEntity[];
 }

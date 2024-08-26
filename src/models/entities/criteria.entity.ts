@@ -14,7 +14,7 @@ export class CriteriaEntity extends BaseEntity {
     })
     type: CriteriaType;
 
-    @Column({ type: 'varchar' })
+    @Column({ type: 'varchar', default: '' })
     value: string;
 
     @Column({ type: 'enum', enum: CriteriaStatus, default: CriteriaStatus.Pending })
