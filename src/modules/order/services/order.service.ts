@@ -6,10 +6,12 @@ import { InjectRedis } from '@songkeys/nestjs-redis';
 import Redis from 'ioredis';
 import { Logger } from 'log4js';
 import { UserEntity } from '@models/entities/user.entity';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Inject } from '@nestjs/common';
 import { CreateOrderRequestDto } from '../dtos/create-order.dto';
 import dayjs from 'dayjs';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
+import { MarketRepository } from '@models/repositories/market.repository';
+import { MatchingEngineService } from '@modules/matching-engine/services/matching-engine.service';
 
 export class OrderService {
     protected logger: Logger;
@@ -21,49 +23,15 @@ export class OrderService {
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
 
+        @Inject()
+        private matchingEngineService: MatchingEngineService,
+
         private orderRepository: OrderRepository,
         private outcomeRepository: OutcomeRepository,
+        private marketRepository: MarketRepository,
     ) {
         this.logger = this.loggerService.getLogger(OrderService.name);
         this.configService = configService;
-
-        // Add some orders to the book
-        // this.orderBook.addOrder(
-        //     this.orderRepository.create({
-        //         id: '1',
-        //         outcomeId: '1',
-        //         side: OrderSide.Bid,
-        //         price: 100n,
-        //         amount: 10n,
-        //     }),
-        // );
-        // this.orderBook.addOrder(
-        //     this.orderRepository.create({
-        //         id: '2',
-        //         outcomeId: '1',
-        //         side: OrderSide.Ask,
-        //         price: 95n,
-        //         amount: 5n,
-        //     }),
-        // );
-        // this.orderBook.addOrder(
-        //     this.orderRepository.create({
-        //         id: '3',
-        //         outcomeId: '0',
-        //         side: OrderSide.Bid,
-        //         price: 100n,
-        //         amount: 10n,
-        //     }),
-        // );
-        // this.orderBook.addOrder(
-        //     this.orderRepository.create({
-        //         id: '4',
-        //         outcomeId: '0',
-        //         side: OrderSide.Ask,
-        //         price: 95n,
-        //         amount: 5n,
-        //     }),
-        // );
     }
 
     // check balance
@@ -86,13 +54,26 @@ export class OrderService {
             where: {
                 id: orderInfo.outcomeId,
             },
+            relations: ['market'],
         });
 
         if (!outcomeInfo) {
             throw new BadRequestException('Outcome not found');
         }
 
+        const marketInfo = outcomeInfo.market;
+
+        if (
+            !marketInfo ||
+            !marketInfo.isActive ||
+            marketInfo.startTime > orderInfo.timestamp ||
+            marketInfo.endTime < orderInfo.timestamp
+        ) {
+            throw new BadRequestException('market not available');
+        }
+
         await this.orderRepository.manager.transaction(async manager => {
+            orderInfo.marketId = marketInfo.id;
             await manager.save(orderInfo);
             const balance = BigInt(userInfo.balance);
             const total = orderInfo.price * orderInfo.amount;
@@ -103,6 +84,9 @@ export class OrderService {
             userInfo.balance = balance - total;
             await manager.save(userInfo);
         });
+
+        // TODO: push into job
+        this.matchingEngineService.addOrder(orderInfo);
 
         return orderInfo;
     }

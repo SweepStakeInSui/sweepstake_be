@@ -38,7 +38,9 @@ export class MarketService {
     }
 
     public async paginate(options: IPaginationOptions): Promise<Pagination<MarketEntity>> {
-        return paginate<MarketEntity>(this.marketRepository, options);
+        return paginate<MarketEntity>(this.marketRepository, options, {
+            relations: ['outcomes'],
+        });
     }
 
     async find(condition: FindOptionsWhere<MarketEntity>) {
@@ -96,6 +98,7 @@ export class MarketService {
                 throw new BadRequestException();
             });
 
+        // TODO: create signature and return to user to send to onchain contract
         return marketInfo;
     }
 }

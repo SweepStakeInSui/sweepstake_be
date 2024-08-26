@@ -8,5 +8,6 @@ const services = [MatchingEngineService];
     imports: [],
     controllers: [...controllers],
     providers: [...services],
+    exports: [...services],
 })
 export class MatchingEngineModule {}
