@@ -5,4 +5,4 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn --immutable
 COPY . .
-RUN yarn build
+RUN yarn run build
