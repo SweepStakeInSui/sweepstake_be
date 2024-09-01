@@ -46,7 +46,7 @@ services:
       - .env.production.local
     tty: true
     ports:
-      - "${PORT}:${PORT}"
+      - "${HOST}:${PORT}:${PORT}"
 volumes:
   redis_data:
   mysql_data:
