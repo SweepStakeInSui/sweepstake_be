@@ -61,11 +61,19 @@ export class MarketService {
         const outcomeYesInfo = this.outcomeRepository.create({
             marketId: marketInfo.id,
             type: OutcomeType.Yes,
+            askLiquidity: 0n,
+            askPrice: 0n,
+            bidLiquidity: 0n,
+            bidPrice: 0n,
         });
 
         const outcomeNoInfo = this.outcomeRepository.create({
             marketId: marketInfo.id,
             type: OutcomeType.No,
+            askLiquidity: 0n,
+            askPrice: 0n,
+            bidLiquidity: 0n,
+            bidPrice: 0n,
         });
 
         const conditionInfos: ConditionEntity[] = [];

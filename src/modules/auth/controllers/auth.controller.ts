@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common'
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
-import { LoginRequestDto, LoginResponseDto } from '../dtos/login.dto';
+import { LoginRequestDto, LoginResponseDto, WalletLoginPayload } from '../dtos/login.dto';
 import { GetNonceRequestDto, GetNonceResponseDto } from '../dtos/get-nonce.dto';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { AuthService } from '../services/auth.service';
@@ -49,7 +49,7 @@ export class AuthController {
             return await this.authService.login(req.user.userId);
         }
 
-        return await this.authService.register(type, payload);
+        return await this.authService.register(type, payload as WalletLoginPayload);
     }
 
     @UseGuards(RefreshTokenGuard)

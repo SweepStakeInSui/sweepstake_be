@@ -16,6 +16,7 @@ import { jwtRefreshConfig } from '@config/jwt.config';
 import { verifySignature } from '@shared/utils/sui';
 import { UserEntity } from '@models/entities/user.entity';
 import { EmailLoginPayload, WalletLoginPayload } from '../dtos/login.dto';
+import { log } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -71,6 +72,10 @@ export class AuthService {
             throw new BadRequestException('Nonce not found');
         }
         await this.redis.del(`auth-nonce:${address}`);
+
+        log('address', address);
+        log('nonce', nonce);
+        log('signature', signature);
 
         const verified = await verifySignature(address, nonce, signature);
         if (!verified) {
