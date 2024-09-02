@@ -6,7 +6,6 @@ import { LoginRequestDto, LoginResponseDto } from '../dtos/login.dto';
 import { GetNonceRequestDto, GetNonceResponseDto } from '../dtos/get-nonce.dto';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { AuthService } from '../services/auth.service';
-import { RegisterRequestDto, RegisterResponseDto } from '../dtos/register.dto';
 import { RefreshResponseDto, RefreshRequestDto } from '../dtos/refresh.dto';
 import { LoginGuard } from '../guards/login.guard';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard';
@@ -44,7 +43,13 @@ export class AuthController {
     })
     @ApiOkResponsePayload(LoginResponseDto, EApiOkResponsePayload.OBJECT)
     async login(@Body() body: LoginRequestDto, @Request() req): Promise<LoginResponseDto> {
-        return await this.authService.login(req.user.userId);
+        const { payload, type } = body;
+
+        if (req.user.userId) {
+            return await this.authService.login(req.user.userId);
+        }
+
+        return await this.authService.register(type, payload);
     }
 
     @UseGuards(RefreshTokenGuard)
@@ -55,18 +60,5 @@ export class AuthController {
     @ApiOkResponsePayload(RefreshResponseDto, EApiOkResponsePayload.OBJECT)
     async refresh(@Body() body: RefreshRequestDto, @Request() req): Promise<RefreshResponseDto> {
         return await this.authService.refresh(req.user.userId, req.user.fingerprint);
-    }
-
-    @Post('register')
-    @ApiOperation({})
-    async register(@Body() body: RegisterRequestDto): Promise<RegisterResponseDto> {
-        const { payload, type } = body;
-        this.logger.info(body.payload);
-        const userInfo = await this.authService.register(type, payload);
-        return {
-            id: userInfo.id,
-            username: userInfo.username,
-            address: userInfo.address,
-        };
     }
 }

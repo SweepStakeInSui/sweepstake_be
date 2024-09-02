@@ -9,11 +9,13 @@ import { InjectRedis } from '@songkeys/nestjs-redis';
 import { Redis } from 'ioredis';
 import { JwtPayload, RefreshJwtPayload } from '../types/jwt-payload';
 import { AuthType } from '../types/auth';
-import { EmailRegisterPayload, RegisterPayload, WalletRegisterPayload } from '../dtos/register.dto';
+// import { EmailRegisterPayload, RegisterPayload, WalletRegisterPayload } from '../dtos/register.dto';
 import { AuthRepository } from '@models/repositories/auth.repository';
 import { UserRepository } from '@models/repositories/user.repository';
 import { jwtRefreshConfig } from '@config/jwt.config';
 import { verifySignature } from '@shared/utils/sui';
+import { UserEntity } from '@models/entities/user.entity';
+import { EmailLoginPayload, WalletLoginPayload } from '../dtos/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -80,14 +82,12 @@ export class AuthService {
             isActive: true,
         });
 
-        if (!authInfo) {
-            throw new BadRequestException('Authentication info not found');
-        }
-
-        return authInfo.userId;
+        return authInfo?.userId;
     }
 
-    public async register(type: AuthType, payload: RegisterPayload) {
+    public async register(type: AuthType, payload: WalletLoginPayload) {
+        let userInfo: UserEntity;
+
         switch (type) {
             case AuthType.Email: {
                 // eslint-disable-next-line no-empty-pattern
@@ -95,25 +95,20 @@ export class AuthService {
                 break;
             }
             case AuthType.Wallet:
-                return await this.registerWallet(payload as WalletRegisterPayload);
+                userInfo = await this.registerWallet(payload as WalletLoginPayload);
+                break;
         }
+
+        const token = await this.generateToken(userInfo.id);
+        return token;
     }
 
-    private async registerEmail(payload: EmailRegisterPayload) {
+    private async registerEmail(payload: EmailLoginPayload) {
         return {};
     }
 
-    private async registerWallet(payload: WalletRegisterPayload) {
+    private async registerWallet(payload: WalletLoginPayload) {
         const { address, signature } = payload;
-        const nonce = await this.redis.get(`auth-nonce:${address}`);
-        if (!nonce) {
-            throw new BadRequestException('Nonce not found');
-        }
-
-        const verified = await verifySignature(address, nonce, signature);
-        if (!verified) {
-            throw new BadRequestException('Failed to verify signature');
-        }
 
         let authInfo = await this.authRepository.findOneBy({
             address,

@@ -6,8 +6,14 @@ import { AuthType } from '../types/auth';
 export type LoginPayload = EmailLoginPayload | WalletLoginPayload;
 
 export class EmailLoginPayload {
+    @ApiProperty({
+        description: '',
+    })
     @IsEmail()
     email: string;
+    @ApiProperty({
+        description: '',
+    })
     @IsString()
     password: string;
 }
