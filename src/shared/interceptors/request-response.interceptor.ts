@@ -44,7 +44,7 @@ export class ResponseTransformInterceptor<T> implements NestInterceptor<T, IResp
     intercept(context: ExecutionContext, next: CallHandler): Observable<IResponse<T>> {
         const request = context.switchToHttp().getRequest();
         this.logger.info(request.headers, request.query, request.params);
-        //TODO: optimize logger body hidden password
+        // TODO: optimize logger body hidden password
         return next.handle().pipe(
             map(data => {
                 const ctx = context.switchToHttp();

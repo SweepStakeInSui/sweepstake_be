@@ -19,6 +19,7 @@ import { redisOptions } from '@config/redis.config';
 import { DatabaseModule } from '@shared/modules/database/database.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtOptions } from '@config/jwt.config';
+import { KafkaModule } from '@shared/modules/kafka/kafka.module';
 
 @Module({
     imports: [
@@ -41,6 +42,7 @@ import { jwtOptions } from '@config/jwt.config';
         ConfigurationModule,
         TypeOrmModule.forRootAsync(typeOrmOptions),
         RedisModule.forRootAsync(redisOptions),
+        KafkaModule,
         JwtModule.registerAsync(jwtOptions),
         DatabaseModule,
         LoggingModule,
