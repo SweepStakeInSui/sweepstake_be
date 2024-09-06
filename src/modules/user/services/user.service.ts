@@ -32,7 +32,7 @@ export class UserService {
         return await this.userRepository.save(user);
     }
 
-    async getById(id: number): Promise<UserEntity> {
+    async getById(id: string): Promise<UserEntity> {
         return await this.userRepository.findOneBy({ id: In([id]) });
     }
 
@@ -40,12 +40,12 @@ export class UserService {
         return await this.userRepository.find();
     }
 
-    async update(id: number, updateData: Partial<UserInput>): Promise<UserEntity> {
+    async update(id: string, updateData: Partial<UserInput>): Promise<UserEntity> {
         await this.userRepository.update(id, updateData);
         return await this.getById(id);
     }
 
-    async delete(id: number): Promise<void> {
+    async delete(id: string): Promise<void> {
         const result = await this.userRepository.softDelete(id);
 
         if (!result.affected || result.affected === 0) {
