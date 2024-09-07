@@ -35,7 +35,9 @@ export async function bootstrap() {
         type: VersioningType.URI,
         defaultVersion: '1',
     });
-    app.enableCors();
+    app.enableCors({
+        credentials: true,
+    });
     app.use(useMorgan(loggingService.logger.access));
     await initSwagger(app, configService);
     await app.listen(configService.get<number>(EEnvKey.PORT) || 3000);
