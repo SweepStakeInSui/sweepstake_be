@@ -20,9 +20,8 @@ export class KafkaConsumerService implements OnApplicationShutdown {
         this.configService = configService;
 
         this.kafka = new Kafka({
-            clientId: 'sweepstake',
+            clientId: 'kafka',
             brokers: [`${this.configService.get(EEnvKey.KAFKA_HOST)}:${this.configService.get(EEnvKey.KAFKA_PORT)}`],
-            connectionTimeout: 3000,
         });
     }
 
@@ -33,8 +32,11 @@ export class KafkaConsumerService implements OnApplicationShutdown {
     }
 
     async consume(groupId: string, topics: ConsumerSubscribeTopics, config: ConsumerRunConfig) {
-        const cosumer: Consumer = this.kafka.consumer({ groupId: groupId });
-        await cosumer.connect().catch(e => console.error(e));
+        const cosumer: Consumer = this.kafka.consumer({
+            allowAutoTopicCreation: true,
+            groupId: groupId,
+        });
+        await cosumer.connect();
         await cosumer.subscribe(topics);
         await cosumer.run(config);
         this.consumers.push(cosumer);

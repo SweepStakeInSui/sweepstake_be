@@ -1,43 +1,47 @@
-import { Injectable, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Kafka, Partitioners, Producer, ProducerRecord } from 'kafkajs';
+import { Admin, Kafka } from 'kafkajs';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
 import { EEnvKey } from '@constants/env.constant';
 
 @Injectable()
-export class KafkaProducerService implements OnModuleInit, OnApplicationShutdown {
+export class KafkaAdminService implements OnApplicationShutdown {
     protected logger: Logger;
     protected configService: ConfigService;
-
     private readonly kafka: Kafka;
-    private readonly producer: Producer;
+    private readonly admin: Admin;
 
     constructor(
         protected loggerService: LoggerService,
         configService: ConfigService,
     ) {
-        this.logger = this.loggerService.getLogger(KafkaProducerService.name);
+        this.logger = this.loggerService.getLogger(KafkaAdminService.name);
         this.configService = configService;
 
         this.kafka = new Kafka({
             clientId: 'kafka',
             brokers: [`${this.configService.get(EEnvKey.KAFKA_HOST)}:${this.configService.get(EEnvKey.KAFKA_PORT)}`],
         });
-        this.producer = this.kafka.producer({
-            allowAutoTopicCreation: true,
-            createPartitioner: Partitioners.LegacyPartitioner,
-        });
+
+        this.admin = this.kafka.admin();
     }
 
     async onModuleInit() {
-        await this.producer.connect();
+        await this.admin.connect();
     }
     async onApplicationShutdown() {
-        await this.producer.disconnect();
+        await this.admin.disconnect();
     }
 
-    async produce(record: ProducerRecord) {
-        return await this.producer.send(record);
+    async createTopic(topics: string[]) {
+        await this.admin.createTopics({
+            waitForLeaders: true,
+            topics: topics.map(topic => {
+                return {
+                    topic,
+                };
+            }),
+        });
     }
 }
