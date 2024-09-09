@@ -5,9 +5,17 @@ import { OrderSide, OrderType } from '@modules/order/types/order';
 import { BigIntUtil } from '@shared/utils/bigint';
 import { log } from 'console';
 
-export class OrderProcessor {
+export type Match = {
+    order: OrderEntity;
+    matchedOrders: {
+        order: OrderEntity;
+        amount: bigint;
+    }[];
+};
+
+export class OrderBook {
     private marketId: string;
-    private price: {
+    private liquidity: {
         [key: string]: bigint;
     } = {};
 
@@ -23,10 +31,10 @@ export class OrderProcessor {
         this.queues['Bid-No'] = new PriorityQueue<OrderEntity>(this.orderByNonIncreasing);
         this.queues['Ask-No'] = new PriorityQueue<OrderEntity>(this.orderByNonDecreasing);
 
-        this.price['Bid-Yes'] = 0n;
-        this.price['Ask-Yes'] = 0n;
-        this.price['Bid-No'] = 0n;
-        this.price['Ask-No'] = 0n;
+        this.liquidity['Bid-Yes'] = 0n;
+        this.liquidity['Ask-Yes'] = 0n;
+        this.liquidity['Bid-No'] = 0n;
+        this.liquidity['Ask-No'] = 0n;
     }
 
     private orderByNonDecreasing = (a: OrderEntity, b: OrderEntity) => {
@@ -37,7 +45,7 @@ export class OrderProcessor {
         return Number(b.price - a.price) || a.createdAt - b.createdAt;
     };
 
-    addOrder(order: OrderEntity) {
+    public matchOrder(order: OrderEntity) {
         Object.entries(this.queues).map(([key, queue]) => {
             log(
                 key,
@@ -53,32 +61,34 @@ export class OrderProcessor {
             );
         });
 
-        this.matchOrder(order);
-    }
+        const matches: Match[] = [];
 
-    matchOrder(order: OrderEntity) {
         switch (order.type) {
             case OrderType.FOK:
-                this.matchMarketOrder(order);
+                this.matchMarketOrder(order, matches);
                 break;
             case OrderType.GTC:
             case OrderType.GTD:
-                this.matchLimitOrder(order);
+                this.matchLimitOrder(order, matches);
                 break;
         }
+
+        return matches;
     }
 
-    private matchMarketOrder(order: OrderEntity) {
+    private matchMarketOrder(order: OrderEntity, matches: Match[]) {
         const liquidity =
-            this.price[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`] +
-            this.price[`${order.side}-${order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`];
+            this.liquidity[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`] +
+            this.liquidity[
+                `${order.side}-${order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`
+            ];
 
         if (order.amount > liquidity) {
             log('liquidity', liquidity);
             log('Not enough liquidity');
 
             // cancel the order
-            return;
+            return matches;
         }
 
         // match same asset order
@@ -88,7 +98,9 @@ export class OrderProcessor {
             const oppositeOrder = sameAssetQueue.peek();
             const matchAmount = BigIntUtil.min(order.amount, oppositeOrder.amount);
 
-            this.executeTrade(order, oppositeOrder, matchAmount);
+            // this.executeTrade(order, oppositeOrder, matchAmount);
+
+            matches.push({ order: order, matchedOrders: [{ order: oppositeOrder, amount: matchAmount }] });
 
             order.fullfilled += matchAmount;
             oppositeOrder.fullfilled += matchAmount;
@@ -98,14 +110,15 @@ export class OrderProcessor {
         }
 
         // match cross asset order
-
         const crossAssetQueue =
             this.queues[`${order.side}-${order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`];
         while (!crossAssetQueue.isEmpty() && order.fullfilled < order.amount) {
             const oppositeOrder = crossAssetQueue.peek();
             const matchAmount = BigIntUtil.min(order.amount, oppositeOrder.amount);
 
-            this.executeTrade(order, oppositeOrder, matchAmount);
+            // this.executeTrade(order, oppositeOrder, matchAmount);
+
+            matches.push({ order: order, matchedOrders: [{ order: oppositeOrder, amount: matchAmount }] });
 
             order.fullfilled += matchAmount;
             oppositeOrder.fullfilled += matchAmount;
@@ -113,44 +126,51 @@ export class OrderProcessor {
             if (oppositeOrder.fullfilled === oppositeOrder.amount) crossAssetQueue.dequeue();
             if (order.fullfilled === order.amount) break;
         }
+
+        return matches;
     }
 
-    private matchLimitOrder(order: OrderEntity) {
-        this.matchSameAssetOrders(order);
-        this.matchCrossAssetOrders(order);
+    private matchLimitOrder(order: OrderEntity, matches: Match[]) {
+        this.matchLimitSameOrders(order, matches);
+        this.matchLimitCrossOrders(order, matches);
     }
 
-    private matchSameAssetOrders(order: OrderEntity): void {
+    private matchLimitSameOrders(order: OrderEntity, matches: Match[]): void {
         const side = order.side;
-        const oppositeQueue = this.queues[`${side === OrderSide.Bid ? 'Ask' : 'Bid'}-${order.outcome.type}`];
+        const oppositeOrders = this.queues[`${side === OrderSide.Bid ? 'Ask' : 'Bid'}-${order.outcome.type}`];
+
+        let comparator;
 
         switch (order.side) {
             case OrderSide.Bid:
-                this.matchBidLimitOrder(order, oppositeQueue);
+                comparator = (o1: OrderEntity, o2: OrderEntity) => {
+                    o1.price >= o2.price;
+                };
                 break;
             case OrderSide.Ask:
-                this.matchAskLimitOrder(order, oppositeQueue);
+                comparator = (o1: OrderEntity, o2: OrderEntity) => {
+                    o1.price < o2.price;
+                };
                 break;
         }
-    }
 
-    private matchBidLimitOrder(order: OrderEntity, askOrders: PriorityQueue<OrderEntity>) {
-        while (!askOrders.isEmpty() && order.fullfilled < order.amount) {
-            const askOrder = askOrders.peek();
+        while (!oppositeOrders.isEmpty() && order.fullfilled < order.amount) {
+            const oppositeOrder = oppositeOrders.peek();
 
-            if (order.price >= askOrder.price) {
+            if (comparator(order, oppositeOrder)) {
                 const matchAmount = BigIntUtil.min(
                     order.amount - order.fullfilled,
-                    askOrder.amount - askOrder.fullfilled,
+                    oppositeOrder.amount - oppositeOrder.fullfilled,
                 );
 
-                log('matched bid limit');
-                this.executeTrade(order, askOrder, matchAmount);
+                log(`matched ${order.side} limit`);
+                matches.push({ order: order, matchedOrders: [{ order: oppositeOrder, amount: matchAmount }] });
+                // this.executeTrade(order, oppositeOrder, matchAmount);
 
                 order.fullfilled += matchAmount;
-                askOrder.fullfilled += matchAmount;
+                oppositeOrder.fullfilled += matchAmount;
 
-                if (askOrder.fullfilled === askOrder.amount) askOrders.dequeue();
+                if (oppositeOrder.fullfilled === oppositeOrder.amount) oppositeOrders.dequeue();
                 if (order.fullfilled === order.amount) break;
             } else {
                 break;
@@ -160,41 +180,11 @@ export class OrderProcessor {
         if (order.fullfilled < order.amount) {
             this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
 
-            this.price[`${order.side}-${order.outcome.type}`] += order.amount;
+            this.liquidity[`${order.side}-${order.outcome.type}`] += order.amount;
         }
     }
 
-    private matchAskLimitOrder(order: OrderEntity, bidOrders: PriorityQueue<OrderEntity>) {
-        while (!bidOrders.isEmpty() && order.fullfilled < order.amount) {
-            const bidOrder = bidOrders.peek();
-
-            if (order.price <= bidOrder.price) {
-                const matchAmount = BigIntUtil.min(
-                    order.amount - order.fullfilled,
-                    bidOrder.amount - bidOrder.fullfilled,
-                );
-
-                log('matched ask limit');
-                this.executeTrade(bidOrder, order, matchAmount);
-
-                order.fullfilled += matchAmount;
-                bidOrder.fullfilled += matchAmount;
-
-                if (bidOrder.fullfilled === bidOrder.amount) bidOrders.dequeue();
-                if (order.amount === order.amount) break;
-            } else {
-                break;
-            }
-        }
-
-        if (order.fullfilled < order.amount) {
-            this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
-
-            this.price[`${order.side}-${order.outcome.type}`] += order.amount;
-        }
-    }
-
-    private matchCrossAssetOrders(order: OrderEntity): void {
+    private matchLimitCrossOrders(order: OrderEntity, matches: Match[]): void {
         const oppQueue =
             this.queues[`${order.side}-${order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`];
 
@@ -231,7 +221,8 @@ export class OrderProcessor {
                 );
 
                 log('matched cross asset');
-                this.executeTrade(matchedOrder, order, matchAmount);
+                matches.push({ order: order, matchedOrders: [{ order: matchedOrder, amount: matchAmount }] });
+                // this.executeTrade(matchedOrder, order, matchAmount);
 
                 matchedOrder.fullfilled += matchAmount;
                 order.fullfilled += matchAmount;
@@ -246,7 +237,5 @@ export class OrderProcessor {
 
     private executeTrade(order1: OrderEntity, order2: OrderEntity, amount: bigint): void {
         console.log(`Trade executed: ${amount} units between Order ${order1.id} and Order ${order2.id}`);
-
-        // TODO: push to job
     }
 }
