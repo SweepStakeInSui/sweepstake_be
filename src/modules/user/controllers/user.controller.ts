@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserService } from '../services/user.service';
 import { Logger } from 'log4js';
@@ -8,6 +8,8 @@ import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { ProfileResponseDto } from '../dtos/profile.dto';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { UserEntity } from '@models/entities/user.entity';
+import { DepositRequestDto, DepositResponseDto } from '../dtos/deposit.dto';
+import { WithdrawRequestDto, WithdrawResponseDto } from '../dtos/withdraw.dto';
 
 @ApiTags('user')
 @Controller('user')
@@ -39,5 +41,32 @@ export class UserController {
             volume: 0,
             winRate: 0,
         };
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Get('/deposit')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(DepositResponseDto, EApiOkResponsePayload.OBJECT)
+    async deposit(@Body() body: DepositRequestDto, @CurrentUser() user: UserEntity): Promise<DepositResponseDto> {
+        await this.userService.update(user.id, { balance: user.balance + body.amount });
+        return {};
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Get('/withdraw')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(WithdrawResponseDto, EApiOkResponsePayload.OBJECT)
+    async withdraw(@Body() body: WithdrawRequestDto, @CurrentUser() user: UserEntity): Promise<WithdrawResponseDto> {
+        if (user.balance < body.amount) {
+            throw new Error('Insufficient balance');
+        }
+        await this.userService.update(user.id, { balance: user.balance - body.amount });
+        return {};
     }
 }
