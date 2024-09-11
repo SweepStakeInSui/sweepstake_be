@@ -40,14 +40,14 @@ export class MatchingEngineService {
     private orderBooks: Map<string, OrderBook>;
 
     private getOrderBook(marketId: string) {
-        let processor = this.orderBooks.get(marketId);
+        let orderBook = this.orderBooks.get(marketId);
 
-        if (!processor) {
-            processor = new OrderBook(marketId);
-            this.orderBooks.set(marketId, processor);
+        if (!orderBook) {
+            orderBook = new OrderBook(marketId);
+            this.orderBooks.set(marketId, orderBook);
         }
 
-        return processor;
+        return orderBook;
     }
 
     async matchOrder(order: OrderEntity) {
@@ -61,6 +61,21 @@ export class MatchingEngineService {
         order.outcome = outcomeInfo;
 
         const orderBook = this.getOrderBook(marketInfo.id);
-        orderBook.matchOrder(order);
+        const matches = orderBook.matchOrder(order);
+        console.log('matches', matches);
+    }
+
+    async cancelOrer(order: OrderEntity) {
+        log('cancel order', order.id);
+        const outcomeInfo = await this.outcomeRepository.findOne({
+            where: { id: order.outcomeId },
+            relations: ['market'],
+        });
+        const marketInfo = outcomeInfo.market;
+
+        order.outcome = outcomeInfo;
+
+        const orderBook = this.getOrderBook(marketInfo.id);
+        orderBook.cancelOrder(order);
     }
 }

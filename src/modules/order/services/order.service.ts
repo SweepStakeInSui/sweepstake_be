@@ -11,7 +11,11 @@ import { CreateOrderRequestDto } from '../dtos/create-order.dto';
 import dayjs from 'dayjs';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
 import { MarketRepository } from '@models/repositories/market.repository';
-import { MatchingEngineService } from '@modules/matching-engine/services/matching-engine.service';
+import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
+import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { OrderStatus } from '../types/order';
+import { log } from 'console';
+import { OrderEntity } from '@models/entities/order.entity';
 
 export class OrderService {
     protected logger: Logger;
@@ -24,7 +28,7 @@ export class OrderService {
         @InjectRedis() private readonly redis: Redis,
 
         @Inject()
-        private matchingEngineService: MatchingEngineService,
+        private kafkaProducer: KafkaProducerService,
 
         private orderRepository: OrderRepository,
         private outcomeRepository: OutcomeRepository,
@@ -75,18 +79,27 @@ export class OrderService {
         await this.orderRepository.manager.transaction(async manager => {
             orderInfo.marketId = marketInfo.id;
             await manager.save(orderInfo);
-            const balance = BigInt(userInfo.balance);
-            const total = orderInfo.price * orderInfo.amount;
-            if (balance < total) {
-                throw new BadRequestException('Insufficient balance');
-            }
+            // const balance = BigInt(userInfo.balance);
+            // const total = orderInfo.price * orderInfo.amount;
+            // if (balance < total) {
+            //     throw new BadRequestException('Insufficient balance');
+            // }
 
-            userInfo.balance = balance - total;
+            // userInfo.balance = balance - total;
             await manager.save(userInfo);
         });
 
-        // TODO: push into job
-        this.matchingEngineService.addOrder(orderInfo);
+        const msgMetadata = await this.kafkaProducer.produce({
+            topic: KafkaTopic.MATCH_ORDER,
+            messages: [
+                {
+                    key: orderInfo.id,
+                    value: JSON.stringify(orderInfo),
+                },
+            ],
+        });
+
+        log(msgMetadata);
 
         return orderInfo;
     }
@@ -104,7 +117,25 @@ export class OrderService {
             throw new BadRequestException('Order not found');
         }
 
-        // push into job
+        if (orderInfo.status !== OrderStatus.Pending) {
+            throw new BadRequestException('cannot cancel order');
+        }
+
+        const msgMetadata = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CANCEL_ORDER,
+            messages: [
+                {
+                    key: orderInfo.id,
+                    value: JSON.stringify(orderInfo),
+                },
+            ],
+        });
+
+        log(msgMetadata);
+    }
+
+    public async consumeCancelMsg(orderId: OrderEntity) {
+        console.log('consumeCancelMsg', orderId);
         // await this.orderRepository.manager.transaction(async manager => {
         //     await manager.update(OrderEntity, orderId, { status: OrderStatus.Cancelled });
         //     userInfo.balance += orderInfo.price * orderInfo.amount;

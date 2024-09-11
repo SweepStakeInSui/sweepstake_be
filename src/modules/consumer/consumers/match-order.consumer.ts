@@ -6,7 +6,7 @@ import { KafkaGroup, KafkaTopic } from '../constants/consumer.constant';
 import { KafkaAdminService } from '@shared/modules/kafka/services/kafka-admin.service';
 
 @Injectable()
-export class MatchOrderProcessor implements OnModuleInit {
+export class MatchOrderConsumer implements OnModuleInit {
     constructor(
         private readonly kafkaConsumerService: KafkaConsumerService,
         private readonly kafkaAdminService: KafkaAdminService,

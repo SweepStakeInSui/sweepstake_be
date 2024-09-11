@@ -1,6 +1,7 @@
+import { OnModuleInit } from '@nestjs/common';
 import { KafkaConsumerService } from '@shared/modules/kafka/services/kafka-consumer.service';
 
-export class ExecuteTradeProcessor {
+export class ExecuteTradeConsumer implements OnModuleInit {
     constructor(private readonly kafkaConsumerService: KafkaConsumerService) {}
 
     async onModuleInit() {

@@ -76,6 +76,19 @@ export class OrderBook {
         return matches;
     }
 
+    public cancelOrder(order: OrderEntity) {
+        const orderIdx = this.queues[`${order.side}-${order.outcome.type}`].find(item => {
+            if (item.id === order.id) return 0;
+            if (item.id < order.id) return 1;
+            if (item.id > order.id) return -1;
+        });
+
+        if (orderIdx !== -1) {
+            this.queues[`${order.side}-${order.outcome.type}`].removeIndex(orderIdx);
+            this.liquidity[`${order.side}-${order.outcome.type}`] -= order.amount;
+        }
+    }
+
     private matchMarketOrder(order: OrderEntity, matches: Match[]) {
         const liquidity =
             this.liquidity[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`] +
@@ -88,7 +101,8 @@ export class OrderBook {
             log('Not enough liquidity');
 
             // cancel the order
-            return matches;
+            // return matches;
+            return;
         }
 
         // match same asset order
@@ -127,7 +141,7 @@ export class OrderBook {
             if (order.fullfilled === order.amount) break;
         }
 
-        return matches;
+        // return matches;
     }
 
     private matchLimitOrder(order: OrderEntity, matches: Match[]) {
@@ -179,7 +193,6 @@ export class OrderBook {
 
         if (order.fullfilled < order.amount) {
             this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
-
             this.liquidity[`${order.side}-${order.outcome.type}`] += order.amount;
         }
     }

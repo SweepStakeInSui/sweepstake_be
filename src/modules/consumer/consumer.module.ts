@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MatchOrderProcessor } from './processors/match-order.processor';
+import { MatchOrderConsumer } from './consumers/match-order.consumer';
 import { MatchingEngineModule } from '@modules/matching-engine/matching-engine.module';
-import { CreateMarketProcessor } from './processors/create-market-event.processor';
-import { ExecuteTradeProcessor } from './processors/execute-trade.processor';
+import { CreateMarketProcessor } from './consumers/create-market-event.consumer';
+import { ExecuteTradeConsumer } from './consumers/execute-trade.consumer';
 
-const processors = [MatchOrderProcessor, CreateMarketProcessor, ExecuteTradeProcessor];
+const processors = [MatchOrderConsumer, CreateMarketProcessor, ExecuteTradeConsumer];
 
 @Module({
     imports: [TypeOrmModule.forFeature([]), MatchingEngineModule],
