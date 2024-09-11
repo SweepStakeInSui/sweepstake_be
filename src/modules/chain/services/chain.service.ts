@@ -6,7 +6,7 @@ import Redis from 'ioredis';
 import { Logger } from 'log4js';
 import { SuiClient } from '@mysten/sui/client';
 import { EEnvKey } from '@constants/env.constant';
-import { SuiGraphQLClient } from '@mysten/sui/dist/cjs/graphql/client';
+import { SuiGraphQLClient } from '@mysten/sui/graphql';
 
 @Injectable()
 export class ChainService {
