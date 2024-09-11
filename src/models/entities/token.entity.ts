@@ -9,7 +9,7 @@ export class TokenEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     public symbol: string;
 
-    @Column({ type: 'int8' })
+    @Column({ type: 'int' })
     public decimals: number;
 
     @Column({ type: 'varchar' })

@@ -9,6 +9,6 @@ export class ChainEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     public chainId: string;
 
-    @Column({ type: 'int64' })
+    @Column({ type: 'int' })
     public block: number;
 }

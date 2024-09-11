@@ -7,7 +7,7 @@ export class TransactionEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     public hash: string;
 
-    @Column({ type: 'int64' })
+    @Column({ type: 'int' })
     public block: number;
 
     @Column({ type: 'varchar' })
