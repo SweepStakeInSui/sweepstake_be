@@ -1,6 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { AuthType } from '@modules/auth/types/auth';
+import { UserEntity } from './user.entity';
 
 @Entity({ name: 'auth' })
 export class AuthEntity extends BaseEntity {
@@ -21,4 +22,7 @@ export class AuthEntity extends BaseEntity {
 
     @Column()
     public isActive: boolean;
+
+    @ManyToOne(() => UserEntity)
+    user: UserEntity;
 }

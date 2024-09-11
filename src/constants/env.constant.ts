@@ -44,4 +44,5 @@ export enum EEnvKey {
     JWT_EXPIRE_REFRESH = 'JWT_EXPIRE_REFRESH',
 
     RPC_URL = 'RPC_URL',
+    GQL_URL = 'GQL_URL',
 }

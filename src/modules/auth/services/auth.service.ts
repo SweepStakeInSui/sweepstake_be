@@ -82,9 +82,12 @@ export class AuthService {
             throw new BadRequestException('Failed to verify signature');
         }
 
-        const authInfo = await this.authRepository.findOneBy({
-            address,
-            isActive: true,
+        const authInfo = await this.authRepository.findOne({
+            where: {
+                address,
+                isActive: true,
+            },
+            relations: ['user'],
         });
 
         return authInfo?.userId;
