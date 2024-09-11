@@ -37,6 +37,10 @@ export class OrderEntity extends BaseEntity {
     @Column({ type: 'bigint' })
     price: bigint;
 
+    // max 1000 = 100%
+    @Column({ type: 'bigint' })
+    slippage: bigint;
+
     @Column({ type: 'varchar' })
     signature: string;
 
