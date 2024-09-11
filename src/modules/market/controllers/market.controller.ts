@@ -68,7 +68,8 @@ export class MarketController {
 
         const { conditions, ...market } = body;
 
-        const result = await this.marketService.create(market, conditions);
+        // TODO: use the real implementation
+        const result = await this.marketService.create2(market, conditions);
 
         return {
             ...result,

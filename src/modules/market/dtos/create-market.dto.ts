@@ -5,7 +5,8 @@ import { MarketInput } from '../types/market';
 
 export class CreateMarketRequestDto extends MarketInput {
     @ApiProperty()
-    conditions: ConditionInput[];
+    conditions: string;
+    // conditions: ConditionInput[];
 }
 
 export class CreateMarketResponseDto {}

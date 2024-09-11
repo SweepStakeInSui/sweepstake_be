@@ -28,4 +28,8 @@ export class MarketEntity extends BaseEntity {
 
     @OneToMany(() => ConditionEntity, condition => condition.market)
     conditions: ConditionEntity[];
+
+    // TODO: remove this
+    @Column({ type: 'varchar' })
+    conditions_str: string;
 }
