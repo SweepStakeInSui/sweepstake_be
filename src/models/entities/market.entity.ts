@@ -1,10 +1,11 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { OutcomeEntity } from './outcome.entity';
 import { ConditionEntity } from './condition.entity';
 
 @Entity({ name: 'market' })
 export class MarketEntity extends BaseEntity {
+    @Index({ fulltext: true })
     @Column({ type: 'varchar' })
     name: string;
 
@@ -23,10 +24,10 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     colaterralToken: string;
 
-    @OneToMany(() => OutcomeEntity, outcome => outcome.market)
+    @OneToMany(() => OutcomeEntity, outcome => outcome.market, { createForeignKeyConstraints: false })
     outcomes: OutcomeEntity[];
 
-    @OneToMany(() => ConditionEntity, condition => condition.market)
+    @OneToMany(() => ConditionEntity, condition => condition.market, { createForeignKeyConstraints: false })
     conditions: ConditionEntity[];
 
     // TODO: remove this

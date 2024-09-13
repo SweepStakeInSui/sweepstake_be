@@ -13,6 +13,6 @@ export class BalanceEntity extends BaseEntity {
     @Column({ type: 'bigint' })
     public amount: bigint;
 
-    @ManyToOne(() => TokenEntity)
+    @ManyToOne(() => TokenEntity, { createForeignKeyConstraints: false })
     public token: TokenEntity;
 }

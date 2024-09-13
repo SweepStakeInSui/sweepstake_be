@@ -23,6 +23,6 @@ export class AuthEntity extends BaseEntity {
     @Column()
     public isActive: boolean;
 
-    @ManyToOne(() => UserEntity)
+    @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
     user: UserEntity;
 }

@@ -27,6 +27,6 @@ export class OutcomeEntity extends BaseEntity {
     @Column({ type: 'bigint' })
     bidLiquidity: bigint;
 
-    @ManyToOne(() => MarketEntity, market => market.outcomes)
+    @ManyToOne(() => MarketEntity, market => market.outcomes, { createForeignKeyConstraints: false })
     market: MarketEntity;
 }

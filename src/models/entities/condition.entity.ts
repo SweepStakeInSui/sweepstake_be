@@ -21,6 +21,6 @@ export class ConditionEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     value: string;
 
-    @ManyToOne(() => MarketEntity, market => market.conditions)
+    @ManyToOne(() => MarketEntity, market => market.conditions, { createForeignKeyConstraints: false })
     market: MarketEntity;
 }

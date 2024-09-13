@@ -54,6 +54,6 @@ export class OrderEntity extends BaseEntity {
     @Column({ type: 'int' })
     timestamp: number;
 
-    @ManyToOne(() => OutcomeEntity)
+    @ManyToOne(() => OutcomeEntity, { createForeignKeyConstraints: false })
     outcome: OutcomeEntity;
 }
