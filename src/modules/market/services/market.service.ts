@@ -41,9 +41,13 @@ export class MarketService {
         this.configService = configService;
     }
 
-    public async paginate(options: IPaginationOptions): Promise<Pagination<MarketEntity>> {
+    public async paginate(
+        options: IPaginationOptions,
+        where: FindOptionsWhere<MarketEntity>,
+    ): Promise<Pagination<MarketEntity>> {
         return paginate<MarketEntity>(this.marketRepository, options, {
             relations: ['outcomes'],
+            where: where,
         });
     }
 

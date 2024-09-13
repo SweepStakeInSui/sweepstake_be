@@ -31,12 +31,16 @@ export class MarketController {
     async getMarketList(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+        @Query('name') name: string,
     ): Promise<GetMarketListRequestDto> {
         limit = limit > 100 ? 100 : limit;
-        return this.marketService.paginate({
-            page,
-            limit,
-        });
+        return this.marketService.paginate(
+            {
+                page,
+                limit,
+            },
+            { name },
+        );
     }
 
     @Get('/:id')
