@@ -51,6 +51,14 @@ export class MarketService {
         });
     }
 
+    async search(name: string) {
+        return await this.marketRepository
+            .createQueryBuilder()
+            .select()
+            .where(`MATCH(name) AGAINST ('${name}' IN NATURAL LANGUAGE MODE)`)
+            .getMany();
+    }
+
     async find(condition: FindOptionsWhere<MarketEntity>) {
         try {
             const marketInfo = await this.marketRepository.findOneBy(condition);

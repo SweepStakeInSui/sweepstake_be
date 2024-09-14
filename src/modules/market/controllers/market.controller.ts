@@ -43,6 +43,16 @@ export class MarketController {
         );
     }
 
+    @Get('/search')
+    // @ApiBearerAuth()
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(GetMarketListResponseDto, EApiOkResponsePayload.OBJECT, true)
+    async searchByName(@Query('name') name: string): Promise<GetMarketListRequestDto> {
+        return this.marketService.search(name);
+    }
+
     @Get('/:id')
     // @ApiBearerAuth()
     @ApiOperation({
