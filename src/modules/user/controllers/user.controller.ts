@@ -42,6 +42,7 @@ export class UserController {
             rank: 0,
             volume: 0,
             winRate: 0,
+            balance: user.balance,
         };
     }
 

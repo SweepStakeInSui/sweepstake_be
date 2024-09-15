@@ -17,4 +17,6 @@ export class ProfileResponseDto {
     winRate?: number;
     @ApiProperty()
     rank?: number;
+    @ApiProperty()
+    balance: bigint;
 }
