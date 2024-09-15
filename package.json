@@ -53,6 +53,7 @@
         "@nestjs/schedule": "4.0.2",
         "@nestjs/terminus": "10.2.3",
         "@nestjs/typeorm": "10.0.2",
+        "@shinami/clients": "0.9.3",
         "@songkeys/nestjs-redis": "10.0.0",
         "axios": "1.7.2",
         "class-transformer": "0.5.1",

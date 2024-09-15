@@ -35,7 +35,7 @@ services:
   kafdrop:
     image: obsidiandynamics/kafdrop
     ports:
-      - "9000:9000"
+      - "9001:9000"
     environment:
       KAFKA_BROKERCONNECT: "sweepstake-kafka:9092"
     depends_on:
@@ -50,8 +50,6 @@ services:
     restart: unless-stopped
     container_name: sweepstake-be
     command: sh -c "yarn start:prod"
-    env_file:
-      - .env.production.local
     tty: true
     ports:
       - "${HOST}:${PORT}:${PORT}"
