@@ -1,4 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
+import { Transform } from 'class-transformer';
+import { IsOptional } from 'class-validator';
+import { IsBigInt, MinBigInt } from 'class-validator-extended';
 
 export enum OrderType {
     // Market Order - order will be filled at the best available price
@@ -25,24 +29,31 @@ export class OrderInput {
     outcomeId: string;
 
     @ApiProperty()
-    amount: number;
+    @IsBigInt()
+    @MinBigInt(0n)
+    @Transform(transformBigInt)
+    amount: bigint;
+
+    @ApiProperty({
+        required: false,
+    })
+    @IsOptional()
+    @IsBigInt()
+    @MinBigInt(0n)
+    @Transform(transformBigInt)
+    price?: bigint;
 
     @ApiProperty({
         enum: OrderType,
         default: OrderType.FOK,
     })
-    type: OrderType;
+    type: OrderType = OrderType.FOK;
 
     // @ApiProperty({
     //     enum: OrderSide,
     //     default: OrderSide.Bid,
     // })
     // side: OrderSide;
-
-    @ApiProperty({
-        required: false,
-    })
-    price?: number;
 
     @ApiProperty()
     signature: string;

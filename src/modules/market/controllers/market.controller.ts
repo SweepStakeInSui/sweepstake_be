@@ -2,7 +2,7 @@ import { MarketService } from '../services/market.service';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
 import { Controller, Get, Query, ParseIntPipe, DefaultValuePipe, Param, Body, Post, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { GetMarketListRequestDto, GetMarketListResponseDto } from '../dtos/get-market-list.dto';
 import { GetMarketRequestDto, GetMarketResponseDto } from '../dtos/get-market.dto';
@@ -27,6 +27,7 @@ export class MarketController {
     @ApiOperation({
         description: '',
     })
+    @ApiQuery({ name: 'name', required: false, type: Number })
     @ApiOkResponsePayload(GetMarketListResponseDto, EApiOkResponsePayload.OBJECT, true)
     async getMarketList(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,

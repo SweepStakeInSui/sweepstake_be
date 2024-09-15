@@ -2,7 +2,8 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { OrderSide, OrderStatus, OrderType } from '@modules/order/types/order';
 import { OutcomeEntity } from './outcome.entity';
-import { bigint } from '@shared/decorators/transformers/big-int.transformer';
+import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
+import { Transform } from 'class-transformer';
 
 @Entity({ name: 'order' })
 export class OrderEntity extends BaseEntity {
@@ -30,16 +31,20 @@ export class OrderEntity extends BaseEntity {
     side: OrderSide;
 
     @Column({ type: 'bigint', transformer: bigint })
+    @Transform(transformBigInt)
     amount: bigint;
 
     @Column({ type: 'bigint', transformer: bigint })
+    @Transform(transformBigInt)
     fullfilled: bigint = 0n;
 
-    @Column({ type: 'bigint', transformer: bigint })
-    price: bigint;
+    @Column({ type: 'bigint', nullable: true, transformer: bigint })
+    @Transform(transformBigInt)
+    price?: bigint;
 
     // max 1000 = 100%
     @Column({ type: 'bigint', nullable: true, transformer: bigint })
+    @Transform(transformBigInt)
     slippage?: bigint;
 
     @Column({ type: 'varchar' })

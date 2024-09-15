@@ -9,7 +9,9 @@ import { OrderBook } from '../order-book';
 import { MarketRepository } from '@models/repositories/market.repository';
 import { OrderRepository } from '@models/repositories/order.repository';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
+import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 
 export interface Trade {
     maker: OrderEntity;
@@ -26,6 +28,8 @@ export class MatchingEngineService {
         protected loggerService: LoggerService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
+        @Inject()
+        private readonly kafkaProducer: KafkaProducerService,
 
         private marketRepository: MarketRepository,
         private outcomeRepository: OutcomeRepository,
@@ -62,7 +66,18 @@ export class MatchingEngineService {
 
         const orderBook = this.getOrderBook(marketInfo.id);
         const matches = orderBook.matchOrder(order);
-        console.log('matches', matches);
+        if (matches.matchedOrders.length == 0) {
+            return;
+        }
+        const msgMetadata = await this.kafkaProducer.produce({
+            topic: KafkaTopic.EXECUTE_TRADE,
+            messages: [
+                {
+                    value: JSON.stringify(matches),
+                },
+            ],
+        });
+        console.log('matches', msgMetadata);
     }
 
     async cancelOrer(order: OrderEntity) {

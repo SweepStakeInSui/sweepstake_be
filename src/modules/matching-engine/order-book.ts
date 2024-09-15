@@ -1,17 +1,27 @@
 import { OrderEntity } from '@models/entities/order.entity';
 import { OutcomeType } from '@modules/market/types/outcome';
-import PriorityQueue from '@modules/order/services/queue';
 import { OrderSide, OrderType } from '@modules/order/types/order';
 import { BigIntUtil } from '@shared/utils/bigint';
 import { log } from 'console';
+import PriorityQueue from './queue';
+import { Transform, Type } from 'class-transformer';
+import { transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
 
-export type Match = {
+export class Match {
+    @Type(() => OrderEntity)
     order: OrderEntity;
-    matchedOrders: {
-        order: OrderEntity;
-        amount: bigint;
-    }[];
-};
+    @Type(() => MatchedOrder)
+    matchedOrders: MatchedOrder[];
+}
+
+export class MatchedOrder {
+    @Type(() => OrderEntity)
+    order: OrderEntity;
+    @Transform(transformBigInt)
+    amount: bigint;
+    @Transform(transformBigInt)
+    price: bigint;
+}
 
 export class OrderBook {
     private marketId: string;
@@ -61,19 +71,19 @@ export class OrderBook {
             );
         });
 
-        const matches: Match[] = [];
+        // const matches: Match;
 
         switch (order.type) {
             case OrderType.FOK:
-                this.matchMarketOrder(order, matches);
+                return this.matchMarketOrder(order);
                 break;
             case OrderType.GTC:
             case OrderType.GTD:
-                this.matchLimitOrder(order, matches);
+                return this.matchLimitOrder(order);
                 break;
         }
 
-        return matches;
+        // return matches;
     }
 
     public cancelOrder(order: OrderEntity) {
@@ -89,7 +99,11 @@ export class OrderBook {
         }
     }
 
-    private matchMarketOrder(order: OrderEntity, matches: Match[]) {
+    private matchMarketOrder(order: OrderEntity) {
+        const matches: Match = {
+            order: order,
+            matchedOrders: [],
+        };
         const liquidity =
             this.liquidity[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`] +
             this.liquidity[
@@ -114,7 +128,7 @@ export class OrderBook {
 
             // this.executeTrade(order, oppositeOrder, matchAmount);
 
-            matches.push({ order: order, matchedOrders: [{ order: oppositeOrder, amount: matchAmount }] });
+            matches.matchedOrders.push({ order: oppositeOrder, amount: matchAmount, price: oppositeOrder.price });
 
             order.fullfilled += matchAmount;
             oppositeOrder.fullfilled += matchAmount;
@@ -132,7 +146,7 @@ export class OrderBook {
 
             // this.executeTrade(order, oppositeOrder, matchAmount);
 
-            matches.push({ order: order, matchedOrders: [{ order: oppositeOrder, amount: matchAmount }] });
+            matches.matchedOrders.push({ order: oppositeOrder, amount: matchAmount, price: oppositeOrder.price });
 
             order.fullfilled += matchAmount;
             oppositeOrder.fullfilled += matchAmount;
@@ -141,15 +155,21 @@ export class OrderBook {
             if (order.fullfilled === order.amount) break;
         }
 
-        // return matches;
+        return matches;
     }
 
-    private matchLimitOrder(order: OrderEntity, matches: Match[]) {
+    private matchLimitOrder(order: OrderEntity) {
+        const matches: Match = {
+            order: order,
+            matchedOrders: [],
+        };
+
         this.matchLimitSameOrders(order, matches);
         this.matchLimitCrossOrders(order, matches);
+        return matches;
     }
 
-    private matchLimitSameOrders(order: OrderEntity, matches: Match[]): void {
+    private matchLimitSameOrders(order: OrderEntity, matches: Match): void {
         const side = order.side;
         const oppositeOrders = this.queues[`${side === OrderSide.Bid ? 'Ask' : 'Bid'}-${order.outcome.type}`];
 
@@ -158,12 +178,12 @@ export class OrderBook {
         switch (order.side) {
             case OrderSide.Bid:
                 comparator = (o1: OrderEntity, o2: OrderEntity) => {
-                    o1.price >= o2.price;
+                    return o1.price >= o2.price;
                 };
                 break;
             case OrderSide.Ask:
                 comparator = (o1: OrderEntity, o2: OrderEntity) => {
-                    o1.price < o2.price;
+                    return o1.price <= o2.price;
                 };
                 break;
         }
@@ -176,9 +196,10 @@ export class OrderBook {
                     order.amount - order.fullfilled,
                     oppositeOrder.amount - oppositeOrder.fullfilled,
                 );
+                const matchedPrice = BigIntUtil.min(order.price, oppositeOrder.price);
 
-                log(`matched ${order.side} limit`);
-                matches.push({ order: order, matchedOrders: [{ order: oppositeOrder, amount: matchAmount }] });
+                log(`matched ${order.side} limit ${matchAmount}`);
+                matches.matchedOrders.push({ order: oppositeOrder, amount: matchAmount, price: matchedPrice });
                 // this.executeTrade(order, oppositeOrder, matchAmount);
 
                 order.fullfilled += matchAmount;
@@ -197,7 +218,7 @@ export class OrderBook {
         }
     }
 
-    private matchLimitCrossOrders(order: OrderEntity, matches: Match[]): void {
+    private matchLimitCrossOrders(order: OrderEntity, matches: Match): void {
         const oppQueue =
             this.queues[`${order.side}-${order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`];
 
@@ -234,7 +255,12 @@ export class OrderBook {
                 );
 
                 log('matched cross asset');
-                matches.push({ order: order, matchedOrders: [{ order: matchedOrder, amount: matchAmount }] });
+                matches.matchedOrders.push({
+                    order: matchedOrder,
+                    amount: matchAmount,
+                    price: order.price,
+                });
+
                 // this.executeTrade(matchedOrder, order, matchAmount);
 
                 matchedOrder.fullfilled += matchAmount;

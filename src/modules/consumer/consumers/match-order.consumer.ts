@@ -2,8 +2,10 @@ import { OrderEntity } from '@models/entities/order.entity';
 import { MatchingEngineService } from '@modules/matching-engine/services/matching-engine.service';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { KafkaConsumerService } from '@shared/modules/kafka/services/kafka-consumer.service';
-import { KafkaGroup, KafkaTopic } from '../constants/consumer.constant';
+import { KafkaTopic } from '../constants/consumer.constant';
 import { KafkaAdminService } from '@shared/modules/kafka/services/kafka-admin.service';
+import { v4 } from 'uuid';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class MatchOrderConsumer implements OnModuleInit {
@@ -15,8 +17,8 @@ export class MatchOrderConsumer implements OnModuleInit {
 
     async onModuleInit() {
         await this.kafkaAdminService.createTopic([KafkaTopic.MATCH_ORDER]);
-        this.kafkaConsumerService.consume(
-            KafkaGroup,
+        await this.kafkaConsumerService.consume(
+            v4(),
             { topics: [KafkaTopic.MATCH_ORDER] },
             {
                 eachMessage: async ({ topic, partition, message }) => {
@@ -25,7 +27,8 @@ export class MatchOrderConsumer implements OnModuleInit {
                         partition,
                         value: message.value.toString(),
                     });
-                    const orderInfo = JSON.parse(message.value.toString()) as OrderEntity;
+
+                    const orderInfo = plainToClass(OrderEntity, JSON.parse(message.value.toString()));
                     await this.matchingEngineService.matchOrder(orderInfo);
                 },
             },

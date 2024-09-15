@@ -12,6 +12,7 @@ export const Modules = [
     MarketModule,
     OrderModule,
     MatchingEngineModule,
-    ConsumerModule,
     ChainModule,
+
+    ConsumerModule,
 ];

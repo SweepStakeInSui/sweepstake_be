@@ -2,8 +2,9 @@ import { OrderEntity } from '@models/entities/order.entity';
 import { MatchingEngineService } from '@modules/matching-engine/services/matching-engine.service';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { KafkaConsumerService } from '@shared/modules/kafka/services/kafka-consumer.service';
-import { KafkaGroup, KafkaTopic } from '../constants/consumer.constant';
+import { KafkaTopic } from '../constants/consumer.constant';
 import { KafkaAdminService } from '@shared/modules/kafka/services/kafka-admin.service';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class CancelOrderConsumer implements OnModuleInit {
@@ -14,9 +15,9 @@ export class CancelOrderConsumer implements OnModuleInit {
     ) {}
 
     async onModuleInit() {
-        await this.kafkaAdminService.createTopic([KafkaTopic.MATCH_ORDER]);
-        this.kafkaConsumerService.consume(
-            KafkaGroup,
+        await this.kafkaAdminService.createTopic([KafkaTopic.CANCEL_ORDER]);
+        await this.kafkaConsumerService.consume(
+            v4(),
             { topics: [KafkaTopic.CANCEL_ORDER] },
             {
                 eachMessage: async ({ topic, partition, message }) => {

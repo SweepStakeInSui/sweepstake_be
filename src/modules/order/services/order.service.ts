@@ -49,10 +49,10 @@ export class OrderService {
         const orderInfo = this.orderRepository.create({
             userId: userInfo.id,
             ...order,
-            price: BigInt(order.price),
-            amount: BigInt(order.amount),
             timestamp: dayjs().unix(),
         });
+
+        console.log('orderInfo', orderInfo);
 
         const outcomeInfo = await this.outcomeRepository.findOne({
             where: {
@@ -78,6 +78,7 @@ export class OrderService {
 
         await this.orderRepository.manager.transaction(async manager => {
             orderInfo.marketId = marketInfo.id;
+            orderInfo.outcome = outcomeInfo;
             await manager.save(orderInfo);
             // const balance = BigInt(userInfo.balance);
             // const total = orderInfo.price * orderInfo.amount;
