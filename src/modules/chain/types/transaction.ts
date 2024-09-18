@@ -1,5 +1,10 @@
 export enum TransactionStatus {
-    Pending = 'Pending',
+    Built = 'Built',
+    Sent = 'Sent',
     Success = 'Success',
     Failed = 'Failed',
+}
+
+export enum TransactionTarget {
+    Deposit = 'Deposit',
 }

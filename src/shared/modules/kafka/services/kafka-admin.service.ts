@@ -34,7 +34,7 @@ export class KafkaAdminService implements OnApplicationShutdown {
         await this.admin.disconnect();
     }
 
-    async createTopic(topics: string[]) {
+    async createTopics(topics: string[]) {
         await this.admin.createTopics({
             waitForLeaders: true,
             topics: topics.map(topic => {

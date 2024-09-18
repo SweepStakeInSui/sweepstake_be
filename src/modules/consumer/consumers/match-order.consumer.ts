@@ -16,7 +16,7 @@ export class MatchOrderConsumer implements OnModuleInit {
     ) {}
 
     async onModuleInit() {
-        await this.kafkaAdminService.createTopic([KafkaTopic.MATCH_ORDER]);
+        await this.kafkaAdminService.createTopics([KafkaTopic.MATCH_ORDER]);
         await this.kafkaConsumerService.consume(
             v4(),
             { topics: [KafkaTopic.MATCH_ORDER] },

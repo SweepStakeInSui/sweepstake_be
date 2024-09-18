@@ -6,7 +6,7 @@ import { InjectRedis } from '@songkeys/nestjs-redis';
 import Redis from 'ioredis';
 import { Logger } from 'log4js';
 import { UserEntity } from '@models/entities/user.entity';
-import { BadRequestException, Inject } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { CreateOrderRequestDto } from '../dtos/create-order.dto';
 import dayjs from 'dayjs';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
@@ -27,7 +27,6 @@ export class OrderService {
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
 
-        @Inject()
         private kafkaProducer: KafkaProducerService,
 
         private orderRepository: OrderRepository,

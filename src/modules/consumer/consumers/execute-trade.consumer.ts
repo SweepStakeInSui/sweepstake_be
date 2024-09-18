@@ -16,7 +16,7 @@ export class ExecuteTradeConsumer implements OnModuleInit {
     ) {}
 
     async onModuleInit() {
-        await this.kafkaAdminService.createTopic([KafkaTopic.EXECUTE_TRADE]);
+        await this.kafkaAdminService.createTopics([KafkaTopic.EXECUTE_TRADE]);
         await this.kafkaConsumerService.consume(
             v4(),
             { topics: [KafkaTopic.EXECUTE_TRADE] },

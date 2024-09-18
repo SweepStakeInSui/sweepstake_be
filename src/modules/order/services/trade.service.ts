@@ -1,6 +1,5 @@
 import { TradeRepository } from '@models/repositories/trade.repository';
 import { Match } from '@modules/matching-engine/order-book';
-import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
@@ -8,6 +7,8 @@ import { InjectRedis } from '@songkeys/nestjs-redis';
 import Redis from 'ioredis';
 import { map } from 'lodash';
 import { Logger } from 'log4js';
+import { OrderStatus } from '../types/order';
+import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 
 export class TradeService {
     protected logger: Logger;
@@ -18,7 +19,6 @@ export class TradeService {
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
 
-        @Inject()
         private readonly kafkaProducer: KafkaProducerService,
 
         private readonly tradeRepository: TradeRepository,
@@ -30,12 +30,12 @@ export class TradeService {
     public async executeTrade(matches: Match) {
         const order = matches.order;
 
-        for (const matched of matches.matchedOrders) {
-            console.log(matched);
-        }
-
         await this.tradeRepository.manager.transaction(async manager => {
             console.log('trade executed');
+
+            if (order.amount === order.fullfilled) {
+                order.status = OrderStatus.Filled;
+            }
 
             await manager.save(order);
 
@@ -51,8 +51,15 @@ export class TradeService {
                     await manager.save(matchedOrder.order);
                 }),
             );
+        });
 
-            // await manager.save(trade);
+        await this.kafkaProducer.produce({
+            topic: KafkaTopic.SUBMIT_TRANSACTION,
+            messages: matches.matchedOrders.map(matchedOrder => {
+                return {
+                    value: JSON.stringify({ matchedOrder }),
+                };
+            }),
         });
     }
 }

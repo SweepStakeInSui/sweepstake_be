@@ -45,4 +45,6 @@ export enum EEnvKey {
 
     RPC_URL = 'RPC_URL',
     GQL_URL = 'GQL_URL',
+
+    SHINAMI_ACCESS_KEY = 'SHINAMI_ACCESS_KEY',
 }

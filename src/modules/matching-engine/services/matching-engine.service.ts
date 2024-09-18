@@ -9,7 +9,7 @@ import { OrderBook } from '../order-book';
 import { MarketRepository } from '@models/repositories/market.repository';
 import { OrderRepository } from '@models/repositories/order.repository';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 
@@ -28,7 +28,6 @@ export class MatchingEngineService {
         protected loggerService: LoggerService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
-        @Inject()
         private readonly kafkaProducer: KafkaProducerService,
 
         private marketRepository: MarketRepository,

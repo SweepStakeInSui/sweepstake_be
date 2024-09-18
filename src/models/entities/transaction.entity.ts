@@ -7,8 +7,11 @@ export class TransactionEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     public hash: string;
 
-    @Column({ type: 'int' })
-    public block: number;
+    @Column({ type: 'int', nullable: true })
+    public block?: number;
+
+    @Column({ type: 'varchar' })
+    public address: string;
 
     @Column({ type: 'varchar' })
     public chainId: string;
@@ -16,7 +19,7 @@ export class TransactionEntity extends BaseEntity {
     @Column({
         type: 'enum',
         enum: TransactionStatus,
-        default: TransactionStatus.Pending,
+        default: TransactionStatus.Built,
     })
     status: TransactionStatus;
 }

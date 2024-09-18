@@ -3,6 +3,7 @@ export const KafkaTopic = {
     CANCEL_ORDER: 'cancel-order',
     EXECUTE_TRADE: 'execute-trade',
     SUBMIT_TRANSACTION: 'submit-transaction',
+    WAIT_TRANSACTION: 'wait-transaction',
 };
 
 export const KafkaGroup = 'kafka';

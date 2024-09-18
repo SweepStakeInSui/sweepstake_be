@@ -9,7 +9,7 @@ import { Logger } from 'log4js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { MarketInput } from '../types/market';
 import { FindOptionsWhere } from 'typeorm';
-import { BadRequestException, Inject } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
 import { ConditionRepository } from '@models/repositories/condition.repository';
 import { CriteriaRepository } from '@models/repositories/criteria.repository';
@@ -29,7 +29,6 @@ export class MarketService {
         protected jwtService: JwtService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
-        @Inject()
         private kafkaProducer: KafkaProducerService,
 
         private marketRepository: MarketRepository,

@@ -1,5 +1,5 @@
 import { UserRepository } from '@models/repositories/user.repository';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
@@ -20,7 +20,7 @@ export class WalletService {
         protected jwtService: JwtService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
-        @Inject()
+
         private readonly kafkaProducer: KafkaProducerService,
         private readonly userRepository: UserRepository,
     ) {

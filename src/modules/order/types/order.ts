@@ -19,7 +19,8 @@ export enum OrderSide {
 
 export enum OrderStatus {
     'Pending' = 'Pending',
-    'Submitted' = 'Submitted',
+    'Matching' = 'Matching',
+    'Filled' = 'Filled',
     'Completed' = 'Completed',
     'Cancelled' = 'Cancelled',
 }
