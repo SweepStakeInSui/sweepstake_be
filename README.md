@@ -2,7 +2,6 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-
 ## Setup
 
 ### Prerequisite
@@ -18,11 +17,13 @@ $ cp .env.example .env
 ```
 
 ### Install dependencies
+
 ```bash
 $ ./scripts/install.sh
 ```
 
 ## Run project
+
 ### Running the app
 
 ```bash
@@ -44,6 +45,7 @@ $ yarn start:prod
 Setup the `.env.production.local` and then run the app with docker compose (mysql and redis included, Make sure the server pointing to the right database)
 
 env sample:
+
 ```
 REDIS_HOST=sweepstake-redis
 REDIS_PORT=6379
@@ -60,27 +62,6 @@ MAX_QUERY_EXECUTION_TIME=5000
 
 ```
 
-and then run the script:
-
-```bash
-$ ./scripts/run.sh
-```
-
-Exec to Mysql container, create database with the name env `DB_DATABASE`
-```
-docker exec -it [container] sh 
-```
-
-```
-mysql -p
-```
-
-enter `DB_PASSWORD`
-
-```
-create database [DB_NAME];
-```
-
 ## Login flow details
 
 1. user uses api `/auth/nonce` to get a random nonce, this nonce will be stored in Redis in 60s
@@ -88,7 +69,8 @@ create database [DB_NAME];
 
 ## Stay in touch
 
-- Author - [0x5ea000000](https://0x5ea000000.xyz)
+-   Author - [0x5ea000000](https://0x5ea000000.xyz)
 
 ## License
+
 Nest is [MIT licensed](LICENSE).
