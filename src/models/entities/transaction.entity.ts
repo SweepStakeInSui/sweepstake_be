@@ -7,19 +7,16 @@ export class TransactionEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     public hash: string;
 
-    @Column({ type: 'int', nullable: true })
-    public block?: number;
+    @Column({ type: 'varchar', nullable: true })
+    public block?: string;
 
-    @Column({ type: 'varchar' })
-    public address: string;
-
-    @Column({ type: 'varchar' })
-    public chainId: string;
+    @Column({ type: 'varchar', nullable: true })
+    public sender?: string;
 
     @Column({
         type: 'enum',
         enum: TransactionStatus,
-        default: TransactionStatus.Built,
+        default: TransactionStatus.Sent,
     })
     status: TransactionStatus;
 }

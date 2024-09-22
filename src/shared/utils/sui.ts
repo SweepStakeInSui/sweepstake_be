@@ -11,3 +11,7 @@ export async function verifySignature(address: string, message: string, signatur
         throw new Error('Failed to verify signature');
     }
 }
+
+export function buildTransactionTarget(address: string, module: string, target: string): string {
+    return `${address}::${module}::${target}`;
+}

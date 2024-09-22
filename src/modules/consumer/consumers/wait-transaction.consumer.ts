@@ -1,9 +1,11 @@
 import { KafkaConsumerService } from '@shared/modules/kafka/services/kafka-consumer.service';
-import { KafkaGroup, KafkaTopic } from '../constants/consumer.constant';
+import { KafkaTopic } from '../constants/consumer.constant';
 import { TransactionService } from '@modules/chain/services/transaction.service';
-import { OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { KafkaAdminService } from '@shared/modules/kafka/services/kafka-admin.service';
+import { v4 } from 'uuid';
 
+@Injectable()
 export class WaitTransactionConsumer implements OnModuleInit {
     constructor(
         private readonly kafkaConsumerService: KafkaConsumerService,
@@ -14,7 +16,7 @@ export class WaitTransactionConsumer implements OnModuleInit {
     async onModuleInit() {
         await this.kafkaAdminService.createTopics([KafkaTopic.WAIT_TRANSACTION]);
         await this.kafkaConsumerService.consume(
-            KafkaGroup,
+            v4(),
             { topics: [KafkaTopic.WAIT_TRANSACTION] },
             {
                 eachMessage: async ({ topic, partition, message }) => {

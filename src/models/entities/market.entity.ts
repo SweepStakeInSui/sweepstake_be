@@ -18,7 +18,7 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'int' })
     endTime: number;
 
-    @Column({ type: 'boolean', default: true })
+    @Column({ type: 'boolean', default: false })
     isActive: boolean;
 
     @Column({ type: 'varchar' })

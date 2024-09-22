@@ -19,6 +19,8 @@ import { ConditionEntity } from '@models/entities/condition.entity';
 import { CriteriaEntity } from '@models/entities/criteria.entity';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { UserEntity } from '@models/entities/user.entity';
+import { TransactionService } from '@modules/chain/services/transaction.service';
 
 export class MarketService {
     protected logger: Logger;
@@ -30,6 +32,7 @@ export class MarketService {
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
         private kafkaProducer: KafkaProducerService,
+        private transactionService: TransactionService,
 
         private marketRepository: MarketRepository,
         private outcomeRepository: OutcomeRepository,
@@ -70,8 +73,15 @@ export class MarketService {
         }
     }
 
-    public async create(market: MarketInput, conditions: ConditionInput[]): Promise<MarketEntity> {
+    public async create(
+        userInfo: UserEntity,
+        market: MarketInput,
+        conditions: ConditionInput[],
+    ): Promise<MarketEntity> {
         const marketInfo = this.marketRepository.create(market);
+
+        // TODO: take the create market fee
+        userInfo.balance -= 100n;
 
         const outcomeYesInfo = this.outcomeRepository.create({
             marketId: marketInfo.id,
@@ -106,7 +116,7 @@ export class MarketService {
             conditionInfos.push(conditionInfo);
         });
 
-        const infos = [marketInfo, outcomeYesInfo, outcomeNoInfo, ...conditionInfos, ...criteriaInfos];
+        const infos = [userInfo, marketInfo, outcomeYesInfo, outcomeNoInfo, ...conditionInfos, ...criteriaInfos];
 
         await this.marketRepository.manager
             .transaction(async manager => {
@@ -137,8 +147,11 @@ export class MarketService {
     }
 
     // TODO: remove this method
-    public async create2(market: MarketInput, conditions: string): Promise<MarketEntity> {
+    public async create2(userInfo: UserEntity, market: MarketInput, conditions: string): Promise<MarketEntity> {
         const marketInfo = this.marketRepository.create({ ...market, conditions_str: conditions });
+
+        // TODO: take the create market fee
+        userInfo.balance -= 100n;
 
         const outcomeYesInfo = this.outcomeRepository.create({
             marketId: marketInfo.id,
@@ -158,7 +171,7 @@ export class MarketService {
             bidPrice: 0n,
         });
 
-        const infos = [marketInfo, outcomeYesInfo, outcomeNoInfo];
+        const infos = [userInfo, marketInfo, outcomeYesInfo, outcomeNoInfo];
 
         await this.marketRepository.manager
             .transaction(async manager => {
@@ -173,12 +186,22 @@ export class MarketService {
                 throw new BadRequestException();
             });
 
+        const { bytes, signature } = await this.transactionService.buildCreateMarketTransaction(
+            '0x62fc05d831210fd95f04c464dca3ef71bcb939d9cef321dd05186ecce629843d',
+            '0x4a3d4c6c35118693cbef1b2782995194eaa5dd98bfd21f6bbfff86dfc65fafb3',
+            marketInfo.name,
+            marketInfo.description,
+            marketInfo.conditions_str,
+            marketInfo.startTime,
+            marketInfo.endTime,
+        );
+
         // TODO: push job create market transaction
         const msgMetaData = await this.kafkaProducer.produce({
             topic: KafkaTopic.SUBMIT_TRANSACTION,
             messages: [
                 {
-                    value: JSON.stringify(marketInfo),
+                    value: JSON.stringify({ txData: bytes, signature: signature }),
                 },
             ],
         });

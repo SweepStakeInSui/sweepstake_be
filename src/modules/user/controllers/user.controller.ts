@@ -6,11 +6,11 @@ import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { AccessTokenGuard } from '@modules/auth/guards/access-token.guard';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { ProfileResponseDto } from '../dtos/profile.dto';
-import { CurrentUser } from '../decorators/current-user.decorator';
 import { UserEntity } from '@models/entities/user.entity';
 import { DepositRequestDto, DepositResponseDto } from '../dtos/deposit.dto';
 import { WithdrawRequestDto, WithdrawResponseDto } from '../dtos/withdraw.dto';
 import { WalletService } from '../services/wallet.service';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
 
 @ApiTags('user')
 @Controller('user')

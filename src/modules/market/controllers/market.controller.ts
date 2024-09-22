@@ -8,6 +8,8 @@ import { GetMarketListRequestDto, GetMarketListResponseDto } from '../dtos/get-m
 import { GetMarketRequestDto, GetMarketResponseDto } from '../dtos/get-market.dto';
 import { CreateMarketRequestDto, CreateMarketResponseDto } from '../dtos/create-market.dto';
 import { AccessTokenGuard } from '@modules/auth/guards/access-token.guard';
+import { UserEntity } from '@models/entities/user.entity';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
 
 @ApiTags('market')
 // @UseGuards(UserGuard)
@@ -78,13 +80,16 @@ export class MarketController {
         description: '',
     })
     @ApiOkResponsePayload(CreateMarketResponseDto, EApiOkResponsePayload.OBJECT)
-    async createMarket(@Body() body: CreateMarketRequestDto): Promise<CreateMarketResponseDto> {
+    async createMarket(
+        @Body() body: CreateMarketRequestDto,
+        @CurrentUser() user: UserEntity,
+    ): Promise<CreateMarketResponseDto> {
         this.logger.info(body);
 
         const { conditions, ...market } = body;
 
         // TODO: use the real implementation
-        const result = await this.marketService.create2(market, conditions);
+        const result = await this.marketService.create2(user, market, conditions);
 
         return {
             ...result,

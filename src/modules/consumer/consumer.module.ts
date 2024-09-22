@@ -5,9 +5,18 @@ import { MatchingEngineModule } from '@modules/matching-engine/matching-engine.m
 import { CreateMarketProcessor } from './consumers/create-market-event.consumer';
 import { ExecuteTradeConsumer } from './consumers/execute-trade.consumer';
 import { OrderModule } from '@modules/order/order.module';
+import { SubmitTransactionConsumer } from './consumers/submit-transaction.consumer';
+import { ChainModule } from '@modules/chain/chain.module';
+import { WaitTransactionConsumer } from './consumers/wait-transaction.consumer';
 
-const modules = [MatchingEngineModule, OrderModule];
-const consumers = [MatchOrderConsumer, CreateMarketProcessor, ExecuteTradeConsumer];
+const modules = [MatchingEngineModule, OrderModule, ChainModule];
+const consumers = [
+    MatchOrderConsumer,
+    CreateMarketProcessor,
+    ExecuteTradeConsumer,
+    SubmitTransactionConsumer,
+    WaitTransactionConsumer,
+];
 
 @Module({
     imports: [TypeOrmModule.forFeature([]), ...modules],
