@@ -1,5 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
+import { bigint } from '@shared/decorators/transformers/big-int.transformer';
+import { CommentEntity } from '@models/entities/comment.entity';
 import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
 import { Transform } from 'class-transformer';
 
@@ -15,6 +17,10 @@ export class UserEntity extends BaseEntity {
     public email: string;
 
     @Column({ type: 'bigint', transformer: bigint })
+    public balance: bigint;
+
+    @OneToMany(() => CommentEntity, comment => comment.user, { createForeignKeyConstraints: false })
+    public comments: CommentEntity[];
     @Transform(transformBigInt)
     public balance: bigint = 0n;
 
