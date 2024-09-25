@@ -186,14 +186,16 @@ export class MarketService {
                 throw new BadRequestException();
             });
 
-        const { bytes, signature } = await this.transactionService.buildCreateMarketTransaction(
-            '0x62fc05d831210fd95f04c464dca3ef71bcb939d9cef321dd05186ecce629843d',
-            '0x4a3d4c6c35118693cbef1b2782995194eaa5dd98bfd21f6bbfff86dfc65fafb3',
-            marketInfo.name,
-            marketInfo.description,
-            marketInfo.conditions_str,
-            marketInfo.startTime,
-            marketInfo.endTime,
+        const { bytes, signature } = await this.transactionService.signAdminTransaction(
+            await this.transactionService.buildCreateMarketTransaction(
+                '0x5e2ee3da9dc6258ddf57ab41be3efc18711714024e7ae0315f954c3e121742f5',
+                '0x4a3d4c6c35118693cbef1b2782995194eaa5dd98bfd21f6bbfff86dfc65fafb3',
+                marketInfo.name,
+                marketInfo.description,
+                marketInfo.conditions_str,
+                marketInfo.startTime,
+                marketInfo.endTime,
+            ),
         );
 
         // TODO: push job create market transaction

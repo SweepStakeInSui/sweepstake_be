@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
-import { GasStationClient, GaslessTransaction, buildGaslessTransaction } from '@shinami/clients/sui';
+import { GasStationClient, buildGaslessTransaction } from '@shinami/clients/sui';
 import { EEnvKey } from '@constants/env.constant';
 import { SuiClient } from '@mysten/sui/client';
 import { TransactionStatus } from '../types/transaction';
@@ -49,12 +49,27 @@ export class TransactionService {
     }
 
     public async getTransactionByHash(hash: string) {
-        // TODO: get tx from chain
-        console.log('getTransactionByHash', hash);
+        const tx = await this.nodeClient.getTransactionBlock({
+            digest: hash,
+            options: {
+                showBalanceChanges: true,
+                showEffects: true,
+                showEvents: true,
+                showInput: true,
+                showObjectChanges: true,
+                showRawEffects: true,
+                showRawInput: true,
+            },
+        });
+        console.log('getTransactionByHash', tx);
+
+        return tx;
     }
 
-    public async buildGasslessTransaction(sender: string, target: string, typeArgs: any[], args: any[]) {
-        const gaslessTx = await this.buildGasslessMoveCall(target, typeArgs, args);
+    public async buildGasslessTransaction(sender: string, tx: Transaction) {
+        const gaslessTx = await buildGaslessTransaction(tx, {
+            sui: this.nodeClient,
+        });
         gaslessTx.sender = sender;
 
         const sponsoredTx = await this.gasClient.sponsorTransaction(gaslessTx);
@@ -82,6 +97,36 @@ export class TransactionService {
         });
     }
 
+    public async buildDepositTransaction(sender: string, amount: bigint) {
+        const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
+        const user_coins_id = await this.nodeClient.getCoins({
+            owner: sender,
+            coinType: coinType,
+        });
+
+        const tx = new Transaction();
+        const first_coin = user_coins_id.data[0].coinObjectId;
+        for (const coin of user_coins_id.data) {
+            if (coin.coinObjectId != first_coin) {
+                tx.mergeCoins(first_coin, [coin.coinObjectId]);
+            }
+        }
+        const [coin] = tx.splitCoins(
+            first_coin, // Get from user
+            [tx.pure.u64(amount)],
+        );
+        tx.moveCall({
+            typeArguments: [coinType],
+            arguments: [tx.object('0x2cec2a9443fc3983f3d0a6f7570b91051bc210b3f1d84fa792a3bc88245c7975'), coin],
+            target: buildTransactionTarget(
+                '0xc8174ff02ce888947173e229373fe510ece5f8b0c127791e87c18b8880553c9c',
+                'sweepstake',
+                'deposit',
+            ),
+        });
+        return tx;
+    }
+
     public async buildCreateMarketTransaction(
         adminCap: string,
         creator: string,
@@ -103,19 +148,24 @@ export class TransactionService {
                 tx.pure.u64(dayjs.unix(end_time).valueOf()),
             ],
             target: buildTransactionTarget(
-                '0x23db3e2dbb0b70af5add9b35f05c9331b27e45ed3f69a977194b2c88af3c10f7',
+                '0xc8174ff02ce888947173e229373fe510ece5f8b0c127791e87c18b8880553c9c',
                 'conditional_market',
                 'create_market',
             ),
         });
+
+        return tx;
+    }
+
+    public async signAdminTransaction(tx: Transaction) {
         tx.setGasBudget(10000000);
         tx.setSender(this.adminKeypair.toSuiAddress());
 
-        const txBytes = await tx.build({
+        return await tx.sign({
+            signer: this.adminKeypair,
             client: this.nodeClient,
         });
-
-        return await this.signTransaction(txBytes, this.adminKeypair);
+        // return await this.signTransaction(txBytes, this.adminKeypair);
     }
 
     public async signTransaction(txBytes: Uint8Array, keypair: Keypair) {
@@ -123,6 +173,8 @@ export class TransactionService {
     }
 
     public async submitTransaction(txData: string | Uint8Array, signature: string[]) {
+        // TODO: consider dry-run first
+
         const txResp = await this.nodeClient.executeTransactionBlock({
             transactionBlock: txData,
             signature,
@@ -194,20 +246,5 @@ export class TransactionService {
         await this.transactionRepository.save(txInfo);
 
         return txResp;
-    }
-
-    private async buildGasslessMoveCall(target: string, typeArgs: any[], args: any[]): Promise<GaslessTransaction> {
-        return await buildGaslessTransaction(
-            txb => {
-                txb.moveCall({
-                    target,
-                    typeArguments: typeArgs,
-                    arguments: args,
-                });
-            },
-            {
-                sui: this.nodeClient,
-            },
-        );
     }
 }

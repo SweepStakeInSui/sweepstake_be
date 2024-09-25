@@ -9,6 +9,7 @@ import { Logger } from 'log4js';
 import { UserEntity } from '@models/entities/user.entity';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { TransactionService } from '@modules/chain/services/transaction.service';
 
 @Injectable()
 export class WalletService {
@@ -22,15 +23,28 @@ export class WalletService {
         @InjectRedis() private readonly redis: Redis,
 
         private readonly kafkaProducer: KafkaProducerService,
+        private readonly transactionService: TransactionService,
         private readonly userRepository: UserRepository,
     ) {
         this.logger = this.loggerService.getLogger(WalletService.name);
         this.configService = configService;
     }
 
-    public async deposit(userInfo: UserEntity, amount: bigint) {
+    public async requestDeposit(userInfo: UserEntity, amount: bigint) {
+        const tx = this.transactionService.buildGasslessTransaction(
+            userInfo.address,
+            await this.transactionService.buildDepositTransaction(userInfo.address, amount),
+        );
+
+        return tx;
+    }
+
+    public async deposit(userInfo: UserEntity, txBytes: string, signature: string[]) {
         // TODO: only add balance after tx is successful
-        userInfo.balance += amount;
+        // userInfo.balance += amount;
+        // const txResp = await this.transactionService.submitTransaction(txBytes, signature);
+
+        // console.log(txResp);
 
         // TODO: build deposit transaction
 
@@ -39,7 +53,7 @@ export class WalletService {
             topic: KafkaTopic.SUBMIT_TRANSACTION,
             messages: [
                 {
-                    value: JSON.stringify({}),
+                    value: JSON.stringify({ txData: txBytes, signature: signature }),
                 },
             ],
         });
@@ -57,6 +71,9 @@ export class WalletService {
         await this.userRepository.save(userInfo);
 
         // TODO: build withdraw transaction
+        // const tx = this.transactionService.buildTransaction(
+
+        // )
 
         // TODO: push withdraw transaction job
         const msgMetadata = await this.kafkaProducer.produce({

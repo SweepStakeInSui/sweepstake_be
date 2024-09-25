@@ -53,9 +53,23 @@ export class UserController {
         description: '',
     })
     @ApiOkResponsePayload(DepositResponseDto, EApiOkResponsePayload.OBJECT)
-    async deposit(@Body() body: DepositRequestDto, @CurrentUser() user: UserEntity): Promise<DepositResponseDto> {
-        await this.userService.update(user.id, { balance: user.balance + body.amount });
+    async deposit(@Body() body: any, @CurrentUser() user: UserEntity): Promise<DepositResponseDto> {
+        await this.walletService.deposit(user, body.txBytes, body.signature);
         return {};
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Post('/request-deposit')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(DepositResponseDto, EApiOkResponsePayload.OBJECT)
+    async requestDeposit(
+        @Body() body: DepositRequestDto,
+        @CurrentUser() user: UserEntity,
+    ): Promise<DepositResponseDto> {
+        return await this.walletService.requestDeposit(user, body.amount);
     }
 
     @UseGuards(AccessTokenGuard)
