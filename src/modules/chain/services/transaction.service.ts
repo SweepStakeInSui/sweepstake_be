@@ -127,8 +127,32 @@ export class TransactionService {
         return tx;
     }
 
+    public async buildWithdrawTransaction(user: string, amount: bigint) {
+        const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
+        const adminCap = '0xf4c34ddbc51247d91d8a25c16474f963dfce305772f0c8b8b9469a45a851b5ab';
+
+        const tx = new Transaction();
+        tx.moveCall({
+            typeArguments: [coinType],
+            arguments: [
+                tx.object(adminCap),
+                tx.object('0x2cec2a9443fc3983f3d0a6f7570b91051bc210b3f1d84fa792a3bc88245c7975'),
+                tx.pure.u64(amount),
+                tx.pure.address(user),
+            ],
+            target: buildTransactionTarget(
+                '0xc8174ff02ce888947173e229373fe510ece5f8b0c127791e87c18b8880553c9c',
+                'sweepstake',
+                'withdraw',
+            ),
+        });
+
+        return tx;
+    }
+
     public async buildCreateMarketTransaction(
         adminCap: string,
+        id: string,
         creator: string,
         name: string,
         description: string,
@@ -140,6 +164,7 @@ export class TransactionService {
         tx.moveCall({
             arguments: [
                 tx.object(adminCap),
+                tx.pure.string(id),
                 tx.pure.address(creator),
                 tx.pure.string(name),
                 tx.pure.string(description),
@@ -156,6 +181,29 @@ export class TransactionService {
 
         return tx;
     }
+
+    // public async buildTradeTransaction(user: string, amount: bigint) {
+    //     const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
+    //     const adminCap = '0xf4c34ddbc51247d91d8a25c16474f963dfce305772f0c8b8b9469a45a851b5ab';
+
+    //     const tx = new Transaction();
+    //     tx.moveCall({
+    //         typeArguments: [coinType],
+    //         arguments: [
+    //             tx.object(adminCap),
+    //             tx.object('0x2cec2a9443fc3983f3d0a6f7570b91051bc210b3f1d84fa792a3bc88245c7975'),
+    //             tx.pure.u64(amount),
+    //             tx.pure.address(user),
+    //         ],
+    //         target: buildTransactionTarget(
+    //             '0xc8174ff02ce888947173e229373fe510ece5f8b0c127791e87c18b8880553c9c',
+    //             'sweepstake',
+    //             'withdraw',
+    //         ),
+    //     });
+
+    //     return tx;
+    // }
 
     public async signAdminTransaction(tx: Transaction) {
         tx.setGasBudget(10000000);

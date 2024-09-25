@@ -189,6 +189,7 @@ export class MarketService {
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
             await this.transactionService.buildCreateMarketTransaction(
                 '0x5e2ee3da9dc6258ddf57ab41be3efc18711714024e7ae0315f954c3e121742f5',
+                marketInfo.id,
                 '0x4a3d4c6c35118693cbef1b2782995194eaa5dd98bfd21f6bbfff86dfc65fafb3',
                 marketInfo.name,
                 marketInfo.description,

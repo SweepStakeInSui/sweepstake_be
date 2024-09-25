@@ -70,17 +70,15 @@ export class WalletService {
 
         await this.userRepository.save(userInfo);
 
-        // TODO: build withdraw transaction
-        // const tx = this.transactionService.buildTransaction(
+        const { bytes, signature } = await this.transactionService.signAdminTransaction(
+            await this.transactionService.buildDepositTransaction(userInfo.address, amount),
+        );
 
-        // )
-
-        // TODO: push withdraw transaction job
         const msgMetadata = await this.kafkaProducer.produce({
             topic: KafkaTopic.SUBMIT_TRANSACTION,
             messages: [
                 {
-                    value: JSON.stringify({}),
+                    value: JSON.stringify({ txBytes: bytes, signature: signature }),
                 },
             ],
         });
