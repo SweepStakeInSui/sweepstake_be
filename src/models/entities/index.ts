@@ -12,6 +12,7 @@ import { TokenEntity } from './token.entity';
 import { TradeEntity } from './trade.entity';
 import { TransactionEntity } from './transaction.entity';
 import { UserEntity } from './user.entity';
+import { CommentEntity } from '@models/entities/comment.entity';
 
 export const Entities = [
     AuthEntity,
@@ -21,6 +22,7 @@ export const Entities = [
     ConditionEntity,
     CriteriaEntity,
     OutcomeEntity,
+    CommentEntity,
     ShareEntity,
 
     OrderEntity,

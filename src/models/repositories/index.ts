@@ -10,12 +10,14 @@ import { ShareRepository } from './share.repository';
 import { TradeRepository } from './trade.repository';
 import { TransactionRepository } from './transaction.repository';
 import { UserRepository } from './user.repository';
+import { CommentRepository } from '@models/repositories/comment.repository';
 
 export const Repositories = [
     AuthRepository,
     UserRepository,
 
     MarketRepository,
+    CommentRepository,
     OutcomeRepository,
     ShareRepository,
 

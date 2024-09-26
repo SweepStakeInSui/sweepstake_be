@@ -1,16 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CommentInput {
     @ApiProperty()
-    marketName: string;
+    @IsString()
+    userId: string;
 
     @ApiProperty()
-    username: string;
-
-    @ApiProperty()
-    @IsNumber()
-    time: number;
+    @IsString()
+    marketId: string;
 
     @ApiProperty()
     content: string;

@@ -6,17 +6,18 @@ import { MatchingEngineModule } from './matching-engine/matching-engine.module';
 import { NotificationModule } from './notification/notification.module';
 import { OrderModule } from './order/order.module';
 import { UserModule } from './user/user.module';
+import { CommentModule } from './comment/comment.module';
 
 export const Modules = [
     AuthModule,
     UserModule,
+    CommentModule,
 
     MarketModule,
     OrderModule,
     MatchingEngineModule,
 
     ChainModule,
-
     ConsumerModule,
 
     NotificationModule,
