@@ -3,7 +3,7 @@ import { UserEntity } from '@models/entities/user.entity';
 import { MarketEntity } from '@models/entities/market.entity';
 import { BaseEntity } from '@shared/base/models/base.entity';
 
-@Entity('comments')
+@Entity('comment')
 export class CommentEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     content: string;
