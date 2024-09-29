@@ -2,7 +2,7 @@ import { Column, Entity } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
 import { Transform } from 'class-transformer';
-import { TradeStatus } from '@modules/order/types/trade';
+import { TradeStatus, TradeType } from '@modules/order/types/trade';
 
 @Entity({ name: 'trade' })
 export class TradeEntity extends BaseEntity {
@@ -19,6 +19,13 @@ export class TradeEntity extends BaseEntity {
     @Column({ type: 'bigint', transformer: bigint })
     @Transform(transformBigInt)
     price: bigint;
+
+    @Column({
+        type: 'enum',
+        enum: TradeType,
+        default: TradeType.Transfer,
+    })
+    type: TradeType;
 
     @Column({
         type: 'enum',

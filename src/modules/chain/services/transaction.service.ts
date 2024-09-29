@@ -26,6 +26,9 @@ export class TransactionService {
 
     private adminKeypair: Ed25519Keypair;
 
+    private sweepstakeContract: string;
+    private conditionalMarketContract: string;
+
     constructor(
         protected loggerService: LoggerService,
         configService: ConfigService,
@@ -42,6 +45,9 @@ export class TransactionService {
         this.adminKeypair = Ed25519Keypair.fromSecretKey(
             decodeSuiPrivateKey(this.configService.get(EEnvKey.ADMIN_PRIVATE_KEY)).secretKey,
         );
+
+        this.sweepstakeContract = this.configService.get(EEnvKey.SWEEPSTAKE_CONTRACT);
+        this.conditionalMarketContract = this.configService.get(EEnvKey.CONDITIONAL_MARKET_CONTRACT);
     }
 
     public getClient() {
@@ -117,9 +123,9 @@ export class TransactionService {
         );
         tx.moveCall({
             typeArguments: [coinType],
-            arguments: [tx.object('0x2cec2a9443fc3983f3d0a6f7570b91051bc210b3f1d84fa792a3bc88245c7975'), coin],
+            arguments: [tx.object('0x19b2c97b008bb928c0b1591f9fe0ad7443be01c344001e3e4808840f0468fb3e'), coin],
             target: buildTransactionTarget(
-                '0xc8174ff02ce888947173e229373fe510ece5f8b0c127791e87c18b8880553c9c',
+                '0x1b929fdc85080cf9033131e9a8c9ace164e7245ccbba6b7160ba530e5dc8003a',
                 'sweepstake',
                 'deposit',
             ),
@@ -129,19 +135,19 @@ export class TransactionService {
 
     public async buildWithdrawTransaction(user: string, amount: bigint) {
         const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
-        const adminCap = '0xf4c34ddbc51247d91d8a25c16474f963dfce305772f0c8b8b9469a45a851b5ab';
+        const adminCap = '0x7e274946a97f35d2ee35b687c1356509fcf78fa54ac04fa8eabb6cfe2999e6af';
 
         const tx = new Transaction();
         tx.moveCall({
             typeArguments: [coinType],
             arguments: [
                 tx.object(adminCap),
-                tx.object('0x2cec2a9443fc3983f3d0a6f7570b91051bc210b3f1d84fa792a3bc88245c7975'),
+                tx.object('0x19b2c97b008bb928c0b1591f9fe0ad7443be01c344001e3e4808840f0468fb3e'),
                 tx.pure.u64(amount),
                 tx.pure.address(user),
             ],
             target: buildTransactionTarget(
-                '0xc8174ff02ce888947173e229373fe510ece5f8b0c127791e87c18b8880553c9c',
+                '0x1b929fdc85080cf9033131e9a8c9ace164e7245ccbba6b7160ba530e5dc8003a',
                 'sweepstake',
                 'withdraw',
             ),
@@ -151,7 +157,6 @@ export class TransactionService {
     }
 
     public async buildCreateMarketTransaction(
-        adminCap: string,
         id: string,
         creator: string,
         name: string,
@@ -163,7 +168,7 @@ export class TransactionService {
         const tx = new Transaction();
         tx.moveCall({
             arguments: [
-                tx.object(adminCap),
+                tx.object('0x97550e218059081bfbffa7ccca59c5b854ed31c809792e39472a40b01253cc86'),
                 tx.pure.string(id),
                 tx.pure.address(creator),
                 tx.pure.string(name),
@@ -173,7 +178,7 @@ export class TransactionService {
                 tx.pure.u64(dayjs.unix(end_time).valueOf()),
             ],
             target: buildTransactionTarget(
-                '0xc8174ff02ce888947173e229373fe510ece5f8b0c127791e87c18b8880553c9c',
+                '0x1b929fdc85080cf9033131e9a8c9ace164e7245ccbba6b7160ba530e5dc8003a',
                 'conditional_market',
                 'create_market',
             ),
@@ -182,28 +187,49 @@ export class TransactionService {
         return tx;
     }
 
-    // public async buildTradeTransaction(user: string, amount: bigint) {
-    //     const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
-    //     const adminCap = '0xf4c34ddbc51247d91d8a25c16474f963dfce305772f0c8b8b9469a45a851b5ab';
+    public async buildExecuteTradeTransaction(
+        trades: {
+            marketId: string;
+            tradeId: string;
+            maker: string;
+            makerAmount: bigint;
+            taker: string;
+            takeAmount: bigint;
+            tradeType: number;
+            assetType: boolean;
+        }[],
+    ) {
+        const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
+        const adminCap = '0x97550e218059081bfbffa7ccca59c5b854ed31c809792e39472a40b01253cc86';
 
-    //     const tx = new Transaction();
-    //     tx.moveCall({
-    //         typeArguments: [coinType],
-    //         arguments: [
-    //             tx.object(adminCap),
-    //             tx.object('0x2cec2a9443fc3983f3d0a6f7570b91051bc210b3f1d84fa792a3bc88245c7975'),
-    //             tx.pure.u64(amount),
-    //             tx.pure.address(user),
-    //         ],
-    //         target: buildTransactionTarget(
-    //             '0xc8174ff02ce888947173e229373fe510ece5f8b0c127791e87c18b8880553c9c',
-    //             'sweepstake',
-    //             'withdraw',
-    //         ),
-    //     });
+        const tx = new Transaction();
 
-    //     return tx;
-    // }
+        for (const trade of trades) {
+            const { marketId, tradeId, maker, makerAmount, taker, takeAmount, tradeType, assetType } = trade;
+
+            tx.moveCall({
+                typeArguments: [coinType],
+                arguments: [
+                    tx.object(adminCap),
+                    tx.object(marketId),
+                    tx.pure.string(tradeId),
+                    tx.pure.address(maker),
+                    tx.pure.u64(makerAmount),
+                    tx.pure.address(taker),
+                    tx.pure.u64(takeAmount),
+                    tx.pure.bool(assetType),
+                    tx.pure.u64(tradeType),
+                ],
+                target: buildTransactionTarget(
+                    '0x1b929fdc85080cf9033131e9a8c9ace164e7245ccbba6b7160ba530e5dc8003a',
+                    'conditional_market',
+                    'execute_order',
+                ),
+            });
+        }
+
+        return tx;
+    }
 
     public async signAdminTransaction(tx: Transaction) {
         tx.setGasBudget(10000000);

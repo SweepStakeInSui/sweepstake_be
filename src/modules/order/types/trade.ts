@@ -3,3 +3,9 @@ export enum TradeStatus {
     Completed = 'Completed',
     Failed = 'Failed',
 }
+
+export enum TradeType {
+    Mint = 'Mint',
+    Transfer = 'Transfer',
+    Merge = 'Merge',
+}

@@ -71,14 +71,14 @@ export class WalletService {
         await this.userRepository.save(userInfo);
 
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
-            await this.transactionService.buildDepositTransaction(userInfo.address, amount),
+            await this.transactionService.buildWithdrawTransaction(userInfo.address, amount),
         );
 
         const msgMetadata = await this.kafkaProducer.produce({
             topic: KafkaTopic.SUBMIT_TRANSACTION,
             messages: [
                 {
-                    value: JSON.stringify({ txBytes: bytes, signature: signature }),
+                    value: JSON.stringify({ txData: bytes, signature: signature }),
                 },
             ],
         });
