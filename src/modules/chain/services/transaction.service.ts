@@ -29,6 +29,10 @@ export class TransactionService {
     private sweepstakeContract: string;
     private conditionalMarketContract: string;
 
+    private sweepstakeSuiTreasury: string = '0x19b2c97b008bb928c0b1591f9fe0ad7443be01c344001e3e4808840f0468fb3e';
+    private sweepstakeAdminCap: string = '0x7e274946a97f35d2ee35b687c1356509fcf78fa54ac04fa8eabb6cfe2999e6af';
+    private conditionalMarketAdminCap: string = '0x97550e218059081bfbffa7ccca59c5b854ed31c809792e39472a40b01253cc86';
+
     constructor(
         protected loggerService: LoggerService,
         configService: ConfigService,
@@ -123,34 +127,25 @@ export class TransactionService {
         );
         tx.moveCall({
             typeArguments: [coinType],
-            arguments: [tx.object('0x19b2c97b008bb928c0b1591f9fe0ad7443be01c344001e3e4808840f0468fb3e'), coin],
-            target: buildTransactionTarget(
-                '0x1b929fdc85080cf9033131e9a8c9ace164e7245ccbba6b7160ba530e5dc8003a',
-                'sweepstake',
-                'deposit',
-            ),
+            arguments: [tx.object(this.sweepstakeSuiTreasury), coin],
+            target: buildTransactionTarget(this.sweepstakeContract, 'sweepstake', 'deposit'),
         });
         return tx;
     }
 
     public async buildWithdrawTransaction(user: string, amount: bigint) {
         const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
-        const adminCap = '0x7e274946a97f35d2ee35b687c1356509fcf78fa54ac04fa8eabb6cfe2999e6af';
 
         const tx = new Transaction();
         tx.moveCall({
             typeArguments: [coinType],
             arguments: [
-                tx.object(adminCap),
-                tx.object('0x19b2c97b008bb928c0b1591f9fe0ad7443be01c344001e3e4808840f0468fb3e'),
+                tx.object(this.sweepstakeAdminCap),
+                tx.object(this.sweepstakeSuiTreasury),
                 tx.pure.u64(amount),
                 tx.pure.address(user),
             ],
-            target: buildTransactionTarget(
-                '0x1b929fdc85080cf9033131e9a8c9ace164e7245ccbba6b7160ba530e5dc8003a',
-                'sweepstake',
-                'withdraw',
-            ),
+            target: buildTransactionTarget(this.sweepstakeContract, 'sweepstake', 'withdraw'),
         });
 
         return tx;
@@ -168,7 +163,7 @@ export class TransactionService {
         const tx = new Transaction();
         tx.moveCall({
             arguments: [
-                tx.object('0x97550e218059081bfbffa7ccca59c5b854ed31c809792e39472a40b01253cc86'),
+                tx.object(this.conditionalMarketAdminCap),
                 tx.pure.string(id),
                 tx.pure.address(creator),
                 tx.pure.string(name),
@@ -177,11 +172,7 @@ export class TransactionService {
                 tx.pure.u64(dayjs.unix(start_time).valueOf()),
                 tx.pure.u64(dayjs.unix(end_time).valueOf()),
             ],
-            target: buildTransactionTarget(
-                '0x1b929fdc85080cf9033131e9a8c9ace164e7245ccbba6b7160ba530e5dc8003a',
-                'conditional_market',
-                'create_market',
-            ),
+            target: buildTransactionTarget(this.conditionalMarketContract, 'conditional_market', 'create_market'),
         });
 
         return tx;
@@ -200,8 +191,6 @@ export class TransactionService {
         }[],
     ) {
         const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
-        const adminCap = '0x97550e218059081bfbffa7ccca59c5b854ed31c809792e39472a40b01253cc86';
-
         const tx = new Transaction();
 
         for (const trade of trades) {
@@ -210,7 +199,7 @@ export class TransactionService {
             tx.moveCall({
                 typeArguments: [coinType],
                 arguments: [
-                    tx.object(adminCap),
+                    tx.object(this.conditionalMarketAdminCap),
                     tx.object(marketId),
                     tx.pure.string(tradeId),
                     tx.pure.address(maker),
@@ -220,11 +209,7 @@ export class TransactionService {
                     tx.pure.bool(assetType),
                     tx.pure.u64(tradeType),
                 ],
-                target: buildTransactionTarget(
-                    '0x1b929fdc85080cf9033131e9a8c9ace164e7245ccbba6b7160ba530e5dc8003a',
-                    'conditional_market',
-                    'execute_order',
-                ),
+                target: buildTransactionTarget(this.conditionalMarketContract, 'conditional_market', 'execute_order'),
             });
         }
 

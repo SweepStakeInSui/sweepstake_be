@@ -11,6 +11,7 @@ import { DepositRequestDto, DepositResponseDto } from '../dtos/deposit.dto';
 import { WithdrawRequestDto, WithdrawResponseDto } from '../dtos/withdraw.dto';
 import { WalletService } from '../services/wallet.service';
 import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { RequestDepositRequestDto } from '../dtos/request-deposit.dto';
 
 @ApiTags('user')
 @Controller('user')
@@ -53,7 +54,7 @@ export class UserController {
         description: '',
     })
     @ApiOkResponsePayload(DepositResponseDto, EApiOkResponsePayload.OBJECT)
-    async deposit(@Body() body: any, @CurrentUser() user: UserEntity): Promise<DepositResponseDto> {
+    async deposit(@Body() body: DepositRequestDto, @CurrentUser() user: UserEntity): Promise<DepositResponseDto> {
         await this.walletService.deposit(user, body.txBytes, body.signature);
         return {};
     }
@@ -66,7 +67,7 @@ export class UserController {
     })
     @ApiOkResponsePayload(DepositResponseDto, EApiOkResponsePayload.OBJECT)
     async requestDeposit(
-        @Body() body: DepositRequestDto,
+        @Body() body: RequestDepositRequestDto,
         @CurrentUser() user: UserEntity,
     ): Promise<DepositResponseDto> {
         return await this.walletService.requestDeposit(user, body.amount);
