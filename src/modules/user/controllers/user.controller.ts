@@ -81,7 +81,7 @@ export class UserController {
     })
     @ApiOkResponsePayload(WithdrawResponseDto, EApiOkResponsePayload.OBJECT)
     async withdraw(@Body() body: WithdrawRequestDto, @CurrentUser() user: UserEntity): Promise<WithdrawResponseDto> {
-        await this.walletService.withdraw(user, body.amount);
+        await this.walletService.withdraw(user, body.amount, body.address);
 
         return {};
     }

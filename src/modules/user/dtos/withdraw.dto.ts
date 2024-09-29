@@ -10,7 +10,7 @@ export class WithdrawRequestDto {
     @Transform(transformBigInt)
     amount: bigint;
     @ApiProperty()
-    signature: string;
+    address: string;
 }
 
 export class WithdrawResponseDto {}

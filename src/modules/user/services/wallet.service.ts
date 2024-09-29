@@ -61,7 +61,7 @@ export class WalletService {
         console.log(msgMetadata);
     }
 
-    public async withdraw(userInfo: UserEntity, amount: bigint) {
+    public async withdraw(userInfo: UserEntity, amount: bigint, address: string) {
         if (userInfo.balance < amount) {
             throw new Error('InsufficientBalance');
         }
@@ -71,7 +71,7 @@ export class WalletService {
         await this.userRepository.save(userInfo);
 
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
-            await this.transactionService.buildWithdrawTransaction(userInfo.address, amount),
+            await this.transactionService.buildWithdrawTransaction(address, amount),
         );
 
         const msgMetadata = await this.kafkaProducer.produce({
