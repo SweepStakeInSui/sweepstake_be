@@ -12,6 +12,7 @@ import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { FindOptionsWhere } from 'typeorm';
+import { UserEntity } from '@models/entities/user.entity';
 
 export class CommentService {
     protected logger: Logger;
@@ -59,16 +60,11 @@ export class CommentService {
     }
 
     public async createComment(
-        userId: string,
+        userInfo: UserEntity,
         marketId: string,
         content: string,
         parentCommentId?: string,
     ): Promise<CommentEntity> {
-        const user = await this.userRepository.findOneBy({ id: userId });
-        if (!user) {
-            throw new BadRequestException('User not found');
-        }
-
         const market = await this.marketRepository.findOneBy({ id: marketId });
         if (!market) {
             throw new BadRequestException('Market not found');
@@ -76,7 +72,7 @@ export class CommentService {
 
         const comment = new CommentEntity();
         comment.content = content;
-        comment.user = user;
+        comment.user = userInfo;
         comment.market = market;
 
         if (parentCommentId) {
@@ -89,18 +85,18 @@ export class CommentService {
         return await this.commentRepository.save(comment);
     }
 
-    async updateComment(id: string, updateCommentDto: CommentInput, userId: string) {
+    async updateComment(id: string, updateCommentDto: CommentInput, userInfo: UserEntity) {
         const comment = await this.commentRepository.findOne({ where: { id } });
-        if (!comment || comment.user.id !== userId) {
+        if (!comment || comment.user.id !== userInfo.id) {
             return null;
         }
         Object.assign(comment, updateCommentDto);
         return this.commentRepository.save(comment);
     }
 
-    async deleteComment(id: string, userId: string) {
+    async deleteComment(id: string, userInfo: UserEntity) {
         const comment = await this.commentRepository.findOne({ where: { id } });
-        if (!comment || comment.user.id !== userId) {
+        if (!comment || comment.user.id !== userInfo.id) {
             return false;
         }
         await this.commentRepository.remove(comment);

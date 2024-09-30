@@ -12,7 +12,6 @@ import {
     Post,
     Put,
     Query,
-    Req,
     UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
@@ -21,6 +20,8 @@ import { GetCommentListResponseDto } from '../dtos/get-comment-list.dto';
 import { CreateCommentRequestDto, CreateCommentResponseDto } from '../dtos/create-comment.dto';
 import { AccessTokenGuard } from '@modules/auth/guards/access-token.guard';
 import { CommentInput } from '@modules/comment/types/comment';
+import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { UserEntity } from '@models/entities/user.entity';
 
 @ApiTags('comment')
 // @UseGuards(UserGuard)
@@ -81,32 +82,23 @@ export class CommentController {
         description: 'Create a new comment',
     })
     @ApiOkResponsePayload(CreateCommentResponseDto, EApiOkResponsePayload.OBJECT, true)
-    async createComment(@Body() body: CreateCommentRequestDto, @Req() req: Request): Promise<CreateCommentResponseDto> {
-        this.logger.info(body);
-
-        const userId = (req as any).user['id']; // Lấy userId từ token
+    async createComment(@Body() body: CreateCommentRequestDto, @CurrentUser() userInfo: UserEntity) {
         const { marketId, content, parentCommentId } = body;
-
-        const result = await this.commentService.createComment(userId, marketId, content, parentCommentId);
-
-        return {
-            ...result,
-            createdAt: new Date(result.createdAt),
-            updatedAt: new Date(result.updatedAt),
-        };
+        return await this.commentService.createComment(userInfo, marketId, content, parentCommentId);
     }
 
     @Put(':id')
-    async updateComment(@Param('id') id: string, @Body() updateCommentDto: CommentInput, @Req() req: Request) {
-        const userId = (req as any).user.id;
-        return await this.commentService.updateComment(id, updateCommentDto, userId);
+    async updateComment(
+        @Param('id') id: string,
+        @Body() updateCommentDto: CommentInput,
+        @CurrentUser() userInfo: UserEntity,
+    ) {
+        return await this.commentService.updateComment(id, updateCommentDto, userInfo);
     }
 
     @Delete(':id')
-    async deleteComment(@Param('id') id: string, @Req() req: Request) {
-        const userId = (req as any).user.id;
-        await this.commentService.deleteComment(id, userId);
-
+    async deleteComment(@Param('id') id: string, @CurrentUser() userInfo: UserEntity) {
+        await this.commentService.deleteComment(id, userInfo);
         return { message: 'Comment deleted successfully' };
     }
 }

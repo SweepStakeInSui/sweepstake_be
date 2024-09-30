@@ -4,10 +4,6 @@ import { IsOptional, IsString } from 'class-validator';
 export class CommentInput {
     @ApiProperty()
     @IsString()
-    userId: string;
-
-    @ApiProperty()
-    @IsString()
     marketId: string;
 
     @ApiProperty()
