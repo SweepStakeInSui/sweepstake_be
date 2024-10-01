@@ -74,6 +74,7 @@ export class CommentService {
         comment.content = content;
         comment.user = userInfo;
         comment.market = market;
+        comment.likes = 0;
 
         if (parentCommentId) {
             const parentComment = await this.commentRepository.findOneBy({ id: parentCommentId });
@@ -83,6 +84,22 @@ export class CommentService {
         }
 
         return await this.commentRepository.save(comment);
+    }
+
+    public async likeComment(id: string, userInfo: UserEntity) {
+        const comment = await this.commentRepository.findOne({ where: { id } });
+        if (!comment) {
+            return false;
+        }
+
+        if (comment.likedBy.some(user => user.id === userInfo.id)) {
+            throw new BadRequestException('User has already liked this comment');
+        }
+
+        comment.likes += 1;
+        comment.likedBy.push(userInfo);
+        await this.commentRepository.save(comment);
+        return true;
     }
 
     async updateComment(id: string, updateCommentDto: CommentInput, userInfo: UserEntity) {

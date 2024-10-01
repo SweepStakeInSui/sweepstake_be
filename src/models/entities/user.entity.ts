@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, JoinTable, OneToMany } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { bigint } from '@shared/decorators/transformers/big-int.transformer';
 import { CommentEntity } from '@models/entities/comment.entity';

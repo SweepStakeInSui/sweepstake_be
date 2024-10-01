@@ -93,4 +93,15 @@ export class MarketController {
             ...result,
         };
     }
+
+    @Get('/category')
+    @ApiOperation({
+        description: 'Find markets by category',
+    })
+    async findMarketsByCategory(@Query('category') category: string): Promise<GetMarketResponseDto> {
+        const markets = await this.marketService.findMarketsByCategory([category]);
+        return {
+            markets,
+        };
+    }
 }
