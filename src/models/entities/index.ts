@@ -13,6 +13,7 @@ import { TradeEntity } from './trade.entity';
 import { TransactionEntity } from './transaction.entity';
 import { UserEntity } from './user.entity';
 import { CommentEntity } from '@models/entities/comment.entity';
+import { CategoryEntity } from '@models/entities/category.entity';
 
 export const Entities = [
     AuthEntity,
@@ -23,6 +24,7 @@ export const Entities = [
     CriteriaEntity,
     OutcomeEntity,
     CommentEntity,
+    CategoryEntity,
     ShareEntity,
 
     OrderEntity,

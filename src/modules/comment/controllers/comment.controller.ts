@@ -87,6 +87,17 @@ export class CommentController {
         return await this.commentService.createComment(userInfo, marketId, content, parentCommentId);
     }
 
+    @UseGuards(AccessTokenGuard)
+    @Post('/like/:id')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: 'Like a comment',
+    })
+    @ApiOkResponsePayload(Boolean, EApiOkResponsePayload.OBJECT, true)
+    async likeComment(@Param('id') id: string, @CurrentUser() userInfo: UserEntity) {
+        return await this.commentService.likeComment(id, userInfo);
+    }
+
     @Put(':id')
     async updateComment(
         @Param('id') id: string,

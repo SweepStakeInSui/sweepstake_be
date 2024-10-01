@@ -7,6 +7,7 @@ import { NotificationModule } from './notification/notification.module';
 import { OrderModule } from './order/order.module';
 import { UserModule } from './user/user.module';
 import { CommentModule } from './comment/comment.module';
+import { CategoryModule } from '@modules/category/category.module';
 
 export const Modules = [
     AuthModule,
@@ -21,4 +22,5 @@ export const Modules = [
     ConsumerModule,
 
     NotificationModule,
+    CategoryModule,
 ];

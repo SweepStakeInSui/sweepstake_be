@@ -149,6 +149,14 @@ export class MarketService {
         return marketInfo;
     }
 
+    async findMarketsByCategory(categoryNames: string[]): Promise<MarketEntity[]> {
+        return this.marketRepository
+            .createQueryBuilder('market')
+            .leftJoinAndSelect('market.categories', 'category')
+            .where('category.name IN (:...categoryNames)', { categoryNames })
+            .getMany();
+    }
+
     // TODO: remove this method
     public async create2(userInfo: UserEntity, market: MarketInput, conditions: string): Promise<MarketEntity> {
         const marketInfo = this.marketRepository.create({ ...market, conditions_str: conditions, userId: userInfo.id });
