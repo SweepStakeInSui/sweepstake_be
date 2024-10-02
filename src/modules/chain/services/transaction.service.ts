@@ -15,13 +15,15 @@ import { Transaction } from '@mysten/sui/transactions';
 import { buildTransactionTarget } from '@shared/utils/sui';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import dayjs from 'dayjs';
+import { SuiGraphQLClient } from '@mysten/sui/graphql';
 
 @Injectable()
 export class TransactionService {
     protected logger: Logger;
     protected configService: ConfigService;
 
-    private nodeClient: SuiClient;
+    private rpcClient: SuiClient;
+    private gqlClient: SuiGraphQLClient;
     private gasClient: GasStationClient;
 
     private adminKeypair: Ed25519Keypair;
@@ -44,7 +46,8 @@ export class TransactionService {
         this.logger = this.loggerService.getLogger(TransactionService.name);
         this.configService = configService;
 
-        this.nodeClient = new SuiClient({ url: this.configService.get(EEnvKey.RPC_URL) });
+        this.rpcClient = new SuiClient({ url: this.configService.get(EEnvKey.RPC_URL) });
+        this.gqlClient = new SuiGraphQLClient({ url: this.configService.get(EEnvKey.GQL_URL) });
         this.gasClient = new GasStationClient(this.configService.get(EEnvKey.SHINAMI_ACCESS_KEY));
         this.adminKeypair = Ed25519Keypair.fromSecretKey(
             decodeSuiPrivateKey(this.configService.get(EEnvKey.ADMIN_PRIVATE_KEY)).secretKey,
@@ -54,12 +57,16 @@ export class TransactionService {
         this.conditionalMarketContract = this.configService.get(EEnvKey.CONDITIONAL_MARKET_CONTRACT);
     }
 
-    public getClient() {
-        return this.nodeClient;
+    public getRpcClient() {
+        return this.rpcClient;
+    }
+
+    public getGqlClient() {
+        return this.gqlClient;
     }
 
     public async getTransactionByHash(hash: string) {
-        const tx = await this.nodeClient.getTransactionBlock({
+        const tx = await this.rpcClient.getTransactionBlock({
             digest: hash,
             options: {
                 showBalanceChanges: true,
@@ -78,7 +85,7 @@ export class TransactionService {
 
     public async buildGasslessTransaction(sender: string, tx: Transaction) {
         const gaslessTx = await buildGaslessTransaction(tx, {
-            sui: this.nodeClient,
+            sui: this.rpcClient,
         });
         gaslessTx.sender = sender;
 
@@ -109,7 +116,7 @@ export class TransactionService {
 
     public async buildDepositTransaction(sender: string, amount: bigint) {
         const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
-        const user_coins_id = await this.nodeClient.getCoins({
+        const user_coins_id = await this.rpcClient.getCoins({
             owner: sender,
             coinType: coinType,
         });
@@ -222,7 +229,7 @@ export class TransactionService {
 
         return await tx.sign({
             signer: this.adminKeypair,
-            client: this.nodeClient,
+            client: this.rpcClient,
         });
         // return await this.signTransaction(txBytes, this.adminKeypair);
     }
@@ -234,7 +241,7 @@ export class TransactionService {
     public async submitTransaction(txData: string | Uint8Array, signature: string[]) {
         // TODO: consider dry-run first
 
-        const txResp = await this.nodeClient.executeTransactionBlock({
+        const txResp = await this.rpcClient.executeTransactionBlock({
             transactionBlock: txData,
             signature,
             options: {
@@ -274,7 +281,7 @@ export class TransactionService {
     public async waitForTransaction(txHash: string) {
         console.log('waiting : ', txHash);
 
-        const txResp = await this.nodeClient.waitForTransaction({
+        const txResp = await this.rpcClient.waitForTransaction({
             digest: txHash,
             options: {
                 showBalanceChanges: true,

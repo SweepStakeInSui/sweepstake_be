@@ -1,8 +1,18 @@
+import { SuiGraphQLClient } from '@mysten/sui/dist/cjs/graphql';
 import { verifyPersonalMessageSignature } from '@mysten/sui/verify';
 
-export async function verifySignature(address: string, message: string, signature: string): Promise<boolean> {
+export async function verifySignature(
+    address: string,
+    message: string,
+    signature: string,
+    options?: {
+        client?: SuiGraphQLClient;
+    },
+): Promise<boolean> {
     try {
-        const recoveredSigner = await verifyPersonalMessageSignature(Buffer.from(message), signature);
+        const recoveredSigner = await verifyPersonalMessageSignature(Buffer.from(message), signature, {
+            client: options.client,
+        });
         if (address !== recoveredSigner.toSuiAddress()) {
             return false;
         }

@@ -17,6 +17,7 @@ import { verifySignature } from '@shared/utils/sui';
 import { UserEntity } from '@models/entities/user.entity';
 import { EmailLoginPayload, WalletLoginPayload } from '../dtos/login.dto';
 import { log } from 'console';
+import { TransactionService } from '@modules/chain/services/transaction.service';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +29,8 @@ export class AuthService {
         protected jwtService: JwtService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
+
+        private readonly transactionService: TransactionService,
 
         private readonly authRepository: AuthRepository,
         private readonly userRepository: UserRepository,
@@ -77,7 +80,9 @@ export class AuthService {
         log('nonce', nonce);
         log('signature', signature);
 
-        const verified = await verifySignature(address, nonce, signature);
+        const verified = await verifySignature(address, nonce, signature, {
+            client: this.transactionService.getGqlClient(),
+        });
         if (!verified) {
             throw new BadRequestException('Failed to verify signature');
         }
