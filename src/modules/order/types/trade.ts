@@ -5,7 +5,7 @@ export enum TradeStatus {
 }
 
 export enum TradeType {
-    Mint = 'Mint',
-    Transfer = 'Transfer',
-    Merge = 'Merge',
+    Mint = '0',
+    Transfer = '1',
+    Merge = '2',
 }

@@ -70,6 +70,9 @@ export class TradeService {
                 if (matchedOrder.order.outcome.type == order.outcome.type) {
                     tradeType = TradeType.Transfer;
                     assetType = order.outcome.type == OutcomeType.Yes ? true : false;
+                } else {
+                    tradeType = order.outcome.type == OutcomeType.Yes ? TradeType.Mint : TradeType.Merge;
+                    assetType = true;
                 }
 
                 return {

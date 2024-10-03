@@ -81,7 +81,7 @@ export class MarketService {
         const marketInfo = this.marketRepository.create(market);
 
         // TODO: take the create market fee
-        userInfo.balance -= 100n;
+        // userInfo.balance -= 100n;
 
         const outcomeYesInfo = this.outcomeRepository.create({
             marketId: marketInfo.id,
