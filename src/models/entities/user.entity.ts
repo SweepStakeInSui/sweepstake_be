@@ -1,6 +1,7 @@
 import { Column, Entity } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
-import { bigint } from '@shared/decorators/transformers/big-int.transformer';
+import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
+import { Transform } from 'class-transformer';
 
 @Entity({ name: 'user' })
 export class UserEntity extends BaseEntity {
@@ -14,5 +15,6 @@ export class UserEntity extends BaseEntity {
     public email: string;
 
     @Column({ type: 'bigint', transformer: bigint })
-    public balance: bigint;
+    @Transform(transformBigInt)
+    public balance: bigint = 0n;
 }

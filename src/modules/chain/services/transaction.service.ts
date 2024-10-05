@@ -31,12 +31,12 @@ export class TransactionService {
     private sweepstakeContract: string;
     private conditionalMarketContract: string;
 
-    // private sweepstakeSuiTreasury: string = '0x19b2c97b008bb928c0b1591f9fe0ad7443be01c344001e3e4808840f0468fb3e';
-    private sweepstakeSuiTreasury: string = '0xe963c8760a403b6e044b2ffaea0f69397610a21bcadabaa7170b8f137a7323fe';
-    // private sweepstakeAdminCap: string = '0x7e274946a97f35d2ee35b687c1356509fcf78fa54ac04fa8eabb6cfe2999e6af';
-    private sweepstakeAdminCap: string = '0xd9283ceaa0280433a0df326a575135693b0dd915759682752f0f071be1744ff2';
-    // private conditionalMarketAdminCap: string = '0x97550e218059081bfbffa7ccca59c5b854ed31c809792e39472a40b01253cc86';
-    private conditionalMarketAdminCap: string = '0x6c2b67414c12f6bc8e4ebbdad5e8a5dd98b41f9a6cd3ca5d5fd4b36cabe0abfe';
+    private sweepstakeSuiTreasury: string = '0xdcebb0ff5c3ed92acc59cefd47cf4097178c37036f147733d2bb09ad3e5e0605';
+    // private sweepstakeSuiTreasury: string = '0xe963c8760a403b6e044b2ffaea0f69397610a21bcadabaa7170b8f137a7323fe';
+    private sweepstakeAdminCap: string = '0xfb46c0a1cca17e6b0856ae64d9523e645675e7119e727c34df0ed158df0b2c33';
+    // private sweepstakeAdminCap: string = '0xd9283ceaa0280433a0df326a575135693b0dd915759682752f0f071be1744ff2';
+    private conditionalMarketAdminCap: string = '0x4aae3c4cb8827d60f73a633d6c6ecb0256dfb4bc30dfbd80bbb404f3593aceca';
+    // private conditionalMarketAdminCap: string = '0x6c2b67414c12f6bc8e4ebbdad5e8a5dd98b41f9a6cd3ca5d5fd4b36cabe0abfe';
 
     constructor(
         protected loggerService: LoggerService,
@@ -192,8 +192,10 @@ export class TransactionService {
         trades: {
             marketId: string;
             tradeId: string;
+            makerOrderId: string;
             maker: string;
             makerAmount: bigint;
+            takerOrderId: string;
             taker: string;
             takeAmount: bigint;
             tradeType: number;
@@ -203,15 +205,38 @@ export class TransactionService {
         const tx = new Transaction();
 
         for (const trade of trades) {
-            const { marketId, tradeId, maker, makerAmount, taker, takeAmount, tradeType, assetType } = trade;
+            const {
+                marketId,
+                makerOrderId,
+                maker,
+                makerAmount,
+                takerOrderId,
+                taker,
+                takeAmount,
+                tradeType,
+                assetType,
+            } = trade;
+
+            console.log({
+                marketId,
+                makerOrderId,
+                maker,
+                makerAmount,
+                takerOrderId,
+                taker,
+                takeAmount,
+                tradeType,
+                assetType,
+            });
 
             tx.moveCall({
                 arguments: [
                     tx.object(this.conditionalMarketAdminCap),
                     tx.object(marketId),
-                    tx.pure.string(tradeId),
+                    tx.pure.string(makerOrderId),
                     tx.pure.address(maker),
                     tx.pure.u64(makerAmount),
+                    tx.pure.string(takerOrderId),
                     tx.pure.address(taker),
                     tx.pure.u64(takeAmount),
                     tx.pure.bool(assetType),

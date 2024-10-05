@@ -6,6 +6,7 @@ import { CriteriaEntity } from './criteria.entity';
 import { MarketEntity } from './market.entity';
 import { OrderEntity } from './order.entity';
 import { OutcomeEntity } from './outcome.entity';
+import { ShareEntity } from './share.entity';
 import { TokenEntity } from './token.entity';
 import { TradeEntity } from './trade.entity';
 import { TransactionEntity } from './transaction.entity';
@@ -19,6 +20,7 @@ export const Entities = [
     ConditionEntity,
     CriteriaEntity,
     OutcomeEntity,
+    ShareEntity,
 
     OrderEntity,
     TradeEntity,

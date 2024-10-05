@@ -37,63 +37,141 @@ export class TradeService {
     public async executeTrade(matches: Match) {
         const order = matches.order;
 
-        const trades = matches.matchedOrders.map(matchedOrder => {
-            const trade = this.tradeRepository.create({
-                makerOrderId: matchedOrder.order.id,
-                takerOrderId: order.id,
-                amount: matchedOrder.amount,
-                price: matchedOrder.price,
-                type: TradeType.Transfer,
-                status: TradeStatus.Pending,
-            });
+        // const trades = matches.matchedOrders.map(matchedOrder => {
+        //     const trade = this.tradeRepository.create({
+        //         makerOrderId: matchedOrder.order.id,
+        //         takerOrderId: order.id,
+        //         amount: matchedOrder.amount,
+        //         price: matchedOrder.price,
+        //         type: TradeType.Transfer,
+        //         status: TradeStatus.Pending,
+        //     });
 
-            return trade;
-        });
+        //     return trade;
+        // });
+
+        const trades = [];
 
         await this.tradeRepository.manager.transaction(async manager => {
             console.log('trade executed');
 
-            if (order.amount === order.fullfilled) {
-                order.status = OrderStatus.Filled;
-            }
+            await Promise.all(
+                matches.matchedOrders.map(async matchedOrder => {
+                    const trade = this.tradeRepository.create({
+                        makerOrderId: matchedOrder.order.id,
+                        takerOrderId: order.id,
+                        amount: matchedOrder.amount,
+                        price: matchedOrder.price,
+                        type: TradeType.Transfer,
+                        status: TradeStatus.Pending,
+                    });
 
-            await manager.save(order);
+                    await manager.save(trade);
 
-            await Promise.all(trades.map(async trade => await manager.save(trade)));
+                    if (order.amount === order.fullfilled) {
+                        order.status = OrderStatus.Filled;
+                    }
+
+                    await manager.save(order);
+
+                    const makerAddress = (await this.userRepository.findOneBy({ id: matchedOrder.order.userId }))
+                        .address;
+                    const takerAddress = (await this.userRepository.findOneBy({ id: order.userId })).address;
+
+                    let tradeType;
+                    let assetType;
+                    if (matchedOrder.order.outcome.type == order.outcome.type) {
+                        tradeType = TradeType.Transfer;
+                        assetType = order.outcome.type == OutcomeType.Yes ? true : false;
+                    } else {
+                        tradeType = order.side == OrderSide.Bid ? TradeType.Mint : TradeType.Merge;
+                        assetType = true;
+                    }
+
+                    const marketInfo = await this.marketRepository.findOneBy({ id: matchedOrder.order.marketId });
+
+                    // TODO: improve this stupid switch case to generate trade transaction data
+                    switch (tradeType) {
+                        case TradeType.Transfer:
+                            if (order.side == OrderSide.Bid) {
+                                trades.push({
+                                    marketId: marketInfo.onchainId,
+                                    tradeId: trade.id,
+                                    makerOrderId: order.id,
+                                    maker: takerAddress,
+                                    makerAmount: matchedOrder.amount,
+                                    takerOrderId: matchedOrder.order.id,
+                                    taker: makerAddress,
+                                    takeAmount: matchedOrder.amount,
+                                    tradeType,
+                                    assetType,
+                                });
+                            } else {
+                                trades.push({
+                                    marketId: marketInfo.onchainId,
+                                    tradeId: trade.id,
+                                    makerOrderId: matchedOrder.order.id,
+                                    maker: makerAddress,
+                                    makerAmount: matchedOrder.amount,
+                                    takerOrderId: order.id,
+                                    taker: takerAddress,
+                                    takeAmount: matchedOrder.amount,
+                                    tradeType,
+                                    assetType,
+                                });
+                            }
+
+                            break;
+                        case TradeType.Mint:
+                        case TradeType.Merge:
+                            if (order.outcome.type == OutcomeType.Yes) {
+                                trades.push({
+                                    marketId: marketInfo.onchainId,
+                                    tradeId: trade.id,
+                                    makerOrderId: order.id,
+                                    maker: takerAddress,
+                                    makerAmount: matchedOrder.amount,
+                                    takerOrderId: matchedOrder.order.id,
+                                    taker: makerAddress,
+                                    takeAmount: matchedOrder.amount,
+                                    tradeType,
+                                    assetType,
+                                });
+                            } else {
+                                trades.push({
+                                    marketId: marketInfo.onchainId,
+                                    tradeId: trade.id,
+                                    makerOrderId: matchedOrder.order.id,
+                                    maker: makerAddress,
+                                    makerAmount: matchedOrder.amount,
+                                    takerOrderId: order.id,
+                                    taker: takerAddress,
+                                    takeAmount: matchedOrder.amount,
+                                    tradeType,
+                                    assetType,
+                                });
+                            }
+                            break;
+                    }
+
+                    // trades.push({
+                    //     marketId: marketInfo.onchainId,
+                    //     tradeId: trade.id,
+                    //     makerOrderid: matchedOrder.order.id,
+                    //     maker: makerAddress,
+                    //     makerAmount: matchedOrder.amount,
+                    //     takerOderId: order.id,
+                    //     taker: takerAddress,
+                    //     takeAmount: matchedOrder.amount,
+                    //     tradeType,
+                    //     assetType,
+                    // });
+                }),
+            );
         });
 
-        const a = await Promise.all(
-            matches.matchedOrders.map(async matchedOrder => {
-                const makerAddress = (await this.userRepository.findOneBy({ id: matchedOrder.order.userId })).address;
-                const takerAddress = (await this.userRepository.findOneBy({ id: order.userId })).address;
-
-                let tradeType;
-                let assetType;
-                if (matchedOrder.order.outcome.type == order.outcome.type) {
-                    tradeType = TradeType.Transfer;
-                    assetType = order.outcome.type == OutcomeType.Yes ? true : false;
-                } else {
-                    tradeType = order.side == OrderSide.Bid ? TradeType.Mint : TradeType.Merge;
-                    assetType = true;
-                }
-
-                const marketInfo = await this.marketRepository.findOneBy({ id: matchedOrder.order.marketId });
-
-                return {
-                    marketId: marketInfo.onchainId,
-                    tradeId: '1',
-                    maker: makerAddress,
-                    makerAmount: matchedOrder.amount,
-                    taker: takerAddress,
-                    takeAmount: matchedOrder.amount,
-                    tradeType,
-                    assetType,
-                };
-            }),
-        );
-
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
-            await this.transactionService.buildExecuteTradeTransaction(a),
+            await this.transactionService.buildExecuteTradeTransaction(trades),
         );
         const msgMetaData = await this.kafkaProducer.produce({
             topic: KafkaTopic.SUBMIT_TRANSACTION,
