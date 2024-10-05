@@ -33,4 +33,7 @@ export class MarketEntity extends BaseEntity {
     // TODO: remove this
     @Column({ type: 'varchar' })
     conditions_str: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    onchainId?: string;
 }

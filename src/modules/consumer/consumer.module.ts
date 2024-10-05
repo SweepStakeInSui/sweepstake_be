@@ -8,6 +8,7 @@ import { OrderModule } from '@modules/order/order.module';
 import { SubmitTransactionConsumer } from './consumers/submit-transaction.consumer';
 import { ChainModule } from '@modules/chain/chain.module';
 import { WaitTransactionConsumer } from './consumers/wait-transaction.consumer';
+import { ProccessEventConsumer } from './consumers/proccess-event';
 
 const modules = [MatchingEngineModule, OrderModule, ChainModule];
 const consumers = [
@@ -16,6 +17,7 @@ const consumers = [
     ExecuteTradeConsumer,
     SubmitTransactionConsumer,
     WaitTransactionConsumer,
+    ProccessEventConsumer,
 ];
 
 @Module({

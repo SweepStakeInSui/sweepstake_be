@@ -6,12 +6,13 @@ import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { InjectRedis } from '@songkeys/nestjs-redis';
 import Redis from 'ioredis';
 import { Logger } from 'log4js';
-import { OrderStatus } from '../types/order';
+import { OrderSide, OrderStatus } from '../types/order';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { TransactionService } from '@modules/chain/services/transaction.service';
 import { TradeStatus, TradeType } from '../types/trade';
 import { UserRepository } from '@models/repositories/user.repository';
 import { OutcomeType } from '@modules/market/types/outcome';
+import { MarketRepository } from '@models/repositories/market.repository';
 
 export class TradeService {
     protected logger: Logger;
@@ -27,6 +28,7 @@ export class TradeService {
 
         private readonly tradeRepository: TradeRepository,
         private readonly userRepository: UserRepository,
+        private readonly marketRepository: MarketRepository,
     ) {
         this.logger = this.loggerService.getLogger(TradeService.name);
         this.configService = configService;
@@ -71,13 +73,15 @@ export class TradeService {
                     tradeType = TradeType.Transfer;
                     assetType = order.outcome.type == OutcomeType.Yes ? true : false;
                 } else {
-                    tradeType = order.outcome.type == OutcomeType.Yes ? TradeType.Mint : TradeType.Merge;
+                    tradeType = order.side == OrderSide.Bid ? TradeType.Mint : TradeType.Merge;
                     assetType = true;
                 }
 
+                const marketInfo = await this.marketRepository.findOneBy({ id: matchedOrder.order.marketId });
+
                 return {
-                    marketId: matchedOrder.order.marketId,
-                    tradeId: '',
+                    marketId: marketInfo.onchainId,
+                    tradeId: '1',
                     maker: makerAddress,
                     makerAmount: matchedOrder.amount,
                     taker: takerAddress,

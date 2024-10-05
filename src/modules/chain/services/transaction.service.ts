@@ -31,9 +31,12 @@ export class TransactionService {
     private sweepstakeContract: string;
     private conditionalMarketContract: string;
 
-    private sweepstakeSuiTreasury: string = '0x19b2c97b008bb928c0b1591f9fe0ad7443be01c344001e3e4808840f0468fb3e';
-    private sweepstakeAdminCap: string = '0x7e274946a97f35d2ee35b687c1356509fcf78fa54ac04fa8eabb6cfe2999e6af';
-    private conditionalMarketAdminCap: string = '0x97550e218059081bfbffa7ccca59c5b854ed31c809792e39472a40b01253cc86';
+    // private sweepstakeSuiTreasury: string = '0x19b2c97b008bb928c0b1591f9fe0ad7443be01c344001e3e4808840f0468fb3e';
+    private sweepstakeSuiTreasury: string = '0xe963c8760a403b6e044b2ffaea0f69397610a21bcadabaa7170b8f137a7323fe';
+    // private sweepstakeAdminCap: string = '0x7e274946a97f35d2ee35b687c1356509fcf78fa54ac04fa8eabb6cfe2999e6af';
+    private sweepstakeAdminCap: string = '0xd9283ceaa0280433a0df326a575135693b0dd915759682752f0f071be1744ff2';
+    // private conditionalMarketAdminCap: string = '0x97550e218059081bfbffa7ccca59c5b854ed31c809792e39472a40b01253cc86';
+    private conditionalMarketAdminCap: string = '0x6c2b67414c12f6bc8e4ebbdad5e8a5dd98b41f9a6cd3ca5d5fd4b36cabe0abfe';
 
     constructor(
         protected loggerService: LoggerService,
@@ -197,14 +200,12 @@ export class TransactionService {
             assetType: boolean;
         }[],
     ) {
-        const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
         const tx = new Transaction();
 
         for (const trade of trades) {
             const { marketId, tradeId, maker, makerAmount, taker, takeAmount, tradeType, assetType } = trade;
 
             tx.moveCall({
-                typeArguments: [coinType],
                 arguments: [
                     tx.object(this.conditionalMarketAdminCap),
                     tx.object(marketId),
@@ -306,6 +307,19 @@ export class TransactionService {
         } else {
             txInfo.status = TransactionStatus.Success;
         }
+
+        const events = txResp.events;
+
+        await this.kafkaProducer.produce({
+            topic: KafkaTopic.PROCCESS_EVENT,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        events,
+                    }),
+                },
+            ],
+        });
 
         txInfo.block = txResp.checkpoint;
 
