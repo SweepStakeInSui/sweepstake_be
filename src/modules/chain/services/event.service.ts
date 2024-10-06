@@ -98,32 +98,28 @@ export class EventService {
     private async proccessMintYesEvent(event: SuiEvent) {
         console.log(event.parsedJson);
 
-        // const { user_yes: userAddress, amount_yes: amount, order_id: orderId } = event.parsedJson as any;
+        const { amount_yes: amount, order_id: orderId } = event.parsedJson as any;
 
-        // const orderInfo = await this.orderRepository.findOneBy({
-        //     id: orderId,
-        // });
+        const orderInfo = await this.orderRepository.findOneBy({
+            id: orderId,
+        });
 
-        // const orderInfos = await this.orderRepository.findBy({
-        //     id: In([tradeInfo.makerOrderId, tradeInfo.takerOrderId]),
-        // });
+        let shareInfo = await this.shareRepository.findOneBy({
+            outcomeId: orderInfo.outcomeId,
+            userId: orderInfo.userId,
+        });
 
-        // let shareInfo = await this.shareRepository.findOneBy({
-        //     outcomeId: orderInfo.outcomeId,
-        //     userId: orderInfo.userId,
-        // });
+        if (shareInfo) {
+            shareInfo.amount += BigInt(amount);
+        } else {
+            shareInfo = this.shareRepository.create({
+                userId: orderInfo.userId,
+                outcomeId: orderInfo.outcomeId,
+                amount: BigInt(amount),
+            });
+        }
 
-        // if (shareInfo) {
-        //     shareInfo.amount += BigInt(amount);
-        // } else {
-        //     shareInfo = this.shareRepository.create({
-        //         userId: orderInfo.userId,
-        //         outcomeId: orderInfo.outcomeId,
-        //         amount: BigInt(amount),
-        //     });
-        // }
-
-        // await this.shareRepository.save(shareInfo);
+        await this.shareRepository.save(shareInfo);
     }
 
     private async proccessMintNoEvent(event: SuiEvent) {
