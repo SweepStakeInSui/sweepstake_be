@@ -80,7 +80,7 @@ export class EventService {
         });
 
         if (userInfo) {
-            userInfo.balance += BigInt(amount);
+            userInfo.addBalance(BigInt(amount));
 
             await this.userRepository.save(userInfo);
         } else {
@@ -118,12 +118,12 @@ export class EventService {
         });
 
         if (shareInfo) {
-            shareInfo.amount += BigInt(amount);
+            shareInfo.addBalance(BigInt(amount));
         } else {
             shareInfo = this.shareRepository.create({
                 userId: orderInfo.userId,
                 outcomeId: orderInfo.outcomeId,
-                amount: BigInt(amount),
+                balance: BigInt(amount),
             });
         }
 
@@ -145,12 +145,12 @@ export class EventService {
         });
 
         if (shareInfo) {
-            shareInfo.amount += BigInt(amount);
+            shareInfo.addBalance(BigInt(amount));
         } else {
             shareInfo = this.shareRepository.create({
                 userId: orderInfo.userId,
                 outcomeId: orderInfo.outcomeId,
-                amount: BigInt(amount),
+                balance: BigInt(amount),
             });
         }
 
@@ -192,8 +192,9 @@ export class EventService {
             this.userRepository.findOneBy({ id: orderNoInfo.userId }),
         ]);
 
-        userYesInfo.balance += orderYesInfo.amount * orderYesInfo.price;
-        userNoInfo.balance += orderNoInfo.amount * orderNoInfo.price;
+        // TODO: check if this is correct
+        userYesInfo.addBalance(orderYesInfo.amount * orderYesInfo.price);
+        userNoInfo.addBalance(orderNoInfo.amount * orderNoInfo.price);
 
         await this.userRepository.manager.transaction(async manager => {
             await manager.save(userYesInfo);
@@ -221,14 +222,14 @@ export class EventService {
             });
 
             // TODO: check if this is correct
-            makerUserInfo.balance += makerOrderInfo.amount * makerOrderInfo.price;
+            makerUserInfo.addBalance(makerOrderInfo.amount * makerOrderInfo.price);
 
             const takerShareInfo = await this.shareRepository.findOneBy({
                 userId: takerOrderInfo.userId,
                 outcomeId: takerOrderInfo.outcomeId,
             });
 
-            takerShareInfo.amount += amount;
+            takerShareInfo.addBalance(BigInt(amount));
 
             await manager.save(makerUserInfo);
             await manager.save(takerShareInfo);

@@ -90,33 +90,16 @@ export class OrderService {
                             orderInfo.price = outcomeInfo.askPrice;
                             break;
                     }
-                    if (
-                        userInfo.balance <
-                        (orderInfo.price * (1000n + orderInfo.slippage) * orderInfo.amount) / 1000n
-                    ) {
-                        throw new Error('Insufficient balance');
-                    }
-                    userInfo.balance -= orderInfo.price * orderInfo.amount;
-
                     break;
                 case OrderType.GTC:
                 case OrderType.GTD:
                     orderInfo.slippage = 0n;
-
                     break;
             }
 
             switch (orderInfo.side) {
                 case OrderSide.Bid: {
-                    const deductAmount = (orderInfo.price * (1000n + orderInfo.slippage) * orderInfo.amount) / 1000n;
-
-                    if (
-                        userInfo.balance <
-                        (orderInfo.price * (1000n + orderInfo.slippage) * orderInfo.amount) / 1000n
-                    ) {
-                        throw new Error('Insufficient balance');
-                    }
-                    userInfo.balance -= deductAmount;
+                    userInfo.reduceBalance((orderInfo.price * (1000n + orderInfo.slippage) * orderInfo.amount) / 1000n);
                     break;
                 }
                 case OrderSide.Ask: {
@@ -125,10 +108,7 @@ export class OrderService {
                         userId: userInfo.id,
                     });
 
-                    if (!shareInfo || shareInfo.amount < orderInfo.amount) {
-                        throw new Error('Insufficient share');
-                    }
-                    shareInfo.amount -= orderInfo.amount;
+                    shareInfo.reduceBalance(orderInfo.amount);
                     await manager.save(shareInfo);
                     break;
                 }

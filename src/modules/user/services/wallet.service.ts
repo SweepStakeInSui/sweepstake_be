@@ -62,11 +62,7 @@ export class WalletService {
     }
 
     public async withdraw(userInfo: UserEntity, amount: bigint, address: string) {
-        if (userInfo.balance < amount) {
-            throw new Error('InsufficientBalance');
-        }
-
-        userInfo.balance -= amount;
+        userInfo.reduceBalance(amount);
 
         await this.userRepository.save(userInfo);
 
