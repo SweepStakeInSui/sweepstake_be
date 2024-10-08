@@ -3,7 +3,7 @@ import { OutcomeType } from '@modules/market/types/outcome';
 import { OrderSide, OrderType } from '@modules/order/types/order';
 import { BigIntUtil } from '@shared/utils/bigint';
 import { log } from 'console';
-import PriorityQueue from './queue';
+import PriorityQueue from '../../shared/utils/queue';
 import { Transform, Type } from 'class-transformer';
 import { transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
 
@@ -116,7 +116,7 @@ export class OrderBook {
 
             // cancel the order
             // return matches;
-            return;
+            return matches;
         }
 
         // match same asset order

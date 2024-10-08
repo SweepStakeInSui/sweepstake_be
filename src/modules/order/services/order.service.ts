@@ -13,9 +13,9 @@ import { OutcomeRepository } from '@models/repositories/outcome.repository';
 import { MarketRepository } from '@models/repositories/market.repository';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
-import { OrderStatus } from '../types/order';
+import { OrderSide, OrderStatus, OrderType } from '../types/order';
 import { log } from 'console';
-import { OrderEntity } from '@models/entities/order.entity';
+import { ShareRepository } from '@models/repositories/share.repository';
 
 export class OrderService {
     protected logger: Logger;
@@ -32,6 +32,7 @@ export class OrderService {
         private orderRepository: OrderRepository,
         private outcomeRepository: OutcomeRepository,
         private marketRepository: MarketRepository,
+        private shareRepository: ShareRepository,
     ) {
         this.logger = this.loggerService.getLogger(OrderService.name);
         this.configService = configService;
@@ -78,14 +79,62 @@ export class OrderService {
         await this.orderRepository.manager.transaction(async manager => {
             orderInfo.marketId = marketInfo.id;
             orderInfo.outcome = outcomeInfo;
-            await manager.save(orderInfo);
-            // const balance = BigInt(userInfo.balance);
-            // const total = orderInfo.price * orderInfo.amount;
-            // if (balance < total) {
-            //     throw new BadRequestException('Insufficient balance');
-            // }
 
-            // userInfo.balance = balance - total;
+            switch (orderInfo.type) {
+                case OrderType.FOK:
+                    switch (orderInfo.side) {
+                        case OrderSide.Bid:
+                            orderInfo.price = outcomeInfo.bidPrice;
+                            break;
+                        case OrderSide.Ask:
+                            orderInfo.price = outcomeInfo.askPrice;
+                            break;
+                    }
+                    if (
+                        userInfo.balance <
+                        (orderInfo.price * (1000n + orderInfo.slippage) * orderInfo.amount) / 1000n
+                    ) {
+                        throw new Error('Insufficient balance');
+                    }
+                    userInfo.balance -= orderInfo.price * orderInfo.amount;
+
+                    break;
+                case OrderType.GTC:
+                case OrderType.GTD:
+                    orderInfo.slippage = 0n;
+
+                    break;
+            }
+
+            switch (orderInfo.side) {
+                case OrderSide.Bid: {
+                    const deductAmount = (orderInfo.price * (1000n + orderInfo.slippage) * orderInfo.amount) / 1000n;
+
+                    if (
+                        userInfo.balance <
+                        (orderInfo.price * (1000n + orderInfo.slippage) * orderInfo.amount) / 1000n
+                    ) {
+                        throw new Error('Insufficient balance');
+                    }
+                    userInfo.balance -= deductAmount;
+                    break;
+                }
+                case OrderSide.Ask: {
+                    const shareInfo = await this.shareRepository.findOneBy({
+                        outcomeId: orderInfo.outcomeId,
+                        userId: userInfo.id,
+                    });
+
+                    if (!shareInfo || shareInfo.amount < orderInfo.amount) {
+                        throw new Error('Insufficient share');
+                    }
+                    shareInfo.amount -= orderInfo.amount;
+                    await manager.save(shareInfo);
+                    break;
+                }
+            }
+
+            await manager.save(orderInfo);
             await manager.save(userInfo);
         });
 
@@ -132,14 +181,5 @@ export class OrderService {
         });
 
         log(msgMetadata);
-    }
-
-    public async consumeCancelMsg(orderId: OrderEntity) {
-        console.log('consumeCancelMsg', orderId);
-        // await this.orderRepository.manager.transaction(async manager => {
-        //     await manager.update(OrderEntity, orderId, { status: OrderStatus.Cancelled });
-        //     userInfo.balance += orderInfo.price * orderInfo.amount;
-        //     await manager.save(userInfo);
-        // });
     }
 }

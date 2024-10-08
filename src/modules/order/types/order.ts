@@ -50,12 +50,25 @@ export class OrderInput {
     })
     type: OrderType = OrderType.FOK;
 
-    // @ApiProperty({
-    //     enum: OrderSide,
-    //     default: OrderSide.Bid,
-    // })
-    // side: OrderSide;
+    @ApiProperty({
+        enum: OrderSide,
+        default: OrderSide.Bid,
+    })
+    side: OrderSide;
 
-    @ApiProperty()
-    signature: string;
+    @ApiProperty({
+        required: false,
+        default: 0n,
+    })
+    @IsOptional()
+    @IsBigInt()
+    @MinBigInt(0n)
+    @Transform(transformBigInt)
+    slippage?: bigint = 0n;
+
+    @ApiProperty({
+        required: false,
+    })
+    @IsOptional()
+    signature?: string;
 }

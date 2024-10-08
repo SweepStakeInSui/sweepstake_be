@@ -37,19 +37,6 @@ export class TradeService {
     public async executeTrade(matches: Match) {
         const order = matches.order;
 
-        // const trades = matches.matchedOrders.map(matchedOrder => {
-        //     const trade = this.tradeRepository.create({
-        //         makerOrderId: matchedOrder.order.id,
-        //         takerOrderId: order.id,
-        //         amount: matchedOrder.amount,
-        //         price: matchedOrder.price,
-        //         type: TradeType.Transfer,
-        //         status: TradeStatus.Pending,
-        //     });
-
-        //     return trade;
-        // });
-
         const trades = [];
 
         await this.tradeRepository.manager.transaction(async manager => {
@@ -57,12 +44,22 @@ export class TradeService {
 
             await Promise.all(
                 matches.matchedOrders.map(async matchedOrder => {
+                    let tradeType;
+                    let assetType;
+                    if (matchedOrder.order.outcome.type == order.outcome.type) {
+                        tradeType = TradeType.Transfer;
+                        assetType = order.outcome.type == OutcomeType.Yes ? true : false;
+                    } else {
+                        tradeType = order.side == OrderSide.Bid ? TradeType.Mint : TradeType.Merge;
+                        assetType = true;
+                    }
+
                     const trade = this.tradeRepository.create({
                         makerOrderId: matchedOrder.order.id,
                         takerOrderId: order.id,
                         amount: matchedOrder.amount,
                         price: matchedOrder.price,
-                        type: TradeType.Transfer,
+                        type: tradeType,
                         status: TradeStatus.Pending,
                     });
 
@@ -77,16 +74,6 @@ export class TradeService {
                     const makerAddress = (await this.userRepository.findOneBy({ id: matchedOrder.order.userId }))
                         .address;
                     const takerAddress = (await this.userRepository.findOneBy({ id: order.userId })).address;
-
-                    let tradeType;
-                    let assetType;
-                    if (matchedOrder.order.outcome.type == order.outcome.type) {
-                        tradeType = TradeType.Transfer;
-                        assetType = order.outcome.type == OutcomeType.Yes ? true : false;
-                    } else {
-                        tradeType = order.side == OrderSide.Bid ? TradeType.Mint : TradeType.Merge;
-                        assetType = true;
-                    }
 
                     const marketInfo = await this.marketRepository.findOneBy({ id: matchedOrder.order.marketId });
 

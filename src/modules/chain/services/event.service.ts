@@ -61,6 +61,14 @@ export class EventService {
                     await this.proccessMintNoEvent(event);
                     break;
                 }
+                case `${this.conditionalMarketContract}::conditional_market::TransferEvent`: {
+                    await this.proccessTransferEvent(event);
+                    break;
+                }
+                case `${this.conditionalMarketContract}::conditional_market::MergeEvent`: {
+                    await this.proccessMergeEvent(event);
+                    break;
+                }
             }
         }
     }
@@ -147,5 +155,83 @@ export class EventService {
         }
 
         await this.shareRepository.save(shareInfo);
+    }
+
+    private async proccessMergeEvent(event: SuiEvent) {
+        console.log(event.parsedJson);
+
+        const {
+            order_id_yes: orderYesId,
+            order_id_no: orderNoId,
+            // amount_yes: amountYes,
+            // amount_no: amountNo,
+        } = event.parsedJson as any;
+
+        const [orderYesInfo, orderNoInfo] = await Promise.all([
+            this.orderRepository.findOneBy({
+                id: orderYesId,
+            }),
+            this.orderRepository.findOneBy({
+                id: orderNoId,
+            }),
+        ]);
+
+        const [userYes, userNo] = await Promise.all([
+            this.userRepository.findOneBy({
+                id: orderYesInfo.userId,
+            }),
+            this.shareRepository.findOneBy({
+                id: orderNoInfo.userId,
+            }),
+        ]);
+        console.log(userYes, userNo);
+
+        // TODO: improve adding balance to userYes and userNo
+        const [userYesInfo, userNoInfo] = await Promise.all([
+            this.userRepository.findOneBy({ id: orderYesInfo.userId }),
+            this.userRepository.findOneBy({ id: orderNoInfo.userId }),
+        ]);
+
+        userYesInfo.balance += orderYesInfo.amount * orderYesInfo.price;
+        userNoInfo.balance += orderNoInfo.amount * orderNoInfo.price;
+
+        await this.userRepository.manager.transaction(async manager => {
+            await manager.save(userYesInfo);
+            await manager.save(userNoInfo);
+        });
+    }
+
+    private async proccessTransferEvent(event: SuiEvent) {
+        console.log(event.parsedJson);
+
+        const { maker_order_id: makerOrderId, taker_order_id: takerOrderId, amount } = event.parsedJson as any;
+
+        const [makerOrderInfo, takerOrderInfo] = await Promise.all([
+            this.orderRepository.findOneBy({
+                id: makerOrderId,
+            }),
+            this.orderRepository.findOneBy({
+                id: takerOrderId,
+            }),
+        ]);
+
+        await this.shareRepository.manager.transaction(async manager => {
+            const makerUserInfo = await this.userRepository.findOneBy({
+                id: makerOrderInfo.userId,
+            });
+
+            // TODO: check if this is correct
+            makerUserInfo.balance += makerOrderInfo.amount * makerOrderInfo.price;
+
+            const takerShareInfo = await this.shareRepository.findOneBy({
+                userId: takerOrderInfo.userId,
+                outcomeId: takerOrderInfo.outcomeId,
+            });
+
+            takerShareInfo.amount += amount;
+
+            await manager.save(makerUserInfo);
+            await manager.save(takerShareInfo);
+        });
     }
 }
