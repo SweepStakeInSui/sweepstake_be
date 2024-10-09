@@ -1,6 +1,4 @@
-import { Entity, Column, ManyToOne, OneToMany, ManyToMany } from 'typeorm';
-import { UserEntity } from '@models/entities/user.entity';
-import { MarketEntity } from '@models/entities/market.entity';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 
 @Entity('comment')
@@ -11,14 +9,14 @@ export class CommentEntity extends BaseEntity {
     @Column({ type: 'int', default: 0 })
     likes: number;
 
-    @ManyToMany(() => UserEntity, user => user.likedComments)
-    likedBy: UserEntity[];
+    @Column({ type: 'simple-array', nullable: true })
+    likedBy: string[];
 
-    @ManyToOne(() => UserEntity, user => user.comments)
-    user: UserEntity;
+    @Column({ type: 'varchar' })
+    userId: string;
 
-    @ManyToOne(() => MarketEntity, market => market.comments)
-    market: MarketEntity;
+    @Column({ type: 'varchar' })
+    marketId: string;
 
     @ManyToOne(() => CommentEntity, comment => comment.replies, { nullable: true })
     parentComment: CommentEntity;

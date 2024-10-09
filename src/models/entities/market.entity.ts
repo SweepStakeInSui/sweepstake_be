@@ -1,9 +1,7 @@
-import { Column, Entity, Index, JoinTable, ManyToMany, OneToMany } from 'typeorm';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { OutcomeEntity } from './outcome.entity';
 import { ConditionEntity } from './condition.entity';
-import { CommentEntity } from '@models/entities/comment.entity';
-import { CategoryEntity } from '@models/entities/category.entity';
 
 @Entity({ name: 'market' })
 export class MarketEntity extends BaseEntity {
@@ -35,12 +33,8 @@ export class MarketEntity extends BaseEntity {
     @OneToMany(() => ConditionEntity, condition => condition.market, { createForeignKeyConstraints: false })
     conditions: ConditionEntity[];
 
-    @OneToMany(() => CommentEntity, comment => comment.market, { createForeignKeyConstraints: false })
-    comments: CommentEntity[];
-
-    @ManyToMany(() => CategoryEntity, category => category.markets)
-    @JoinTable()
-    categories: CategoryEntity[];
+    @Column({ type: 'simple-array' })
+    categoryIds: string[];
 
     // TODO: remove this
     @Column({ type: 'varchar' })
