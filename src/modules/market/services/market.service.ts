@@ -63,7 +63,10 @@ export class MarketService {
 
     async find(condition: FindOptionsWhere<MarketEntity>) {
         try {
-            const marketInfo = await this.marketRepository.findOneBy(condition);
+            const marketInfo = await this.marketRepository.findOne({
+                where: condition,
+                relations: ['outcomes'],
+            });
 
             this.logger.info(marketInfo);
             return marketInfo;

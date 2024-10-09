@@ -64,13 +64,11 @@ export class MarketController {
     @ApiOkResponsePayload(GetMarketResponseDto, EApiOkResponsePayload.OBJECT)
     async getMarket(@Param() params: GetMarketRequestDto): Promise<GetMarketResponseDto> {
         const { id } = params;
-        const investor = await this.marketService.find({
+        const market = await this.marketService.find({
             id,
         });
 
-        return {
-            ...investor,
-        };
+        return market;
     }
 
     @UseGuards(AccessTokenGuard)
