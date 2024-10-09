@@ -1,8 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { CommentRepository } from '@models/repositories/comment.repository';
-import { CommentInput } from '../types/comment';
 import { CommentEntity } from '@models/entities/comment.entity';
-import { UserRepository } from '@models/repositories/user.repository';
 import { MarketRepository } from '@models/repositories/market.repository';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +11,7 @@ import { Logger } from 'log4js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { FindOptionsWhere } from 'typeorm';
 import { UserEntity } from '@models/entities/user.entity';
+import { UpdateCommentDto } from '@modules/comment/dtos/create-comment.dto';
 
 export class CommentService {
     protected logger: Logger;
@@ -24,7 +23,6 @@ export class CommentService {
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
         private readonly commentRepository: CommentRepository,
-        private readonly userRepository: UserRepository,
         private readonly marketRepository: MarketRepository,
     ) {
         this.logger = this.loggerService.getLogger(CommentService.name);
@@ -36,7 +34,6 @@ export class CommentService {
         where: FindOptionsWhere<CommentEntity>,
     ): Promise<Pagination<CommentEntity>> {
         return paginate<CommentEntity>(this.commentRepository, options, {
-            relations: ['user', 'market'],
             where: where,
         });
     }
@@ -45,18 +42,7 @@ export class CommentService {
         marketId: string,
         options: IPaginationOptions,
     ): Promise<Pagination<CommentEntity>> {
-        return this.paginate(options, { market: { id: marketId }, parentComment: null });
-    }
-
-    public async getCommentsByUser(username: string): Promise<CommentEntity[]> {
-        return await this.commentRepository
-            .createQueryBuilder('comment')
-            .leftJoinAndSelect('comment.user', 'user')
-            .leftJoinAndSelect('comment.market', 'market')
-            .leftJoinAndSelect('comment.replies', 'replies')
-            .where('user.username = :username', { username })
-            .andWhere('comment.parentComment IS NULL')
-            .getMany();
+        return this.paginate(options, { marketId, parentComment: null });
     }
 
     public async createComment(
@@ -70,11 +56,11 @@ export class CommentService {
             throw new BadRequestException('Market not found');
         }
 
-        const comment = new CommentEntity();
-        comment.content = content;
-        comment.user = userInfo;
-        comment.market = market;
-        comment.likes = 0;
+        const comment = this.commentRepository.create({
+            content,
+            marketId,
+            userId: userInfo.id,
+        });
 
         if (parentCommentId) {
             const parentComment = await this.commentRepository.findOneBy({ id: parentCommentId });
@@ -92,19 +78,27 @@ export class CommentService {
             return false;
         }
 
-        if (comment.likedBy.some(user => user.id === userInfo.id)) {
-            throw new BadRequestException('User has already liked this comment');
+        if (!comment.likedBy) {
+            comment.likedBy = [];
         }
 
-        comment.likes += 1;
-        comment.likedBy.push(userInfo);
+        const userIndex = comment.likedBy.indexOf(userInfo.id);
+        // If user already liked the comment, remove the like
+        if (userIndex !== -1) {
+            comment.likes -= 1;
+            comment.likedBy.splice(userIndex, 1);
+        } else {
+            comment.likes += 1;
+            comment.likedBy.push(userInfo.id);
+        }
+
         await this.commentRepository.save(comment);
         return true;
     }
 
-    async updateComment(id: string, updateCommentDto: CommentInput, userInfo: UserEntity) {
+    async updateComment(id: string, updateCommentDto: UpdateCommentDto, userInfo: UserEntity) {
         const comment = await this.commentRepository.findOne({ where: { id } });
-        if (!comment || comment.user.id !== userInfo.id) {
+        if (!comment || comment.userId !== userInfo.id) {
             return null;
         }
         Object.assign(comment, updateCommentDto);
@@ -113,11 +107,10 @@ export class CommentService {
 
     async deleteComment(id: string, userInfo: UserEntity) {
         const comment = await this.commentRepository.findOne({ where: { id } });
-        if (!comment || comment.user.id !== userInfo.id) {
-            return false;
+        if (!comment || comment.userId !== userInfo.id) {
+            throw new Error('Comment not found');
         }
         await this.commentRepository.remove(comment);
-        return true;
     }
 
     async getById(id: string): Promise<CommentEntity> {

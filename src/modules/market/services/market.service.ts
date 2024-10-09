@@ -8,11 +8,12 @@ import Redis from 'ioredis';
 import { Logger } from 'log4js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { MarketInput } from '../types/market';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
 import { ConditionRepository } from '@models/repositories/condition.repository';
 import { CriteriaRepository } from '@models/repositories/criteria.repository';
+import { CategoryRepository } from '@models/repositories/category.repository';
 import { OutcomeType } from '../types/outcome';
 import { ConditionInput } from '../dtos/create-market.dto';
 import { ConditionEntity } from '@models/entities/condition.entity';
@@ -21,6 +22,7 @@ import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-produ
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { UserEntity } from '@models/entities/user.entity';
 import { TransactionService } from '@modules/chain/services/transaction.service';
+import { Like } from 'typeorm';
 
 export class MarketService {
     protected logger: Logger;
@@ -38,18 +40,34 @@ export class MarketService {
         private outcomeRepository: OutcomeRepository,
         private conditionRepository: ConditionRepository,
         private criteriaRepository: CriteriaRepository,
+        private categoryRepository: CategoryRepository,
     ) {
         this.logger = this.loggerService.getLogger(MarketService.name);
         this.configService = configService;
     }
 
+    // TODO: Improve filter of this method
     public async paginate(
         options: IPaginationOptions,
-        where: FindOptionsWhere<MarketEntity>,
+        filters: { name?: string; categories?: string },
     ): Promise<Pagination<MarketEntity>> {
+        const where: FindOptionsWhere<MarketEntity> = {};
+
+        if (filters.name) {
+            where.name = Like(`%${filters.name}%`);
+        }
+
+        if (filters.categories) {
+            const categoryNames = filters.categories.split(',').map(name => name.trim());
+            const categories = await this.categoryRepository.find({
+                where: { name: In(categoryNames) },
+            });
+            const categoryIds = categories.map(category => category.id);
+            where.categoryIds = In(categoryIds);
+        }
+
         return paginate<MarketEntity>(this.marketRepository, options, {
-            relations: ['outcomes'],
-            where: where,
+            where,
         });
     }
 
@@ -147,14 +165,6 @@ export class MarketService {
         console.log(msgMetaData);
 
         return marketInfo;
-    }
-
-    async findMarketsByCategory(categoryNames: string[]): Promise<MarketEntity[]> {
-        return this.marketRepository
-            .createQueryBuilder('market')
-            .leftJoinAndSelect('market.categories', 'category')
-            .where('category.name IN (:...categoryNames)', { categoryNames })
-            .getMany();
     }
 
     // TODO: remove this method

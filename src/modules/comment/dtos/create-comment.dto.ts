@@ -28,3 +28,9 @@ export class CreateCommentResponseDto {
     @ApiProperty()
     updatedAt: Date;
 }
+
+export class UpdateCommentDto {
+    @ApiProperty()
+    @IsString()
+    content: string;
+}

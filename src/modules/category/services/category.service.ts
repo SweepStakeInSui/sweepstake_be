@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'log4js';
 import Redis from 'ioredis';
-import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { CategoryRepository } from '@models/repositories/category.repository';
 import { InjectRedis } from '@songkeys/nestjs-redis';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { CategoryEntity } from '@models/entities/category.entity';
+import { JwtService } from '@nestjs/jwt';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class CategoryService {
@@ -15,9 +15,9 @@ export class CategoryService {
 
     constructor(
         protected loggerService: LoggerService,
+        protected jwtService: JwtService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
-        private kafkaProducer: KafkaProducerService,
         private categoryRepository: CategoryRepository,
     ) {
         this.logger = this.loggerService.getLogger(CategoryService.name);
@@ -29,11 +29,11 @@ export class CategoryService {
         return this.categoryRepository.save(category);
     }
 
-    async getCategiryById(id: string): Promise<CategoryEntity> {
+    async getCategoryById(id: string): Promise<CategoryEntity> {
         return this.categoryRepository.findOne({ where: { id } });
     }
 
-    public async getAllCategories(): Promise<CategoryEntity[]> {
+    async getAllCategories(): Promise<CategoryEntity[]> {
         return this.categoryRepository.find();
     }
 
@@ -48,6 +48,10 @@ export class CategoryService {
     }
 
     async deleteCategory(id: string): Promise<void> {
+        const category = await this.categoryRepository.findOne({ where: { id } });
+        if (!category) {
+            throw new Error('Category not found');
+        }
         await this.categoryRepository.delete({ id });
     }
 }

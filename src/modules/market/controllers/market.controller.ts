@@ -1,8 +1,20 @@
 import { MarketService } from '../services/market.service';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
-import { Controller, Get, Query, ParseIntPipe, DefaultValuePipe, Param, Body, Post, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+    Body,
+    Controller,
+    DefaultValuePipe,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Post,
+    Put,
+    Query,
+    UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { GetMarketListRequestDto, GetMarketListResponseDto } from '../dtos/get-market-list.dto';
 import { GetMarketRequestDto, GetMarketResponseDto } from '../dtos/get-market.dto';
@@ -10,6 +22,16 @@ import { CreateMarketRequestDto, CreateMarketResponseDto } from '../dtos/create-
 import { AccessTokenGuard } from '@modules/auth/guards/access-token.guard';
 import { UserEntity } from '@models/entities/user.entity';
 import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
+import { CommentService } from '@modules/comment/services/comment.service';
+import { GetCommentListResponseDto } from '@modules/comment/dtos/get-comment-list.dto';
+import {
+    CreateCommentRequestDto,
+    CreateCommentResponseDto,
+    UpdateCommentDto,
+} from '@modules/comment/dtos/create-comment.dto';
+import { CategoryService } from '@modules/category/services/category.service';
+import { CreateCategoryDto } from '@modules/category/dtos/create-category.dto';
+import { GetCategoryListDto, GetCategoryListResponseDto } from '@modules/category/dtos/get-category-list.dto';
 
 @ApiTags('market')
 // @UseGuards(UserGuard)
@@ -18,6 +40,8 @@ export class MarketController {
     constructor(
         private loggerService: LoggerService,
         private marketService: MarketService,
+        private commentService: CommentService,
+        private categoryService: CategoryService,
     ) {
         this.logger = this.loggerService.getLogger(MarketController.name);
     }
@@ -34,7 +58,8 @@ export class MarketController {
     async getMarketList(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
-        @Query('name') name: string,
+        @Query('name') name?: string,
+        @Query('category') categories?: string,
     ): Promise<GetMarketListRequestDto> {
         limit = limit > 100 ? 100 : limit;
         return this.marketService.paginate(
@@ -42,7 +67,7 @@ export class MarketController {
                 page,
                 limit,
             },
-            { name },
+            { name, categories },
         );
     }
 
@@ -94,14 +119,115 @@ export class MarketController {
         };
     }
 
-    @Get('/category')
+    // Market comments
+    @Get('/comments/:marketId')
     @ApiOperation({
-        description: 'Find markets by category',
+        description: 'Get comments for a market',
     })
-    async findMarketsByCategory(@Query('category') category: string): Promise<GetMarketResponseDto> {
-        const markets = await this.marketService.findMarketsByCategory([category]);
-        return {
-            markets,
-        };
+    @ApiQuery({ name: 'page', required: false, type: Number })
+    @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiOkResponsePayload(GetCommentListResponseDto, EApiOkResponsePayload.OBJECT, true)
+    async getCommentsByMarket(
+        @Param('marketId') marketId: string,
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    ): Promise<GetCommentListResponseDto> {
+        limit = limit > 100 ? 100 : limit;
+        return this.commentService.getCommentsByMarket(marketId, { page, limit });
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Post('/comments')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: 'Create a new comment',
+    })
+    @ApiOkResponsePayload(CreateCommentResponseDto, EApiOkResponsePayload.OBJECT, true)
+    async createComment(@Body() body: CreateCommentRequestDto, @CurrentUser() userInfo: UserEntity) {
+        const { marketId, content, parentCommentId } = body;
+        return await this.commentService.createComment(userInfo, marketId, content, parentCommentId);
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Post('/comments/like/:id')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: 'Like a comment',
+    })
+    @ApiOkResponsePayload(Boolean, EApiOkResponsePayload.OBJECT, true)
+    async likeComment(@Param('id') id: string, @CurrentUser() userInfo: UserEntity) {
+        return await this.commentService.likeComment(id, userInfo);
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Put('/comments/:id')
+    async updateComment(
+        @Param('id') id: string,
+        @Body() updateCommentDto: UpdateCommentDto,
+        @CurrentUser() userInfo: UserEntity,
+    ) {
+        return await this.commentService.updateComment(id, updateCommentDto, userInfo);
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Delete('/comments/:id')
+    @ApiOkResponsePayload(Boolean, EApiOkResponsePayload.OBJECT)
+    async deleteComment(@Param('id') id: string, @CurrentUser() userInfo: UserEntity): Promise<boolean> {
+        await this.commentService.deleteComment(id, userInfo);
+        return true;
+    }
+
+    // Category
+
+    @Get('/categories')
+    @ApiOperation({
+        description: 'Get category list',
+    })
+    @ApiOkResponsePayload(GetCategoryListDto, EApiOkResponsePayload.OBJECT, true)
+    async getCategoryList(): Promise<GetCategoryListResponseDto> {
+        return this.categoryService.getAllCategories();
+    }
+
+    @Get('/categories/:id')
+    @ApiOperation({
+        description: 'Get category by id',
+    })
+    @ApiOkResponsePayload(CreateCategoryDto, EApiOkResponsePayload.OBJECT)
+    async getCategoryById(@Param('id') id: string): Promise<CreateCategoryDto> {
+        return this.categoryService.getCategoryById(id);
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Post('/categories')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: 'Create category',
+    })
+    @ApiOkResponsePayload(CreateCategoryDto, EApiOkResponsePayload.OBJECT)
+    async createCategory(@Body() body: CreateCategoryDto): Promise<CreateCategoryDto> {
+        return this.categoryService.createCategory(body.name);
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Put('/categories/:id')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: 'Update category',
+    })
+    @ApiOkResponsePayload(CreateCategoryDto, EApiOkResponsePayload.OBJECT)
+    async updateCategory(@Param('id') id: string, @Body() body: CreateCategoryDto): Promise<CreateCategoryDto> {
+        return this.categoryService.updateCategory(id, body.name);
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Delete('/categories/:id')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: 'Delete category',
+    })
+    @ApiOkResponsePayload(Boolean, EApiOkResponsePayload.OBJECT)
+    async deleteCategory(@Param('id') id: string): Promise<boolean> {
+        await this.categoryService.deleteCategory(id);
+        return true;
     }
 }

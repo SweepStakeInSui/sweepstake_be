@@ -18,4 +18,7 @@ export class MarketInput {
 
     @ApiProperty()
     colaterralToken: string;
+
+    @ApiProperty()
+    categoryIds: string[];
 }
