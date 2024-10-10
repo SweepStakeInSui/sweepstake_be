@@ -25,6 +25,14 @@ export class MatchedOrder {
 
 export class OrderBook {
     private marketId: string;
+
+    private outcomeYesId: string;
+    private outcomeNoId: string;
+
+    private price: {
+        [key: string]: bigint;
+    } = {};
+
     private liquidity: {
         [key: string]: bigint;
     } = {};
@@ -35,6 +43,8 @@ export class OrderBook {
 
     constructor(marketId: string) {
         this.marketId = marketId;
+        // this.outcomeYesId = outcomeYesId;
+        // this.outcomeNoId = outcomeNoId;
 
         this.queues['Bid-Yes'] = new PriorityQueue<OrderEntity>(this.orderByNonIncreasing);
         this.queues['Ask-Yes'] = new PriorityQueue<OrderEntity>(this.orderByNonDecreasing);
@@ -45,6 +55,32 @@ export class OrderBook {
         this.liquidity['Ask-Yes'] = 0n;
         this.liquidity['Bid-No'] = 0n;
         this.liquidity['Ask-No'] = 0n;
+
+        this.price['Bid-Yes'] = 0n;
+        this.price['Ask-Yes'] = 0n;
+        this.price['Bid-No'] = 0n;
+        this.price['Ask-No'] = 0n;
+
+        this.updatePrice();
+    }
+
+    private updatePrice() {
+        this.price['Bid-Yes'] = this.queues['Bid-Yes'].isEmpty()
+            ? this.price['Bid-Yes']
+            : this.queues['Bid-Yes'].peek().price;
+        this.price['Ask-Yes'] = this.queues['Ask-Yes'].isEmpty()
+            ? this.price['Ask-Yes']
+            : this.queues['Ask-Yes'].peek().price;
+        this.price['Bid-No'] = this.queues['Bid-No'].isEmpty()
+            ? this.price['Bid-No']
+            : this.queues['Bid-No'].peek().price;
+        this.price['Ask-No'] = this.queues['Ask-No'].isEmpty()
+            ? this.price['Ask-No']
+            : this.queues['Ask-No'].peek().price;
+    }
+
+    public getPrice() {
+        return this.price;
     }
 
     private orderByNonDecreasing = (a: OrderEntity, b: OrderEntity) => {
@@ -71,19 +107,19 @@ export class OrderBook {
             );
         });
 
-        // const matches: Match;
+        let matches: Match;
 
         switch (order.type) {
             case OrderType.FOK:
-                return this.matchMarketOrder(order);
+                matches = this.matchMarketOrder(order);
                 break;
             case OrderType.GTC:
             case OrderType.GTD:
-                return this.matchLimitOrder(order);
+                matches = this.matchLimitOrder(order);
                 break;
         }
-
-        // return matches;
+        this.updatePrice();
+        return matches;
     }
 
     public cancelOrder(order: OrderEntity) {
@@ -124,6 +160,27 @@ export class OrderBook {
             this.queues[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`];
         while (!sameAssetQueue.isEmpty() && order.fullfilled < order.amount) {
             const oppositeOrder = sameAssetQueue.peek();
+
+            let exceeded = false;
+
+            switch (order.side) {
+                case OrderSide.Bid: {
+                    const maxExpectedPrice = (order.price * (1000n + order.slippage)) / 1000n;
+
+                    if (oppositeOrder.price > maxExpectedPrice) exceeded = true;
+                    break;
+                }
+                case OrderSide.Ask: {
+                    const maxExpectedPrice = (order.price * (1000n - order.slippage)) / 1000n;
+
+                    if (oppositeOrder.price < maxExpectedPrice) exceeded = true;
+                    break;
+                }
+            }
+
+            // TODO: it's look like IOC order right now, need to change to FOK order by revert the match logic
+            if (exceeded) break;
+
             const matchAmount = BigIntUtil.min(order.amount, oppositeOrder.amount);
 
             // this.executeTrade(order, oppositeOrder, matchAmount);
@@ -142,6 +199,27 @@ export class OrderBook {
             this.queues[`${order.side}-${order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`];
         while (!crossAssetQueue.isEmpty() && order.fullfilled < order.amount) {
             const oppositeOrder = crossAssetQueue.peek();
+
+            let exceeded = false;
+
+            switch (order.side) {
+                case OrderSide.Bid: {
+                    const maxExpectedPrice = (order.price * (1000n + order.slippage)) / 1000n;
+
+                    if (1000n - oppositeOrder.price > maxExpectedPrice) exceeded = true;
+                    break;
+                }
+                case OrderSide.Ask: {
+                    const maxExpectedPrice = (order.price * (1000n - order.slippage)) / 1000n;
+
+                    if (1000n - oppositeOrder.price < maxExpectedPrice) exceeded = true;
+                    break;
+                }
+            }
+
+            // TODO: it's look like IOC order right now, need to change to FOK order by revert the match logic
+            if (exceeded) break;
+
             const matchAmount = BigIntUtil.min(order.amount, oppositeOrder.amount);
 
             // this.executeTrade(order, oppositeOrder, matchAmount);
@@ -166,12 +244,18 @@ export class OrderBook {
 
         this.matchLimitSameOrders(order, matches);
         this.matchLimitCrossOrders(order, matches);
+
+        if (order.fullfilled < order.amount) {
+            this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
+            this.liquidity[`${order.side}-${order.outcome.type}`] += order.amount;
+        }
         return matches;
     }
 
     private matchLimitSameOrders(order: OrderEntity, matches: Match): void {
         const side = order.side;
-        const oppositeOrders = this.queues[`${side === OrderSide.Bid ? 'Ask' : 'Bid'}-${order.outcome.type}`];
+        const oppositeOrders =
+            this.queues[`${side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`];
 
         let comparator;
 
@@ -210,11 +294,6 @@ export class OrderBook {
             } else {
                 break;
             }
-        }
-
-        if (order.fullfilled < order.amount) {
-            this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
-            this.liquidity[`${order.side}-${order.outcome.type}`] += order.amount;
         }
     }
 

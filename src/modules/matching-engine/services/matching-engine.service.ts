@@ -12,6 +12,8 @@ import { OutcomeRepository } from '@models/repositories/outcome.repository';
 import { Injectable } from '@nestjs/common';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { OrderSide, OrderStatus, OrderType } from '@modules/order/types/order';
+import { OutcomeType } from '@modules/market/types/outcome';
 
 export interface Trade {
     maker: OrderEntity;
@@ -65,9 +67,28 @@ export class MatchingEngineService {
 
         const orderBook = this.getOrderBook(marketInfo.id);
         const matches = orderBook.matchOrder(order);
+        const orderbookPrice = orderBook.getPrice();
+        const oppositeOutcomeInfo = await this.outcomeRepository.findOne({
+            where: {
+                marketId: marketInfo.id,
+                type: outcomeInfo.type == OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes,
+            },
+        });
+
+        outcomeInfo.askPrice = orderbookPrice[`${OrderSide.Ask}-${outcomeInfo.type}`];
+        outcomeInfo.bidPrice = orderbookPrice[`${OrderSide.Bid}-${outcomeInfo.type}`];
+        oppositeOutcomeInfo.askPrice = orderbookPrice[`${OrderSide.Ask}-${oppositeOutcomeInfo.type}`];
+        oppositeOutcomeInfo.bidPrice = orderbookPrice[`${OrderSide.Bid}-${oppositeOutcomeInfo.type}`];
+
+        await this.outcomeRepository.save([outcomeInfo, oppositeOutcomeInfo]);
         if (matches.matchedOrders.length == 0) {
+            if (order.type == OrderType.FOK) {
+                order.status = OrderStatus.Cancelled;
+                await this.orderRepository.save(order);
+            }
             return;
         }
+
         const msgMetadata = await this.kafkaProducer.produce({
             topic: KafkaTopic.EXECUTE_TRADE,
             messages: [

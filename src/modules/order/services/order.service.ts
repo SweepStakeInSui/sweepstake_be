@@ -16,6 +16,8 @@ import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { OrderSide, OrderStatus, OrderType } from '../types/order';
 import { log } from 'console';
 import { ShareRepository } from '@models/repositories/share.repository';
+import { OutcomeType } from '@modules/market/types/outcome';
+import { BigIntUtil } from '@shared/utils/bigint';
 
 export class OrderService {
     protected logger: Logger;
@@ -67,6 +69,13 @@ export class OrderService {
 
         const marketInfo = outcomeInfo.market;
 
+        const oppositeOutcomeInfo = await this.outcomeRepository.findOne({
+            where: {
+                marketId: marketInfo.id,
+                type: outcomeInfo.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes,
+            },
+        });
+
         if (
             !marketInfo ||
             !marketInfo.isActive ||
@@ -83,12 +92,20 @@ export class OrderService {
             switch (orderInfo.type) {
                 case OrderType.FOK:
                     switch (orderInfo.side) {
-                        case OrderSide.Bid:
-                            orderInfo.price = outcomeInfo.bidPrice;
+                        case OrderSide.Bid: {
+                            const sameAssetPrice = outcomeInfo.askPrice;
+                            const oppositeAssetPrice = oppositeOutcomeInfo.bidPrice;
+
+                            orderInfo.price = BigIntUtil.max(oppositeAssetPrice, 1000n - sameAssetPrice);
                             break;
-                        case OrderSide.Ask:
-                            orderInfo.price = outcomeInfo.askPrice;
+                        }
+                        case OrderSide.Ask: {
+                            const sameAssetPrice = outcomeInfo.askPrice;
+                            const oppositeAssetPrice = oppositeOutcomeInfo.bidPrice;
+
+                            orderInfo.price = BigIntUtil.min(oppositeAssetPrice, 1000n - sameAssetPrice);
                             break;
+                        }
                     }
                     break;
                 case OrderType.GTC:

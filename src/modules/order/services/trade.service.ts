@@ -65,10 +65,14 @@ export class TradeService {
 
                     await manager.save(trade);
 
+                    if (matchedOrder.order.amount === matchedOrder.order.fullfilled) {
+                        matchedOrder.order.status = OrderStatus.Filled;
+                    }
+                    await manager.save(matchedOrder.order);
+
                     if (order.amount === order.fullfilled) {
                         order.status = OrderStatus.Filled;
                     }
-
                     await manager.save(order);
 
                     const makerAddress = (await this.userRepository.findOneBy({ id: matchedOrder.order.userId }))
