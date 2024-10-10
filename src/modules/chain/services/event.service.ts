@@ -51,6 +51,10 @@ export class EventService {
                     await this.processDepositEvent(event);
                     break;
                 }
+                case `${this.sweepstakeContract}::sweepstake::WithdrawEvent`: {
+                    await this.processWithdrawEvent(event);
+                    break;
+                }
                 case `${this.conditionalMarketContract}::conditional_market::NewMarketEvent`: {
                     await this.proccessNewMarketEvent(event);
                     break;
@@ -93,6 +97,17 @@ export class EventService {
             userId: userInfo.id,
             type: 'deposit',
             message: `You have deposited ${amount} to your account`,
+        });
+
+        await this.notificationRepository.save(notificationInfo);
+    }
+
+    private async processWithdrawEvent(event: SuiEvent) {
+        const { owner, amount } = event.parsedJson as any;
+        const notificationInfo = await this.notificationRepository.create({
+            userId: owner,
+            type: 'withdraw',
+            message: `You have withdrown ${amount} to your account`,
         });
 
         await this.notificationRepository.save(notificationInfo);
