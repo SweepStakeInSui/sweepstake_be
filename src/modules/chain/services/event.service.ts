@@ -12,6 +12,7 @@ import { UserRepository } from '@models/repositories/user.repository';
 import { ShareRepository } from '@models/repositories/share.repository';
 import { OrderRepository } from '@models/repositories/order.repository';
 import { TradeRepository } from '@models/repositories/trade.repository';
+import { NotificationRepository } from '@models/repositories/notification.repository';
 
 @Injectable()
 export class EventService {
@@ -31,6 +32,7 @@ export class EventService {
         private readonly shareRepository: ShareRepository,
         private readonly orderRepository: OrderRepository,
         private readonly tradeRepository: TradeRepository,
+        private readonly notificationRepository: NotificationRepository,
     ) {
         this.logger = this.loggerService.getLogger(CrawlerService.name);
         this.configService = configService;
@@ -86,6 +88,14 @@ export class EventService {
         } else {
             this.logger.error('User not found');
         }
+
+        const notificationInfo = await this.notificationRepository.create({
+            userId: userInfo.id,
+            type: 'deposit',
+            message: `You have deposited ${amount} to your account`,
+        });
+
+        await this.notificationRepository.save(notificationInfo);
     }
 
     private async proccessNewMarketEvent(event: SuiEvent) {
@@ -101,6 +111,14 @@ export class EventService {
         }
 
         await this.marketRepository.save(marketInfo);
+
+        const notificationInfo = await this.notificationRepository.create({
+            userId: marketInfo.userId,
+            type: 'create_market',
+            message: `Your market ${marketInfo.name} has been created`,
+        });
+
+        await this.notificationRepository.save(notificationInfo);
     }
 
     private async proccessMintYesEvent(event: SuiEvent) {
@@ -128,6 +146,14 @@ export class EventService {
         }
 
         await this.shareRepository.save(shareInfo);
+
+        const notificationInfo = await this.notificationRepository.create({
+            userId: orderInfo.userId,
+            type: 'order_executed',
+            message: `You have minted ${amount} to your account`,
+        });
+
+        await this.notificationRepository.save(notificationInfo);
     }
 
     private async proccessMintNoEvent(event: SuiEvent) {
@@ -155,6 +181,14 @@ export class EventService {
         }
 
         await this.shareRepository.save(shareInfo);
+
+        const notificationInfo = await this.notificationRepository.create({
+            userId: orderInfo.userId,
+            type: 'order_executed',
+            message: `You have minted ${amount} to your account`,
+        });
+
+        await this.notificationRepository.save(notificationInfo);
     }
 
     private async proccessMergeEvent(event: SuiEvent) {
@@ -200,6 +234,21 @@ export class EventService {
             await manager.save(userYesInfo);
             await manager.save(userNoInfo);
         });
+
+        const notificationInfos = await this.notificationRepository.create([
+            {
+                userId: orderNoId.userId,
+                type: 'order_executed',
+                message: `You have burned ${orderNoInfo.amount} from your account`,
+            },
+            {
+                userId: orderYesId.userId,
+                type: 'order_executed',
+                message: `You have burned ${orderYesInfo.amount} from your account`,
+            },
+        ]);
+
+        await this.notificationRepository.save(notificationInfos);
     }
 
     private async proccessTransferEvent(event: SuiEvent) {
@@ -234,5 +283,20 @@ export class EventService {
             await manager.save(makerUserInfo);
             await manager.save(takerShareInfo);
         });
+
+        const notificationInfos = await this.notificationRepository.create([
+            {
+                userId: makerOrderId.userId,
+                type: 'order_executed',
+                message: `You have transferred ${makerOrderInfo.amount} from your account`,
+            },
+            {
+                userId: takerOrderInfo.userId,
+                type: 'order_executed',
+                message: `You have received ${takerOrderInfo.amount} from your account`,
+            },
+        ]);
+
+        await this.notificationRepository.save(notificationInfos);
     }
 }

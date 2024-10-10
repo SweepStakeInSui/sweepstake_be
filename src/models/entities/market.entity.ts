@@ -12,6 +12,9 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'text' })
     description: string;
 
+    @Column({ type: 'varchar' })
+    userId: string;
+
     @Column({ type: 'int' })
     startTime: number;
 

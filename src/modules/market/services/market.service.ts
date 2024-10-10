@@ -151,7 +151,7 @@ export class MarketService {
 
     // TODO: remove this method
     public async create2(userInfo: UserEntity, market: MarketInput, conditions: string): Promise<MarketEntity> {
-        const marketInfo = this.marketRepository.create({ ...market, conditions_str: conditions });
+        const marketInfo = this.marketRepository.create({ ...market, conditions_str: conditions, userId: userInfo.id });
 
         // TODO: take the create market fee
         // userInfo.reduceBalance(100n);

@@ -4,6 +4,7 @@ import { ChainEntity } from './chain.entity';
 import { ConditionEntity } from './condition.entity';
 import { CriteriaEntity } from './criteria.entity';
 import { MarketEntity } from './market.entity';
+import { NotificationEntity } from './notification.entity';
 import { OrderEntity } from './order.entity';
 import { OutcomeEntity } from './outcome.entity';
 import { ShareEntity } from './share.entity';
@@ -29,4 +30,6 @@ export const Entities = [
     ChainEventEntity,
     TokenEntity,
     TransactionEntity,
+
+    NotificationEntity,
 ];

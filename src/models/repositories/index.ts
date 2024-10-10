@@ -3,6 +3,7 @@ import { ChainRepository } from './chain.repository';
 import { ConditionRepository } from './condition.repository';
 import { CriteriaRepository } from './criteria.repository';
 import { MarketRepository } from './market.repository';
+import { NotificationRepository } from './notification.repository';
 import { OrderRepository } from './order.repository';
 import { OutcomeRepository } from './outcome.repository';
 import { ShareRepository } from './share.repository';
@@ -26,4 +27,6 @@ export const Repositories = [
 
     ChainRepository,
     TransactionRepository,
+
+    NotificationRepository,
 ];
