@@ -18,6 +18,7 @@ export const Repositories = [
     UserRepository,
 
     MarketRepository,
+    CategoryRepository,
     CommentRepository,
     OutcomeRepository,
     ShareRepository,
@@ -30,7 +31,6 @@ export const Repositories = [
 
     ChainRepository,
     TransactionRepository,
-    CategoryRepository,
 
     NotificationRepository,
 ];
