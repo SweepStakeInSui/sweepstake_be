@@ -29,9 +29,6 @@ import {
     CreateCommentResponseDto,
     UpdateCommentDto,
 } from '@modules/comment/dtos/create-comment.dto';
-import { CategoryService } from '@modules/category/services/category.service';
-import { CreateCategoryDto } from '@modules/category/dtos/create-category.dto';
-import { GetCategoryListDto, GetCategoryListResponseDto } from '@modules/category/dtos/get-category-list.dto';
 
 @ApiTags('market')
 // @UseGuards(UserGuard)
@@ -41,7 +38,6 @@ export class MarketController {
         private loggerService: LoggerService,
         private marketService: MarketService,
         private commentService: CommentService,
-        private categoryService: CategoryService,
     ) {
         this.logger = this.loggerService.getLogger(MarketController.name);
     }
@@ -53,7 +49,8 @@ export class MarketController {
     @ApiOperation({
         description: '',
     })
-    @ApiQuery({ name: 'name', required: false, type: Number })
+    @ApiQuery({ name: 'name', required: false, type: String })
+    @ApiQuery({ name: 'category', required: false, type: String })
     @ApiOkResponsePayload(GetMarketListResponseDto, EApiOkResponsePayload.OBJECT, true)
     async getMarketList(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
@@ -174,60 +171,6 @@ export class MarketController {
     @ApiOkResponsePayload(Boolean, EApiOkResponsePayload.OBJECT)
     async deleteComment(@Param('id') id: string, @CurrentUser() userInfo: UserEntity): Promise<boolean> {
         await this.commentService.deleteComment(id, userInfo);
-        return true;
-    }
-
-    // Category
-
-    @Get('/categories')
-    @ApiOperation({
-        description: 'Get category list',
-    })
-    @ApiOkResponsePayload(GetCategoryListDto, EApiOkResponsePayload.OBJECT, true)
-    async getCategoryList(): Promise<GetCategoryListResponseDto> {
-        return this.categoryService.getAllCategories();
-    }
-
-    @Get('/categories/:id')
-    @ApiOperation({
-        description: 'Get category by id',
-    })
-    @ApiOkResponsePayload(CreateCategoryDto, EApiOkResponsePayload.OBJECT)
-    async getCategoryById(@Param('id') id: string): Promise<CreateCategoryDto> {
-        return this.categoryService.getCategoryById(id);
-    }
-
-    @UseGuards(AccessTokenGuard)
-    @Post('/categories')
-    @ApiBearerAuth()
-    @ApiOperation({
-        description: 'Create category',
-    })
-    @ApiOkResponsePayload(CreateCategoryDto, EApiOkResponsePayload.OBJECT)
-    async createCategory(@Body() body: CreateCategoryDto): Promise<CreateCategoryDto> {
-        return this.categoryService.createCategory(body.name);
-    }
-
-    @UseGuards(AccessTokenGuard)
-    @Put('/categories/:id')
-    @ApiBearerAuth()
-    @ApiOperation({
-        description: 'Update category',
-    })
-    @ApiOkResponsePayload(CreateCategoryDto, EApiOkResponsePayload.OBJECT)
-    async updateCategory(@Param('id') id: string, @Body() body: CreateCategoryDto): Promise<CreateCategoryDto> {
-        return this.categoryService.updateCategory(id, body.name);
-    }
-
-    @UseGuards(AccessTokenGuard)
-    @Delete('/categories/:id')
-    @ApiBearerAuth()
-    @ApiOperation({
-        description: 'Delete category',
-    })
-    @ApiOkResponsePayload(Boolean, EApiOkResponsePayload.OBJECT)
-    async deleteCategory(@Param('id') id: string): Promise<boolean> {
-        await this.categoryService.deleteCategory(id);
         return true;
     }
 }

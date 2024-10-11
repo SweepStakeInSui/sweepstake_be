@@ -18,9 +18,12 @@ export class CommentEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     marketId: string;
 
-    @ManyToOne(() => CommentEntity, comment => comment.replies, { nullable: true })
+    @ManyToOne(() => CommentEntity, comment => comment.replies, { nullable: true, createForeignKeyConstraints: false })
     parentComment: CommentEntity;
 
-    @OneToMany(() => CommentEntity, comment => comment.parentComment)
+    @OneToMany(() => CommentEntity, comment => comment.parentComment, {
+        nullable: true,
+        createForeignKeyConstraints: false,
+    })
     replies: CommentEntity[];
 }
