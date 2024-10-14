@@ -33,8 +33,8 @@ export class MarketEntity extends BaseEntity {
     @OneToMany(() => ConditionEntity, condition => condition.market, { createForeignKeyConstraints: false })
     conditions: ConditionEntity[];
 
-    @Column({ type: 'simple-array' })
-    categoryIds: string[];
+    @Column({ type: 'simple-array', nullable: true })
+    categoryIds?: string[];
 
     // TODO: remove this
     @Column({ type: 'varchar' })

@@ -23,6 +23,7 @@ import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { UserEntity } from '@models/entities/user.entity';
 import { TransactionService } from '@modules/chain/services/transaction.service';
 import { Like } from 'typeorm';
+import { EEnvKey } from '@constants/env.constant';
 
 export class MarketService {
     protected logger: Logger;
@@ -171,8 +172,7 @@ export class MarketService {
     public async create2(userInfo: UserEntity, market: MarketInput, conditions: string): Promise<MarketEntity> {
         const marketInfo = this.marketRepository.create({ ...market, conditions_str: conditions, userId: userInfo.id });
 
-        // TODO: take the create market fee
-        // userInfo.reduceBalance(100n);
+        userInfo.reduceBalance(BigInt(this.configService.get(EEnvKey.FEE_CREATE_MARKET)));
 
         const outcomeYesInfo = this.outcomeRepository.create({
             marketId: marketInfo.id,
