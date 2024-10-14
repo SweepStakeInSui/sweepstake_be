@@ -1,9 +1,9 @@
 export enum CriteriaType {
-    Bool = 'Bool',
-    Num = 'Num',
+    Bool = 'bool',
+    Num = 'N=num',
 }
 
 export enum CriteriaStatus {
-    Pending = 'Pending',
-    Set = 'Set',
+    Pending = 'pending',
+    Set = 'set',
 }

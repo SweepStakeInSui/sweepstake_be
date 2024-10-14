@@ -18,11 +18,11 @@ export enum OrderSide {
 }
 
 export enum OrderStatus {
-    'Pending' = 'Pending',
-    'Matching' = 'Matching',
-    'Filled' = 'Filled',
-    'Completed' = 'Completed',
-    'Cancelled' = 'Cancelled',
+    Pending = 'pending',
+    Matching = 'matching',
+    Filled = 'filled',
+    Completed = 'completed',
+    Cancelled = 'cancelled',
 }
 
 export class OrderInput {

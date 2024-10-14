@@ -1,13 +1,14 @@
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
-import { Controller, DefaultValuePipe, Get, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Get, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
 import { UserEntity } from '@models/entities/user.entity';
 import { AccessTokenGuard } from '@modules/auth/guards/access-token.guard';
 import { NotificationService } from '../services/notification.service';
-import { GetNotificationResponseDto } from '../dtos/get-notification';
+import { GetNotificationResponseDto } from '../dtos/get-notification.dto';
+import { SeenRequestDto, SeenResponseDto } from '../dtos/seen.dto';
 
 @ApiTags('notification')
 @UseGuards(AccessTokenGuard)
@@ -28,7 +29,7 @@ export class NotificationController {
         description: '',
     })
     @ApiOkResponsePayload(GetNotificationResponseDto, EApiOkResponsePayload.OBJECT, true)
-    async getMarketList(
+    async getNotification(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
         @CurrentUser() userInfo: UserEntity,
@@ -41,5 +42,17 @@ export class NotificationController {
             },
             { userId: userInfo.id },
         );
+    }
+
+    @Post('/seen')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(SeenResponseDto, EApiOkResponsePayload.OBJECT, true)
+    async seen(@Body() body: SeenRequestDto, @CurrentUser() userInfo: UserEntity): Promise<SeenResponseDto> {
+        await this.notificationService.seen(body.notificationId, userInfo.id);
+
+        return {};
     }
 }

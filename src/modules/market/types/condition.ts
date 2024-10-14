@@ -1,7 +1,7 @@
 export enum ConditionType {
-    Equal = 'Equal',
-    Greater = 'Greater',
-    Less = 'Less',
-    GreaterEqual = 'GreaterEqual',
-    LessEqual = 'LessEqual',
+    Equal = 'equal',
+    Greater = 'greater',
+    Less = 'less',
+    GreaterEqual = 'greaterEqual',
+    LessEqual = 'lessEqual',
 }

@@ -13,6 +13,7 @@ import { ShareRepository } from '@models/repositories/share.repository';
 import { OrderRepository } from '@models/repositories/order.repository';
 import { TradeRepository } from '@models/repositories/trade.repository';
 import { NotificationRepository } from '@models/repositories/notification.repository';
+import { NotificationType } from '@modules/notification/types/notification';
 
 @Injectable()
 export class EventService {
@@ -95,7 +96,7 @@ export class EventService {
 
         const notificationInfo = await this.notificationRepository.create({
             userId: userInfo.id,
-            type: 'deposit',
+            type: NotificationType.Deposited,
             message: `You have deposited ${amount} to your account`,
         });
 
@@ -106,7 +107,7 @@ export class EventService {
         const { owner, amount } = event.parsedJson as any;
         const notificationInfo = await this.notificationRepository.create({
             userId: owner,
-            type: 'withdraw',
+            type: NotificationType.Withdrawn,
             message: `You have withdrown ${amount} to your account`,
         });
 
@@ -129,7 +130,7 @@ export class EventService {
 
         const notificationInfo = await this.notificationRepository.create({
             userId: marketInfo.userId,
-            type: 'create_market',
+            type: NotificationType.MarketCreated,
             message: `Your market ${marketInfo.name} has been created`,
         });
 
@@ -164,7 +165,7 @@ export class EventService {
 
         const notificationInfo = await this.notificationRepository.create({
             userId: orderInfo.userId,
-            type: 'order_executed',
+            type: NotificationType.OrderExecuted,
             message: `You have minted ${amount} to your account`,
         });
 
@@ -199,7 +200,7 @@ export class EventService {
 
         const notificationInfo = await this.notificationRepository.create({
             userId: orderInfo.userId,
-            type: 'order_executed',
+            type: NotificationType.OrderExecuted,
             message: `You have minted ${amount} to your account`,
         });
 
@@ -253,12 +254,12 @@ export class EventService {
         const notificationInfos = await this.notificationRepository.create([
             {
                 userId: orderNoId.userId,
-                type: 'order_executed',
+                type: NotificationType.OrderExecuted,
                 message: `You have burned ${orderNoInfo.amount} from your account`,
             },
             {
                 userId: orderYesId.userId,
-                type: 'order_executed',
+                type: NotificationType.OrderExecuted,
                 message: `You have burned ${orderYesInfo.amount} from your account`,
             },
         ]);
@@ -302,12 +303,12 @@ export class EventService {
         const notificationInfos = await this.notificationRepository.create([
             {
                 userId: makerOrderId.userId,
-                type: 'order_executed',
+                type: NotificationType.OrderExecuted,
                 message: `You have transferred ${makerOrderInfo.amount} from your account`,
             },
             {
                 userId: takerOrderInfo.userId,
-                type: 'order_executed',
+                type: NotificationType.OrderExecuted,
                 message: `You have received ${takerOrderInfo.amount} from your account`,
             },
         ]);
