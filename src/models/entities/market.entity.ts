@@ -34,7 +34,7 @@ export class MarketEntity extends BaseEntity {
     conditions: ConditionEntity[];
 
     @Column({ type: 'simple-array', nullable: true })
-    categoryIds?: string[];
+    category?: string[];
 
     // TODO: remove this
     @Column({ type: 'varchar' })
