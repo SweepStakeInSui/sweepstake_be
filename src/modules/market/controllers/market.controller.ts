@@ -133,6 +133,22 @@ export class MarketController {
         return this.commentService.getCommentsByMarket(marketId, { page, limit });
     }
 
+    @Get('/comments/user/:userId')
+    @ApiOperation({
+        description: 'Get comments for a user',
+    })
+    @ApiQuery({ name: 'page', required: false, type: Number })
+    @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiOkResponsePayload(GetCommentListResponseDto, EApiOkResponsePayload.OBJECT, true)
+    async getCommentsByUser(
+        @Param('userId') userId: string,
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    ): Promise<GetCommentListResponseDto> {
+        limit = limit > 100 ? 100 : limit;
+        return this.commentService.getCommentsByUser(userId, { page, limit });
+    }
+
     @UseGuards(AccessTokenGuard)
     @Post('/comments')
     @ApiBearerAuth()

@@ -42,7 +42,17 @@ export class CommentService {
         marketId: string,
         options: IPaginationOptions,
     ): Promise<Pagination<CommentEntity>> {
-        return this.paginate(options, { marketId, parentComment: null });
+        return paginate<CommentEntity>(this.commentRepository, options, {
+            where: { marketId },
+            relations: ['parentComment'],
+        });
+    }
+
+    public async getCommentsByUser(userId: string, options: IPaginationOptions): Promise<Pagination<CommentEntity>> {
+        return paginate<CommentEntity>(this.commentRepository, options, {
+            where: { userId },
+            relations: ['parentComment'],
+        });
     }
 
     public async createComment(
