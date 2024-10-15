@@ -8,7 +8,7 @@ import Redis from 'ioredis';
 import { Logger } from 'log4js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { MarketInput } from '../types/market';
-import { FindOptionsWhere, In } from 'typeorm';
+import { FindOptionsWhere } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
 import { ConditionRepository } from '@models/repositories/condition.repository';
@@ -22,7 +22,6 @@ import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-produ
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { UserEntity } from '@models/entities/user.entity';
 import { TransactionService } from '@modules/chain/services/transaction.service';
-import { Like } from 'typeorm';
 import { EEnvKey } from '@constants/env.constant';
 
 export class MarketService {
@@ -36,7 +35,6 @@ export class MarketService {
         @InjectRedis() private readonly redis: Redis,
         private kafkaProducer: KafkaProducerService,
         private transactionService: TransactionService,
-
         private marketRepository: MarketRepository,
         private outcomeRepository: OutcomeRepository,
         private conditionRepository: ConditionRepository,
@@ -52,24 +50,22 @@ export class MarketService {
         options: IPaginationOptions,
         filters: { name?: string; categories?: string },
     ): Promise<Pagination<MarketEntity>> {
-        const where: FindOptionsWhere<MarketEntity> = {};
+        const queryBuilder = this.marketRepository.createQueryBuilder('market');
 
         if (filters.name) {
-            where.name = Like(`%${filters.name}%`);
+            queryBuilder.andWhere('market.name LIKE :name', { name: `%${filters.name}%` });
         }
 
         if (filters.categories) {
             const categoryNames = filters.categories.split(',').map(name => name.trim());
-            const categories = await this.categoryRepository.find({
-                where: { name: In(categoryNames) },
+            categoryNames.forEach((category, index) => {
+                queryBuilder.andWhere(`FIND_IN_SET(:category${index}, market.category)`, {
+                    [`category${index}`]: category,
+                });
             });
-            const categoryIds = categories.map(category => category.id);
-            where.categoryIds = In(categoryIds);
         }
 
-        return paginate<MarketEntity>(this.marketRepository, options, {
-            where,
-        });
+        return paginate<MarketEntity>(queryBuilder, options);
     }
 
     async search(name: string) {
