@@ -10,6 +10,9 @@ import { UserEntity } from '@models/entities/user.entity';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { TransactionService } from '@modules/chain/services/transaction.service';
+import { BalanceChangeRepository } from '@models/repositories/balance-change.repository';
+import { paginate } from 'nestjs-typeorm-paginate';
+import { BalanceChangeEntity } from '@models/entities/balance-change.entity';
 
 @Injectable()
 export class WalletService {
@@ -25,6 +28,7 @@ export class WalletService {
         private readonly kafkaProducer: KafkaProducerService,
         private readonly transactionService: TransactionService,
         private readonly userRepository: UserRepository,
+        private readonly balanceChangeRepository: BalanceChangeRepository,
     ) {
         this.logger = this.loggerService.getLogger(WalletService.name);
         this.configService = configService;
@@ -71,5 +75,18 @@ export class WalletService {
         });
 
         console.log(msgMetadata);
+    }
+
+    public async getTransactionHistory(userInfo: UserEntity, page: number, limit: number) {
+        return await paginate<BalanceChangeEntity>(
+            this.balanceChangeRepository,
+            {
+                page,
+                limit,
+            },
+            {
+                where: { userId: userInfo.id },
+            },
+        );
     }
 }
