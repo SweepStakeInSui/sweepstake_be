@@ -14,10 +14,13 @@ import { TransactionEntity } from './transaction.entity';
 import { UserEntity } from './user.entity';
 import { CommentEntity } from '@models/entities/comment.entity';
 import { CategoryEntity } from '@models/entities/category.entity';
+import { BalanceChangeEntity } from './balance-change.entity';
 
 export const Entities = [
     AuthEntity,
     UserEntity,
+
+    BalanceChangeEntity,
 
     MarketEntity,
     ConditionEntity,

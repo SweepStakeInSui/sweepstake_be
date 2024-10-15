@@ -40,15 +40,6 @@ export class WalletService {
     }
 
     public async deposit(userInfo: UserEntity, txBytes: string, signature: string[]) {
-        // TODO: only add balance after tx is successful
-        // userInfo.balance += amount;
-        // const txResp = await this.transactionService.submitTransaction(txBytes, signature);
-
-        // console.log(txResp);
-
-        // TODO: build deposit transaction
-
-        // TODO: push deposit transaction job
         const msgMetadata = await this.kafkaProducer.produce({
             topic: KafkaTopic.SUBMIT_TRANSACTION,
             messages: [

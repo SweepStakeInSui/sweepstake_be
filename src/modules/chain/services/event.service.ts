@@ -14,6 +14,9 @@ import { OrderRepository } from '@models/repositories/order.repository';
 import { TradeRepository } from '@models/repositories/trade.repository';
 import { NotificationRepository } from '@models/repositories/notification.repository';
 import { NotificationType } from '@modules/notification/types/notification';
+import { BalanceChangeRepository } from '@models/repositories/balance-change.repository';
+import dayjs from 'dayjs';
+import { BalanceChangeStatus, BalanceChangeType } from '@modules/user/types/balance-change.type';
 
 @Injectable()
 export class EventService {
@@ -34,6 +37,7 @@ export class EventService {
         private readonly orderRepository: OrderRepository,
         private readonly tradeRepository: TradeRepository,
         private readonly notificationRepository: NotificationRepository,
+        private readonly balanceChangeRepository: BalanceChangeRepository,
     ) {
         this.logger = this.loggerService.getLogger(CrawlerService.name);
         this.configService = configService;
@@ -89,7 +93,18 @@ export class EventService {
         if (userInfo) {
             userInfo.addBalance(BigInt(amount));
 
-            await this.userRepository.save(userInfo);
+            const depositInfo = await this.balanceChangeRepository.create({
+                userId: userInfo.id,
+                amount,
+                type: BalanceChangeType.Deposit,
+                status: BalanceChangeStatus.Success,
+                timestamp: event.timestampMs ? dayjs(event.timestampMs).unix() : dayjs().unix(),
+                transactionHash: event.id.txDigest,
+            });
+            await this.userRepository.manager.transaction(async manager => {
+                await manager.save(userInfo);
+                await manager.save(depositInfo);
+            });
         } else {
             this.logger.error('User not found');
         }
@@ -98,6 +113,9 @@ export class EventService {
             userId: userInfo.id,
             type: NotificationType.Deposited,
             message: `You have deposited ${amount} to your account`,
+            data: {
+                amount,
+            },
         });
 
         await this.notificationRepository.save(notificationInfo);
@@ -105,10 +123,34 @@ export class EventService {
 
     private async processWithdrawEvent(event: SuiEvent) {
         const { owner, amount } = event.parsedJson as any;
+
+        const userInfo = await this.userRepository.findOneBy({
+            address: owner,
+        });
+
+        if (!userInfo) {
+            this.logger.error('User not found');
+            return;
+        }
+
+        const withdrawInfo = await this.balanceChangeRepository.create({
+            userId: userInfo.id,
+            amount,
+            type: BalanceChangeType.Withdraw,
+            status: BalanceChangeStatus.Success,
+            timestamp: event.timestampMs ? dayjs(event.timestampMs).unix() : dayjs().unix(),
+            transactionHash: event.id.txDigest,
+        });
+
+        await this.balanceChangeRepository.save(withdrawInfo);
+
         const notificationInfo = await this.notificationRepository.create({
             userId: owner,
             type: NotificationType.Withdrawn,
             message: `You have withdrown ${amount} to your account`,
+            data: {
+                amount,
+            },
         });
 
         await this.notificationRepository.save(notificationInfo);
@@ -124,6 +166,7 @@ export class EventService {
         if (marketInfo) {
             marketInfo.isActive = true;
             marketInfo.onchainId = (event.parsedJson as any).object_id;
+            marketInfo.transactionHash = event.id.txDigest;
         }
 
         await this.marketRepository.save(marketInfo);
@@ -132,6 +175,9 @@ export class EventService {
             userId: marketInfo.userId,
             type: NotificationType.MarketCreated,
             message: `Your market ${marketInfo.name} has been created`,
+            data: {
+                marketInfo,
+            },
         });
 
         await this.notificationRepository.save(notificationInfo);
@@ -167,6 +213,9 @@ export class EventService {
             userId: orderInfo.userId,
             type: NotificationType.OrderExecuted,
             message: `You have minted ${amount} to your account`,
+            data: {
+                amount,
+            },
         });
 
         await this.notificationRepository.save(notificationInfo);
@@ -202,6 +251,9 @@ export class EventService {
             userId: orderInfo.userId,
             type: NotificationType.OrderExecuted,
             message: `You have minted ${amount} to your account`,
+            data: {
+                amount,
+            },
         });
 
         await this.notificationRepository.save(notificationInfo);
@@ -256,11 +308,17 @@ export class EventService {
                 userId: orderNoId.userId,
                 type: NotificationType.OrderExecuted,
                 message: `You have burned ${orderNoInfo.amount} from your account`,
+                data: {
+                    amount: orderNoInfo.amount,
+                },
             },
             {
                 userId: orderYesId.userId,
                 type: NotificationType.OrderExecuted,
                 message: `You have burned ${orderYesInfo.amount} from your account`,
+                data: {
+                    amount: orderNoInfo.amount,
+                },
             },
         ]);
 

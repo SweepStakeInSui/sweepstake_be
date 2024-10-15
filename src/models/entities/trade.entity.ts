@@ -33,4 +33,7 @@ export class TradeEntity extends BaseEntity {
         default: TradeStatus.Pending,
     })
     status: TradeStatus;
+
+    @Column({ type: 'varchar', nullable: true })
+    transactionHash?: string;
 }

@@ -42,4 +42,7 @@ export class MarketEntity extends BaseEntity {
 
     @Column({ type: 'varchar', nullable: true })
     onchainId?: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    transactionHash?: string;
 }
