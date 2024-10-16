@@ -56,6 +56,7 @@ export class MarketController {
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
         @Query('name') name?: string,
+        @Query('user') userId?: string,
         @Query('category') categories?: string,
     ): Promise<GetMarketListRequestDto> {
         limit = limit > 100 ? 100 : limit;
@@ -64,7 +65,7 @@ export class MarketController {
                 page,
                 limit,
             },
-            { name, categories },
+            { name, categories, userId },
         );
     }
 

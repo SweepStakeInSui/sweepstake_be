@@ -48,7 +48,7 @@ export class MarketService {
     // TODO: Improve filter of this method
     public async paginate(
         options: IPaginationOptions,
-        filters: { name?: string; categories?: string },
+        filters: { name?: string; categories?: string; userId?: string },
     ): Promise<Pagination<MarketEntity>> {
         const queryBuilder = this.marketRepository.createQueryBuilder('market');
 
@@ -63,6 +63,10 @@ export class MarketService {
                     [`category${index}`]: category,
                 });
             });
+        }
+
+        if (filters.userId) {
+            queryBuilder.andWhere('market.userId = :userId', { userId: filters.userId });
         }
 
         return paginate<MarketEntity>(queryBuilder, options);
