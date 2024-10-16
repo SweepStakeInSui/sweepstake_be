@@ -51,6 +51,7 @@ export class MarketController {
     })
     @ApiQuery({ name: 'name', required: false, type: String })
     @ApiQuery({ name: 'category', required: false, type: String })
+    @ApiQuery({ name: 'user', required: false, type: String })
     @ApiOkResponsePayload(GetMarketListResponseDto, EApiOkResponsePayload.OBJECT, true)
     async getMarketList(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
