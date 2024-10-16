@@ -14,6 +14,8 @@ import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
 import { RequestDepositRequestDto } from '../dtos/request-deposit.dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { BalanceChangeEntity } from '@models/entities/balance-change.entity';
+import { ShareService } from '../services/share.service';
+import { ShareEntity } from '@models/entities/share.entity';
 
 @ApiTags('user')
 @Controller('user')
@@ -24,6 +26,7 @@ export class UserController {
         private loggerService: LoggerService,
         private readonly userService: UserService,
         private readonly walletService: WalletService,
+        private readonly shareService: ShareService,
     ) {
         this.logger = this.loggerService.getLogger(UserController.name);
     }
@@ -103,5 +106,22 @@ export class UserController {
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
     ): Promise<Pagination<BalanceChangeEntity>> {
         return await this.walletService.getTransactionHistory(user, page, limit);
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Get('/positions')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: '',
+    })
+    @ApiQuery({ name: 'page', required: false, type: Number })
+    @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiOkResponsePayload(ProfileResponseDto, EApiOkResponsePayload.OBJECT)
+    async getPositions(
+        @CurrentUser() user: UserEntity,
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    ): Promise<Pagination<ShareEntity>> {
+        return await this.shareService.paginate({ page, limit }, user.id);
     }
 }
