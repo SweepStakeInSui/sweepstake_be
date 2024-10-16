@@ -18,6 +18,8 @@ import { log } from 'console';
 import { ShareRepository } from '@models/repositories/share.repository';
 import { OutcomeType } from '@modules/market/types/outcome';
 import { BigIntUtil } from '@shared/utils/bigint';
+import { OrderEntity } from '@models/entities/order.entity';
+import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 
 export class OrderService {
     protected logger: Logger;
@@ -178,5 +180,13 @@ export class OrderService {
         });
 
         log(msgMetadata);
+    }
+
+    public async paginate(options: IPaginationOptions, userId: string): Promise<Pagination<OrderEntity>> {
+        return paginate<OrderEntity>(this.orderRepository, options, {
+            where: {
+                userId,
+            },
+        });
     }
 }
