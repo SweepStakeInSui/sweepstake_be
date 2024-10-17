@@ -122,7 +122,7 @@ export class EventService {
     }
 
     private async processWithdrawEvent(event: SuiEvent) {
-        const { owner, amount } = event.parsedJson as any;
+        const { withdraw_id: withdrawId, owner, amount } = event.parsedJson as any;
 
         const userInfo = await this.userRepository.findOneBy({
             address: owner,
@@ -133,14 +133,18 @@ export class EventService {
             return;
         }
 
-        const withdrawInfo = await this.balanceChangeRepository.create({
+        const withdrawInfo = await this.balanceChangeRepository.findOneBy({
+            id: withdrawId,
             userId: userInfo.id,
-            amount,
-            type: BalanceChangeType.Withdraw,
-            status: BalanceChangeStatus.Success,
-            timestamp: event.timestampMs ? dayjs(event.timestampMs).unix() : dayjs().unix(),
-            transactionHash: event.id.txDigest,
         });
+
+        if (!withdrawInfo) {
+            this.logger.error('Withdraw info not found');
+            return;
+        }
+
+        withdrawInfo.status = BalanceChangeStatus.Success;
+        withdrawInfo.transactionHash = event.id.txDigest;
 
         await this.balanceChangeRepository.save(withdrawInfo);
 
@@ -215,6 +219,7 @@ export class EventService {
             message: `You have minted ${amount} to your account`,
             data: {
                 amount,
+                outcomeId: orderInfo.outcomeId,
             },
         });
 
@@ -253,6 +258,7 @@ export class EventService {
             message: `You have minted ${amount} to your account`,
             data: {
                 amount,
+                outcomeId: orderInfo.outcomeId,
             },
         });
 
@@ -310,6 +316,7 @@ export class EventService {
                 message: `You have burned ${orderNoInfo.amount} from your account`,
                 data: {
                     amount: orderNoInfo.amount,
+                    outcomeId: orderNoInfo.outcomeId,
                 },
             },
             {
@@ -317,7 +324,8 @@ export class EventService {
                 type: NotificationType.OrderExecuted,
                 message: `You have burned ${orderYesInfo.amount} from your account`,
                 data: {
-                    amount: orderNoInfo.amount,
+                    amount: orderYesInfo.amount,
+                    type: orderYesInfo.outcomeId,
                 },
             },
         ]);
@@ -363,11 +371,19 @@ export class EventService {
                 userId: makerOrderId.userId,
                 type: NotificationType.OrderExecuted,
                 message: `You have transferred ${makerOrderInfo.amount} from your account`,
+                data: {
+                    amount: makerOrderInfo.amount,
+                    type: 'send',
+                },
             },
             {
                 userId: takerOrderInfo.userId,
                 type: NotificationType.OrderExecuted,
                 message: `You have received ${takerOrderInfo.amount} from your account`,
+                data: {
+                    amount: takerOrderInfo.amount,
+                    type: 'receive',
+                },
             },
         ]);
 

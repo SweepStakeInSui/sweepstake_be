@@ -13,6 +13,7 @@ import { TransactionService } from '@modules/chain/services/transaction.service'
 import { BalanceChangeRepository } from '@models/repositories/balance-change.repository';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { BalanceChangeEntity } from '@models/entities/balance-change.entity';
+import { BalanceChangeType } from '../types/balance-change.type';
 
 @Injectable()
 export class WalletService {
@@ -59,7 +60,16 @@ export class WalletService {
     public async withdraw(userInfo: UserEntity, amount: bigint, address: string) {
         userInfo.reduceBalance(amount);
 
-        await this.userRepository.save(userInfo);
+        const withdrawInfo = this.balanceChangeRepository.create({
+            userId: userInfo.id,
+            amount,
+            type: BalanceChangeType.Withdraw,
+        });
+
+        await this.userRepository.manager.transaction(async manager => {
+            await manager.save(userInfo);
+            await manager.save(withdrawInfo);
+        });
 
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
             await this.transactionService.buildWithdrawTransaction(address, amount),
