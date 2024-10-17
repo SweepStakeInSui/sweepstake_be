@@ -23,6 +23,8 @@ export class MatchedOrder {
     price: bigint;
 }
 
+const UNIT = 1000000000n;
+
 export class OrderBook {
     private marketId: string;
 
@@ -165,13 +167,13 @@ export class OrderBook {
 
             switch (order.side) {
                 case OrderSide.Bid: {
-                    const maxExpectedPrice = (order.price * (1000n + order.slippage)) / 1000n;
+                    const maxExpectedPrice = (order.price * (UNIT + order.slippage)) / UNIT;
 
                     if (oppositeOrder.price > maxExpectedPrice) exceeded = true;
                     break;
                 }
                 case OrderSide.Ask: {
-                    const maxExpectedPrice = (order.price * (1000n - order.slippage)) / 1000n;
+                    const maxExpectedPrice = (order.price * (UNIT - order.slippage)) / UNIT;
 
                     if (oppositeOrder.price < maxExpectedPrice) exceeded = true;
                     break;
@@ -204,15 +206,15 @@ export class OrderBook {
 
             switch (order.side) {
                 case OrderSide.Bid: {
-                    const maxExpectedPrice = (order.price * (1000n + order.slippage)) / 1000n;
+                    const maxExpectedPrice = (order.price * (UNIT + order.slippage)) / UNIT;
 
-                    if (1000n - oppositeOrder.price > maxExpectedPrice) exceeded = true;
+                    if (UNIT - oppositeOrder.price > maxExpectedPrice) exceeded = true;
                     break;
                 }
                 case OrderSide.Ask: {
-                    const maxExpectedPrice = (order.price * (1000n - order.slippage)) / 1000n;
+                    const maxExpectedPrice = (order.price * (UNIT - order.slippage)) / UNIT;
 
-                    if (1000n - oppositeOrder.price < maxExpectedPrice) exceeded = true;
+                    if (UNIT - oppositeOrder.price < maxExpectedPrice) exceeded = true;
                     break;
                 }
             }
@@ -308,17 +310,17 @@ export class OrderBook {
                 case OrderSide.Bid:
                     // comparator for bid order, descending
                     comparator = (item: OrderEntity) => {
-                        if (item.price === 1000n - order.price) return 0;
-                        if (item.price < 1000n - order.price) return 1;
-                        if (item.price > 1000n - order.price) return -1;
+                        if (item.price === UNIT - order.price) return 0;
+                        if (item.price < UNIT - order.price) return 1;
+                        if (item.price > UNIT - order.price) return -1;
                     };
                     break;
                 case OrderSide.Ask:
                     // comparator for ask order, ascending
                     comparator = (item: OrderEntity) => {
-                        if (item.price === 1000n - order.price) return 0;
-                        if (item.price < 1000n - order.price) return 1;
-                        if (item.price > 1000n - order.price) return -1;
+                        if (item.price === UNIT - order.price) return 0;
+                        if (item.price < UNIT - order.price) return 1;
+                        if (item.price > UNIT - order.price) return -1;
                     };
                     break;
             }

@@ -21,6 +21,8 @@ import { BigIntUtil } from '@shared/utils/bigint';
 import { OrderEntity } from '@models/entities/order.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 
+const UNIT = 1000000000n;
+
 export class OrderService {
     protected logger: Logger;
     protected configService: ConfigService;
@@ -98,14 +100,14 @@ export class OrderService {
                             const sameAssetPrice = outcomeInfo.askPrice;
                             const oppositeAssetPrice = oppositeOutcomeInfo.bidPrice;
 
-                            orderInfo.price = BigIntUtil.max(oppositeAssetPrice, 1000n - sameAssetPrice);
+                            orderInfo.price = BigIntUtil.max(oppositeAssetPrice, UNIT - sameAssetPrice);
                             break;
                         }
                         case OrderSide.Ask: {
                             const sameAssetPrice = outcomeInfo.askPrice;
                             const oppositeAssetPrice = oppositeOutcomeInfo.bidPrice;
 
-                            orderInfo.price = BigIntUtil.min(oppositeAssetPrice, 1000n - sameAssetPrice);
+                            orderInfo.price = BigIntUtil.min(oppositeAssetPrice, UNIT - sameAssetPrice);
                             break;
                         }
                     }
@@ -118,7 +120,7 @@ export class OrderService {
 
             switch (orderInfo.side) {
                 case OrderSide.Bid: {
-                    userInfo.reduceBalance((orderInfo.price * (1000n + orderInfo.slippage) * orderInfo.amount) / 1000n);
+                    userInfo.reduceBalance((orderInfo.price * (UNIT + orderInfo.slippage) * orderInfo.amount) / UNIT);
                     break;
                 }
                 case OrderSide.Ask: {
