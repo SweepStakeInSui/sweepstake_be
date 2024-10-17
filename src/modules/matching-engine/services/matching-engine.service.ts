@@ -55,6 +55,17 @@ export class MatchingEngineService {
         return orderBook;
     }
 
+    async init() {
+        const orders = await this.orderRepository.find({
+            where: {
+                status: OrderStatus.Pending,
+            },
+        });
+        for (const order of orders) {
+            await this.matchOrder(order);
+        }
+    }
+
     async matchOrder(order: OrderEntity) {
         log('matching order', order.id, order.side, order.outcome.type, order.price, order.amount);
         const outcomeInfo = await this.outcomeRepository.findOne({
