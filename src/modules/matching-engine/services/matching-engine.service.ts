@@ -40,6 +40,8 @@ export class MatchingEngineService {
         this.configService = configService;
 
         this.orderBooks = new Map();
+
+        this.init();
     }
 
     private orderBooks: Map<string, OrderBook>;
@@ -60,6 +62,7 @@ export class MatchingEngineService {
             where: {
                 status: OrderStatus.Pending,
             },
+            relations: ['outcome'],
         });
         for (const order of orders) {
             await this.matchOrder(order);
