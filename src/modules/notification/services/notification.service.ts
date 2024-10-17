@@ -7,7 +7,7 @@ import { InjectRedis } from '@songkeys/nestjs-redis';
 import Redis from 'ioredis';
 import { Logger } from 'log4js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, In } from 'typeorm';
 import { NotificationStatus } from '../types/notification';
 
 @Injectable()
@@ -35,15 +35,10 @@ export class NotificationService {
         });
     }
 
-    public async seen(notificationId: string, userId: string): Promise<void> {
-        const notificationInfo = await this.notificationRepository.findOne({
-            where: { id: notificationId, userId },
-        });
-
-        if (!notificationInfo) {
-            throw new Error('Notification not found');
-        }
-
-        await this.notificationRepository.update({ id: notificationId }, { status: NotificationStatus.Read });
+    public async seen(notificationIds: string[], userId: string): Promise<void> {
+        await this.notificationRepository.update(
+            { id: In(notificationIds), userId },
+            { status: NotificationStatus.Read },
+        );
     }
 }

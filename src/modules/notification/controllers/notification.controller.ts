@@ -51,7 +51,7 @@ export class NotificationController {
     })
     @ApiOkResponsePayload(SeenResponseDto, EApiOkResponsePayload.OBJECT, true)
     async seen(@Body() body: SeenRequestDto, @CurrentUser() userInfo: UserEntity): Promise<SeenResponseDto> {
-        await this.notificationService.seen(body.notificationId, userInfo.id);
+        await this.notificationService.seen(body.notificationIds, userInfo.id);
 
         return {};
     }
