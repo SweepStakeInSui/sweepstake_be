@@ -144,7 +144,7 @@ export class TransactionService {
         return tx;
     }
 
-    public async buildWithdrawTransaction(user: string, amount: bigint) {
+    public async buildWithdrawTransaction(user: string, withdrawId: string, amount: bigint) {
         const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
 
         const tx = new Transaction();
@@ -153,6 +153,7 @@ export class TransactionService {
             arguments: [
                 tx.object(this.sweepstakeAdminCap),
                 tx.object(this.sweepstakeSuiTreasury),
+                tx.pure.string(withdrawId),
                 tx.pure.u64(amount),
                 tx.pure.address(user),
             ],

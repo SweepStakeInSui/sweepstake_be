@@ -72,7 +72,7 @@ export class WalletService {
         });
 
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
-            await this.transactionService.buildWithdrawTransaction(address, amount),
+            await this.transactionService.buildWithdrawTransaction(address, withdrawInfo.id, amount),
         );
 
         const msgMetadata = await this.kafkaProducer.produce({
