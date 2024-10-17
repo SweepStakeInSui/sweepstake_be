@@ -59,7 +59,8 @@ export class OrderController {
         @CurrentUser() user: UserEntity,
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+        @Query('user') userId?: string,
     ): Promise<Pagination<OrderEntity>> {
-        return await this.orderService.paginate({ page, limit }, user.id);
+        return await this.orderService.paginate({ page, limit }, userId);
     }
 }
