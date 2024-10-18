@@ -1,7 +1,8 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { Transform } from 'class-transformer';
 import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
+import { OutcomeEntity } from './outcome.entity';
 
 @Entity({ name: 'share' })
 export class ShareEntity extends BaseEntity {
@@ -25,4 +26,7 @@ export class ShareEntity extends BaseEntity {
     public addBalance(amount: bigint) {
         this.balance += amount;
     }
+
+    @ManyToOne(() => OutcomeEntity, { createForeignKeyConstraints: false })
+    public outcome: OutcomeEntity;
 }

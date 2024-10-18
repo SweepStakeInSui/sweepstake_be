@@ -24,9 +24,14 @@ export class ShareService {
     }
 
     public async paginate(options: IPaginationOptions, userId: string): Promise<Pagination<ShareEntity>> {
-        return paginate<ShareEntity>(this.shareRepository, options, {
+        return await paginate<ShareEntity>(this.shareRepository, options, {
             where: {
                 userId,
+            },
+            relations: {
+                outcome: {
+                    market: true,
+                },
             },
         });
     }

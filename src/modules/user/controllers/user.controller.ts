@@ -120,6 +120,7 @@ export class UserController {
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
     ): Promise<Pagination<ShareEntity>> {
+        // TODO: reduce data size
         return await this.shareService.paginate({ page, limit }, user.id);
     }
 }
