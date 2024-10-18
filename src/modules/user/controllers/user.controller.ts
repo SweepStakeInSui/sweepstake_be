@@ -40,15 +40,13 @@ export class UserController {
     @ApiOkResponsePayload(ProfileResponseDto, EApiOkResponsePayload.OBJECT)
     async getProfile(@CurrentUser() user: UserEntity): Promise<ProfileResponseDto> {
         return {
-            username: user.username,
-            address: user.address,
+            ...user,
             avatar: 'https://example.com/avatar.jpg',
             pnl: 0,
             positionsValue: 0,
             rank: 0,
             volume: 0,
             winRate: 0,
-            balance: user.balance,
         };
     }
 
