@@ -4,6 +4,7 @@ import { OrderSide, OrderStatus, OrderType } from '@modules/order/types/order';
 import { OutcomeEntity } from './outcome.entity';
 import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
 import { Transform } from 'class-transformer';
+import { MarketEntity } from './market.entity';
 
 @Entity({ name: 'order' })
 export class OrderEntity extends BaseEntity {
@@ -62,4 +63,7 @@ export class OrderEntity extends BaseEntity {
 
     @ManyToOne(() => OutcomeEntity, { createForeignKeyConstraints: false })
     outcome: OutcomeEntity;
+
+    @ManyToOne(() => MarketEntity, { createForeignKeyConstraints: false })
+    market: MarketEntity;
 }

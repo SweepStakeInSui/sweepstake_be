@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MulterModule } from '@nestjs/platform-express';
 import { ScheduleModule } from '@nestjs/schedule';
-import { memoryStorage } from 'multer';
 import { ConsoleModule } from 'nestjs-console';
 
 import { ConfigurationModule } from '@config/config.module';
@@ -47,9 +45,13 @@ import { KafkaModule } from '@shared/modules/kafka/kafka.module';
         DatabaseModule,
         LoggingModule,
         ConsoleModule,
-        MulterModule.register({
-            storage: memoryStorage(),
-        }),
+        // MulterModule.registerAsync({
+        //     useFactory: () => ({
+        //         storage: diskStorage({
+        //             destination: './uploads',
+        //         }),
+        //     }),
+        // }),
         ScheduleModule.forRoot(),
         ...Modules,
     ],

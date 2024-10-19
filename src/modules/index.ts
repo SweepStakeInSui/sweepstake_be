@@ -8,6 +8,7 @@ import { OrderModule } from './order/order.module';
 import { UserModule } from './user/user.module';
 import { CommentModule } from './comment/comment.module';
 import { CategoryModule } from '@modules/category/category.module';
+import { FileModule } from './file/file.module';
 
 export const Modules = [
     AuthModule,
@@ -23,4 +24,6 @@ export const Modules = [
 
     NotificationModule,
     CategoryModule,
+
+    FileModule,
 ];

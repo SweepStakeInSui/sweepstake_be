@@ -16,6 +16,7 @@ import { AppModule } from './app.module';
 import { VersioningType } from '@nestjs/common';
 
 import '@shared/utils/bigint';
+import { join } from 'path';
 
 export async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -37,6 +38,9 @@ export async function bootstrap() {
     });
     app.enableCors({
         credentials: true,
+    });
+    app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), {
+        prefix: '/uploads',
     });
     app.use(useMorgan(loggingService.logger.access));
     await initSwagger(app, configService);
