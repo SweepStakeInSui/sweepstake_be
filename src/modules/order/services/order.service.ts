@@ -189,6 +189,11 @@ export class OrderService {
             where: {
                 userId,
             },
+            relations: {
+                outcome: {
+                    market: true,
+                },
+            },
         });
     }
 }

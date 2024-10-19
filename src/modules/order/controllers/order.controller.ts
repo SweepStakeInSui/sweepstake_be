@@ -54,6 +54,7 @@ export class OrderController {
     })
     @ApiQuery({ name: 'page', required: false, type: Number })
     @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiQuery({ name: 'user', required: false, type: String })
     @ApiOkResponsePayload(GetOrdersResponseDto, EApiOkResponsePayload.OBJECT)
     async getOrders(
         @CurrentUser() user: UserEntity,
