@@ -23,6 +23,7 @@ import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { UserEntity } from '@models/entities/user.entity';
 import { TransactionService } from '@modules/chain/services/transaction.service';
 import { EEnvKey } from '@constants/env.constant';
+import dayjs from 'dayjs';
 
 export class MarketService {
     protected logger: Logger;
@@ -170,7 +171,12 @@ export class MarketService {
 
     // TODO: remove this method
     public async create2(userInfo: UserEntity, market: MarketInput, conditions: string): Promise<MarketEntity> {
-        const marketInfo = this.marketRepository.create({ ...market, conditions_str: conditions, userId: userInfo.id });
+        const marketInfo = this.marketRepository.create({
+            ...market,
+            payoutTime: dayjs(market.endTime).add(3, 'day').unix(),
+            conditions_str: conditions,
+            userId: userInfo.id,
+        });
 
         userInfo.reduceBalance(BigInt(this.configService.get(EEnvKey.FEE_CREATE_MARKET)));
 

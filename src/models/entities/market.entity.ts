@@ -24,6 +24,9 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'int' })
     endTime: number;
 
+    @Column({ type: 'int' })
+    payoutTime: number;
+
     @Column({ type: 'boolean', default: false })
     isActive: boolean;
 
