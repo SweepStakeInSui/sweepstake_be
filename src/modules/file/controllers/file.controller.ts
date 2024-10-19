@@ -8,7 +8,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
 
@@ -22,6 +22,18 @@ export class FileController {
     }
 
     @Post('upload')
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                },
+            },
+        },
+    })
     @UseInterceptors(FileInterceptor('file'))
     public async upload(
         @UploadedFile(
