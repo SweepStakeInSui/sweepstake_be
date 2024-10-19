@@ -13,7 +13,6 @@ import { GetOrdersResponseDto } from '../dtos/get-orders.dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
 
 @ApiTags('order')
-@UseGuards(AccessTokenGuard)
 @Controller('order')
 export class OrderController {
     constructor(
@@ -25,6 +24,7 @@ export class OrderController {
 
     private logger: Logger;
 
+    @UseGuards(AccessTokenGuard)
     @Post('/')
     @ApiBearerAuth()
     @ApiOperation({
@@ -36,6 +36,7 @@ export class OrderController {
         return order;
     }
 
+    @UseGuards(AccessTokenGuard)
     @Post('/cancel/:id')
     @ApiBearerAuth()
     @ApiOperation({
@@ -46,7 +47,6 @@ export class OrderController {
         await this.orderService.cancelOrder(user, id);
     }
 
-    @UseGuards(AccessTokenGuard)
     @Get('/')
     @ApiBearerAuth()
     @ApiOperation({
