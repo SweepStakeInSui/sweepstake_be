@@ -191,4 +191,18 @@ export class MarketController {
         await this.commentService.deleteComment(id, userInfo);
         return true;
     }
+
+    @Get('/order-book/:marketId')
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(GetCommentListResponseDto, EApiOkResponsePayload.OBJECT, true)
+    async getOrderBook(
+        @Param('userId') userId: string,
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    ): Promise<GetCommentListResponseDto> {
+        limit = limit > 100 ? 100 : limit;
+        return this.commentService.getCommentsByUser(userId, { page, limit });
+    }
 }

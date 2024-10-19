@@ -9,6 +9,9 @@ export class MarketInput {
     description: string;
 
     @ApiProperty()
+    image?: string;
+
+    @ApiProperty()
     @IsNumber()
     startTime: number;
 

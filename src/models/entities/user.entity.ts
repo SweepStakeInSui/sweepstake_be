@@ -14,7 +14,7 @@ export class UserEntity extends BaseEntity {
     @Column({ type: 'varchar', nullable: true, unique: true })
     public email?: string;
 
-    @Column({ type: 'varchar', nullable: true, unique: true })
+    @Column({ type: 'text', nullable: true })
     public avatar?: string;
 
     @Column({ type: 'bigint', transformer: bigint })
