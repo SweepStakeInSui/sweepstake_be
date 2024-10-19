@@ -53,7 +53,10 @@ services:
     tty: true
     ports:
       - "${HOST}:${PORT}:${PORT}"
+    volumes:
+      - image_data: /app/uploads
 volumes:
   redis_data:
   mysql_data:
   kafka_data:
+  image_data:
