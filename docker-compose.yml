@@ -54,7 +54,7 @@ services:
     ports:
       - "${HOST}:${PORT}:${PORT}"
     volumes:
-      - image_data: /app/uploads
+      - image_data:/app/uploads
 volumes:
   redis_data:
   mysql_data:
