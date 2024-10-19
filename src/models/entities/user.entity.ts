@@ -9,10 +9,13 @@ export class UserEntity extends BaseEntity {
     public username: string;
 
     @Column({ type: 'varchar', nullable: true, unique: true })
-    public address: string;
+    public address?: string;
 
     @Column({ type: 'varchar', nullable: true, unique: true })
-    public email: string;
+    public email?: string;
+
+    @Column({ type: 'varchar', nullable: true, unique: true })
+    public avatar?: string;
 
     @Column({ type: 'bigint', transformer: bigint })
     @Transform(transformBigInt)

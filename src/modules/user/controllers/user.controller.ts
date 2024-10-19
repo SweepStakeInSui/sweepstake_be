@@ -16,6 +16,7 @@ import { Pagination } from 'nestjs-typeorm-paginate';
 import { BalanceChangeEntity } from '@models/entities/balance-change.entity';
 import { ShareService } from '../services/share.service';
 import { ShareEntity } from '@models/entities/share.entity';
+import { UpdateProfileRequestDto } from '../dtos/update-profile.dto';
 
 @ApiTags('user')
 @Controller('user')
@@ -41,7 +42,25 @@ export class UserController {
     async getProfile(@CurrentUser() user: UserEntity): Promise<ProfileResponseDto> {
         return {
             ...user,
-            avatar: 'https://example.com/avatar.jpg',
+            pnl: 0,
+            positionsValue: 0,
+            rank: 0,
+            volume: 0,
+            winRate: 0,
+        };
+    }
+
+    @UseGuards(AccessTokenGuard)
+    @Post('/profile')
+    @ApiBearerAuth()
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(ProfileResponseDto, EApiOkResponsePayload.OBJECT)
+    async updateProfile(@CurrentUser() user: UserEntity, @Body() body: UpdateProfileRequestDto): Promise<any> {
+        user = await this.userService.update(user.id, body);
+        return {
+            ...user,
             pnl: 0,
             positionsValue: 0,
             rank: 0,

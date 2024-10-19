@@ -4,7 +4,7 @@ export class ProfileResponseDto {
     @ApiProperty()
     username: string;
     @ApiProperty()
-    address: string;
+    address?: string;
     @ApiProperty()
     avatar?: string;
     @ApiProperty()

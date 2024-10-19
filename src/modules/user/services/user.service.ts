@@ -10,6 +10,7 @@ import { UserInput } from '../types/user.type';
 import { UserEntity } from '@models/entities/user.entity';
 import { UserError } from '../types/error.type';
 import { In } from 'typeorm';
+import { UpdateProfileRequestDto } from '../dtos/update-profile.dto';
 
 @Injectable()
 export class UserService {
@@ -40,7 +41,7 @@ export class UserService {
         return await this.userRepository.find();
     }
 
-    async update(id: string, updateData: Partial<UserInput>): Promise<UserEntity> {
+    async update(id: string, updateData: UpdateProfileRequestDto): Promise<UserEntity> {
         await this.userRepository.update(id, updateData);
         return await this.getById(id);
     }
