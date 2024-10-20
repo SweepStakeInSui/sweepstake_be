@@ -16,6 +16,12 @@ export class CommentEntity extends BaseEntity {
     userId: string;
 
     @Column({ type: 'varchar' })
+    username: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    avatar?: string;
+
+    @Column({ type: 'varchar' })
     marketId: string;
 
     @ManyToOne(() => CommentEntity, comment => comment.replies, { nullable: true, createForeignKeyConstraints: false })
