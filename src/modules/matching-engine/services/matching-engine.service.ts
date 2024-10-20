@@ -14,6 +14,7 @@ import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-produ
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { OrderSide, OrderStatus, OrderType } from '@modules/order/types/order';
 import { OutcomeType } from '@modules/market/types/outcome';
+import { EEnvKey } from '@constants/env.constant';
 
 export interface Trade {
     maker: OrderEntity;
@@ -50,7 +51,7 @@ export class MatchingEngineService {
         let orderBook = this.orderBooks.get(marketId);
 
         if (!orderBook) {
-            orderBook = new OrderBook(marketId);
+            orderBook = new OrderBook(marketId, BigInt(this.configService.get(EEnvKey.DECIMALS)));
             this.orderBooks.set(marketId, orderBook);
         }
 

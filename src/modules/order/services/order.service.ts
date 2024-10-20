@@ -20,12 +20,13 @@ import { OutcomeType } from '@modules/market/types/outcome';
 import { BigIntUtil } from '@shared/utils/bigint';
 import { OrderEntity } from '@models/entities/order.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-
-const UNIT = 1000000000n;
+import { EEnvKey } from '@constants/env.constant';
 
 export class OrderService {
     protected logger: Logger;
     protected configService: ConfigService;
+
+    private readonly unit: bigint;
 
     constructor(
         protected loggerService: LoggerService,
@@ -35,13 +36,14 @@ export class OrderService {
 
         private kafkaProducer: KafkaProducerService,
 
-        private orderRepository: OrderRepository,
-        private outcomeRepository: OutcomeRepository,
-        private marketRepository: MarketRepository,
-        private shareRepository: ShareRepository,
+        private readonly orderRepository: OrderRepository,
+        private readonly outcomeRepository: OutcomeRepository,
+        private readonly marketRepository: MarketRepository,
+        private readonly shareRepository: ShareRepository,
     ) {
         this.logger = this.loggerService.getLogger(OrderService.name);
         this.configService = configService;
+        this.unit = 10n ** BigInt(this.configService.get(EEnvKey.DECIMALS));
     }
 
     // check balance
@@ -100,14 +102,14 @@ export class OrderService {
                             const sameAssetPrice = outcomeInfo.askPrice;
                             const oppositeAssetPrice = oppositeOutcomeInfo.bidPrice;
 
-                            orderInfo.price = BigIntUtil.max(oppositeAssetPrice, UNIT - sameAssetPrice);
+                            orderInfo.price = BigIntUtil.max(oppositeAssetPrice, this.unit - sameAssetPrice);
                             break;
                         }
                         case OrderSide.Ask: {
                             const sameAssetPrice = outcomeInfo.askPrice;
                             const oppositeAssetPrice = oppositeOutcomeInfo.bidPrice;
 
-                            orderInfo.price = BigIntUtil.min(oppositeAssetPrice, UNIT - sameAssetPrice);
+                            orderInfo.price = BigIntUtil.min(oppositeAssetPrice, this.unit - sameAssetPrice);
                             break;
                         }
                     }
@@ -120,7 +122,9 @@ export class OrderService {
 
             switch (orderInfo.side) {
                 case OrderSide.Bid: {
-                    userInfo.reduceBalance((orderInfo.price * (UNIT + orderInfo.slippage) * orderInfo.amount) / UNIT);
+                    userInfo.reduceBalance(
+                        (orderInfo.price * (this.unit + orderInfo.slippage) * orderInfo.amount) / this.unit,
+                    );
                     break;
                 }
                 case OrderSide.Ask: {
@@ -128,6 +132,9 @@ export class OrderService {
                         outcomeId: orderInfo.outcomeId,
                         userId: userInfo.id,
                     });
+                    if (!shareInfo) {
+                        throw new BadRequestException('Insufficient balance');
+                    }
 
                     shareInfo.reduceBalance(orderInfo.amount);
                     await manager.save(shareInfo);

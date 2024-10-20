@@ -23,9 +23,9 @@ export class MatchedOrder {
     price: bigint;
 }
 
-const UNIT = 1000000000n;
-
 export class OrderBook {
+    private unit: bigint;
+
     private marketId: string;
 
     private outcomeYesId: string;
@@ -43,8 +43,10 @@ export class OrderBook {
         [key: string]: PriorityQueue<OrderEntity>;
     } = {};
 
-    constructor(marketId: string) {
+    constructor(marketId: string, decimals: bigint) {
         this.marketId = marketId;
+        this.unit = 10n ** decimals;
+
         // this.outcomeYesId = outcomeYesId;
         // this.outcomeNoId = outcomeNoId;
 
@@ -167,13 +169,13 @@ export class OrderBook {
 
             switch (order.side) {
                 case OrderSide.Bid: {
-                    const maxExpectedPrice = (order.price * (UNIT + order.slippage)) / UNIT;
+                    const maxExpectedPrice = (order.price * (this.unit + order.slippage)) / this.unit;
 
                     if (oppositeOrder.price > maxExpectedPrice) exceeded = true;
                     break;
                 }
                 case OrderSide.Ask: {
-                    const maxExpectedPrice = (order.price * (UNIT - order.slippage)) / UNIT;
+                    const maxExpectedPrice = (order.price * (this.unit - order.slippage)) / this.unit;
 
                     if (oppositeOrder.price < maxExpectedPrice) exceeded = true;
                     break;
@@ -206,15 +208,15 @@ export class OrderBook {
 
             switch (order.side) {
                 case OrderSide.Bid: {
-                    const maxExpectedPrice = (order.price * (UNIT + order.slippage)) / UNIT;
+                    const maxExpectedPrice = (order.price * (this.unit + order.slippage)) / this.unit;
 
-                    if (UNIT - oppositeOrder.price > maxExpectedPrice) exceeded = true;
+                    if (this.unit - oppositeOrder.price > maxExpectedPrice) exceeded = true;
                     break;
                 }
                 case OrderSide.Ask: {
-                    const maxExpectedPrice = (order.price * (UNIT - order.slippage)) / UNIT;
+                    const maxExpectedPrice = (order.price * (this.unit - order.slippage)) / this.unit;
 
-                    if (UNIT - oppositeOrder.price < maxExpectedPrice) exceeded = true;
+                    if (this.unit - oppositeOrder.price < maxExpectedPrice) exceeded = true;
                     break;
                 }
             }
@@ -310,17 +312,17 @@ export class OrderBook {
                 case OrderSide.Bid:
                     // comparator for bid order, descending
                     comparator = (item: OrderEntity) => {
-                        if (item.price === UNIT - order.price) return 0;
-                        if (item.price < UNIT - order.price) return 1;
-                        if (item.price > UNIT - order.price) return -1;
+                        if (item.price === this.unit - order.price) return 0;
+                        if (item.price < this.unit - order.price) return 1;
+                        if (item.price > this.unit - order.price) return -1;
                     };
                     break;
                 case OrderSide.Ask:
                     // comparator for ask order, ascending
                     comparator = (item: OrderEntity) => {
-                        if (item.price === UNIT - order.price) return 0;
-                        if (item.price < UNIT - order.price) return 1;
-                        if (item.price > UNIT - order.price) return -1;
+                        if (item.price === this.unit - order.price) return 0;
+                        if (item.price < this.unit - order.price) return 1;
+                        if (item.price > this.unit - order.price) return -1;
                     };
                     break;
             }
