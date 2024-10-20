@@ -70,6 +70,8 @@ export class CommentService {
             content,
             marketId,
             userId: userInfo.id,
+            username: userInfo.username,
+            avatar: userInfo.avatar,
         });
 
         if (parentCommentId) {
