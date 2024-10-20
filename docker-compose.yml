@@ -51,6 +51,8 @@ services:
     container_name: sweepstake-be
     command: sh -c "yarn start:prod"
     tty: true
+    env_file:
+      - .env.production.local
     ports:
       - "${HOST}:${PORT}:${PORT}"
     volumes:
