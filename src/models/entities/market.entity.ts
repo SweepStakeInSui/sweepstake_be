@@ -43,7 +43,7 @@ export class MarketEntity extends BaseEntity {
     category?: string[];
 
     // TODO: remove this
-    @Column({ type: 'varchar' })
+    @Column({ type: 'text' })
     conditions_str: string;
 
     @Column({ type: 'varchar', nullable: true })
