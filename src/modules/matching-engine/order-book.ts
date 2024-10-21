@@ -87,6 +87,10 @@ export class OrderBook {
         return this.price;
     }
 
+    public getOrderBook() {
+        return this.queues;
+    }
+
     private orderByNonDecreasing = (a: OrderEntity, b: OrderEntity) => {
         return Number(a.price - b.price) || a.createdAt - b.createdAt;
     };
@@ -169,13 +173,15 @@ export class OrderBook {
 
             switch (order.side) {
                 case OrderSide.Bid: {
-                    const maxExpectedPrice = (order.price * (this.unit + order.slippage)) / this.unit;
+                    // const maxExpectedPrice = (order.price * (this.unit + order.slippage)) / this.unit;
+                    const maxExpectedPrice = (order.price * (1000n + order.slippage)) / 1000n;
 
                     if (oppositeOrder.price > maxExpectedPrice) exceeded = true;
                     break;
                 }
                 case OrderSide.Ask: {
-                    const maxExpectedPrice = (order.price * (this.unit - order.slippage)) / this.unit;
+                    // const maxExpectedPrice = (order.price * (this.unit - order.slippage)) / this.unit;
+                    const maxExpectedPrice = (order.price * (1000n - order.slippage)) / 1000n;
 
                     if (oppositeOrder.price < maxExpectedPrice) exceeded = true;
                     break;
@@ -208,13 +214,13 @@ export class OrderBook {
 
             switch (order.side) {
                 case OrderSide.Bid: {
-                    const maxExpectedPrice = (order.price * (this.unit + order.slippage)) / this.unit;
+                    const maxExpectedPrice = (order.price * (1000n + order.slippage)) / 1000n;
 
                     if (this.unit - oppositeOrder.price > maxExpectedPrice) exceeded = true;
                     break;
                 }
                 case OrderSide.Ask: {
-                    const maxExpectedPrice = (order.price * (this.unit - order.slippage)) / this.unit;
+                    const maxExpectedPrice = (order.price * (1000n - order.slippage)) / 1000n;
 
                     if (this.unit - oppositeOrder.price < maxExpectedPrice) exceeded = true;
                     break;

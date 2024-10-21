@@ -24,6 +24,7 @@ import { UserEntity } from '@models/entities/user.entity';
 import { TransactionService } from '@modules/chain/services/transaction.service';
 import { EEnvKey } from '@constants/env.constant';
 import dayjs from 'dayjs';
+import { MatchingEngineService } from '@modules/matching-engine/services/matching-engine.service';
 
 export class MarketService {
     protected logger: Logger;
@@ -36,6 +37,8 @@ export class MarketService {
         @InjectRedis() private readonly redis: Redis,
         private kafkaProducer: KafkaProducerService,
         private transactionService: TransactionService,
+        private matchingEngineService: MatchingEngineService,
+
         private marketRepository: MarketRepository,
         private outcomeRepository: OutcomeRepository,
         private conditionRepository: ConditionRepository,
@@ -216,7 +219,7 @@ export class MarketService {
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
             await this.transactionService.buildCreateMarketTransaction(
                 marketInfo.id,
-                '0x4a3d4c6c35118693cbef1b2782995194eaa5dd98bfd21f6bbfff86dfc65fafb3',
+                userInfo.address,
                 marketInfo.name,
                 marketInfo.description,
                 marketInfo.conditions_str,
@@ -238,5 +241,15 @@ export class MarketService {
         console.log(msgMetaData);
 
         return marketInfo;
+    }
+
+    async getOrderBook(marketId: string) {
+        const marketInfo = await this.marketRepository.findOneBy({ id: marketId });
+        if (!marketInfo) {
+            throw new BadRequestException('Market not found');
+        }
+
+        const book = await this.matchingEngineService.getOrderBook(marketInfo.id);
+        return book;
     }
 }

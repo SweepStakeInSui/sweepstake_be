@@ -47,7 +47,7 @@ export class MatchingEngineService {
 
     private orderBooks: Map<string, OrderBook>;
 
-    private getOrderBook(marketId: string) {
+    private getOrderBookInner(marketId: string) {
         let orderBook = this.orderBooks.get(marketId);
 
         if (!orderBook) {
@@ -70,6 +70,10 @@ export class MatchingEngineService {
         }
     }
 
+    async getOrderBook(marketId: string) {
+        return this.getOrderBookInner(marketId).getOrderBook();
+    }
+
     async matchOrder(order: OrderEntity) {
         log('matching order', order.id, order.side, order.outcome.type, order.price, order.amount);
         const outcomeInfo = await this.outcomeRepository.findOne({
@@ -80,7 +84,7 @@ export class MatchingEngineService {
 
         order.outcome = outcomeInfo;
 
-        const orderBook = this.getOrderBook(marketInfo.id);
+        const orderBook = this.getOrderBookInner(marketInfo.id);
         const matches = orderBook.matchOrder(order);
         const orderbookPrice = orderBook.getPrice();
         const oppositeOutcomeInfo = await this.outcomeRepository.findOne({
@@ -125,7 +129,7 @@ export class MatchingEngineService {
 
         order.outcome = outcomeInfo;
 
-        const orderBook = this.getOrderBook(marketInfo.id);
+        const orderBook = this.getOrderBookInner(marketInfo.id);
         orderBook.cancelOrder(order);
     }
 }

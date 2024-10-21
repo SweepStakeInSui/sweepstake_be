@@ -29,6 +29,7 @@ import {
     CreateCommentResponseDto,
     UpdateCommentDto,
 } from '@modules/comment/dtos/create-comment.dto';
+import { GetOrderBookResponseDto } from '../dtos/get-order-book.dto';
 
 @ApiTags('market')
 // @UseGuards(UserGuard)
@@ -196,13 +197,8 @@ export class MarketController {
     @ApiOperation({
         description: '',
     })
-    @ApiOkResponsePayload(GetCommentListResponseDto, EApiOkResponsePayload.OBJECT, true)
-    async getOrderBook(
-        @Param('userId') userId: string,
-        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
-    ): Promise<GetCommentListResponseDto> {
-        limit = limit > 100 ? 100 : limit;
-        return this.commentService.getCommentsByUser(userId, { page, limit });
+    @ApiOkResponsePayload(GetOrderBookResponseDto, EApiOkResponsePayload.OBJECT, true)
+    async getOrderBook(@Param('marketId') marketId: string): Promise<any> {
+        return await this.marketService.getOrderBook(marketId);
     }
 }
