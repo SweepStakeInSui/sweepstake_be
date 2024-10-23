@@ -20,8 +20,8 @@ export class CreateOrderRequestDto {
     })
     @IsOptional()
     @IsBigInt()
-    @MinBigInt(100_000n)
-    @MaxBigInt(99_900_000n)
+    @MinBigInt(1_000n)
+    @MaxBigInt(999_000n)
     @Transform(transformBigInt)
     price?: bigint;
 
