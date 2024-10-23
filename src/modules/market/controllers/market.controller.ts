@@ -109,10 +109,8 @@ export class MarketController {
     ): Promise<CreateMarketResponseDto> {
         this.logger.info(body);
 
-        const { conditions, ...market } = body;
-
         // TODO: use the real implementation
-        const result = await this.marketService.create2(user, market, conditions);
+        const result = await this.marketService.create(user, body);
 
         return {
             ...result,

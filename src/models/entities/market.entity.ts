@@ -9,8 +9,8 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     name: string;
 
-    @Column({ type: 'text' })
-    description: string;
+    @Column({ type: 'text', nullable: true })
+    description?: string;
 
     @Column({ type: 'text', nullable: true })
     image?: string;
@@ -45,6 +45,9 @@ export class MarketEntity extends BaseEntity {
     // TODO: remove this
     @Column({ type: 'text' })
     conditions_str: string;
+
+    @Column({ type: 'text', nullable: true })
+    source?: string;
 
     @Column({ type: 'varchar', nullable: true })
     onchainId?: string;

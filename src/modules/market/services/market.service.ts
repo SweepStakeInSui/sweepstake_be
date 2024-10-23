@@ -7,7 +7,6 @@ import { InjectRedis } from '@songkeys/nestjs-redis';
 import Redis from 'ioredis';
 import { Logger } from 'log4js';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { MarketInput } from '../types/market';
 import { FindOptionsWhere } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
@@ -15,9 +14,7 @@ import { ConditionRepository } from '@models/repositories/condition.repository';
 import { CriteriaRepository } from '@models/repositories/criteria.repository';
 import { CategoryRepository } from '@models/repositories/category.repository';
 import { OutcomeType } from '../types/outcome';
-import { ConditionInput } from '../dtos/create-market.dto';
-import { ConditionEntity } from '@models/entities/condition.entity';
-import { CriteriaEntity } from '@models/entities/criteria.entity';
+import { CreateMarketRequestDto } from '../dtos/create-market.dto';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { UserEntity } from '@models/entities/user.entity';
@@ -99,84 +96,85 @@ export class MarketService {
         }
     }
 
-    public async create(
-        userInfo: UserEntity,
-        market: MarketInput,
-        conditions: ConditionInput[],
-    ): Promise<MarketEntity> {
-        const marketInfo = this.marketRepository.create(market);
+    // public async create(
+    //     userInfo: UserEntity,
+    //     market: CreateMarketRequestDto,
+    //     conditions: ConditionInput[],
+    // ): Promise<MarketEntity> {
+    //     const marketInfo = this.marketRepository.create(market);
 
-        // TODO: take the create market fee
-        // userInfo.reduceBalance(100n);
+    //     // TODO: take the create market fee
+    //     // userInfo.reduceBalance(100n);
 
-        const outcomeYesInfo = this.outcomeRepository.create({
-            marketId: marketInfo.id,
-            type: OutcomeType.Yes,
-            askLiquidity: 0n,
-            askPrice: 0n,
-            bidLiquidity: 0n,
-            bidPrice: 0n,
-        });
+    //     const outcomeYesInfo = this.outcomeRepository.create({
+    //         marketId: marketInfo.id,
+    //         type: OutcomeType.Yes,
+    //         askLiquidity: 0n,
+    //         askPrice: 0n,
+    //         bidLiquidity: 0n,
+    //         bidPrice: 0n,
+    //     });
 
-        const outcomeNoInfo = this.outcomeRepository.create({
-            marketId: marketInfo.id,
-            type: OutcomeType.No,
-            askLiquidity: 0n,
-            askPrice: 0n,
-            bidLiquidity: 0n,
-            bidPrice: 0n,
-        });
+    //     const outcomeNoInfo = this.outcomeRepository.create({
+    //         marketId: marketInfo.id,
+    //         type: OutcomeType.No,
+    //         askLiquidity: 0n,
+    //         askPrice: 0n,
+    //         bidLiquidity: 0n,
+    //         bidPrice: 0n,
+    //     });
 
-        const conditionInfos: ConditionEntity[] = [];
-        const criteriaInfos: CriteriaEntity[] = [];
-        conditions.map(condition => {
-            const criteriaInfo = this.criteriaRepository.create(condition.criteria);
-            criteriaInfos.push(criteriaInfo);
+    //     const conditionInfos: ConditionEntity[] = [];
+    //     const criteriaInfos: CriteriaEntity[] = [];
+    //     conditions.map(condition => {
+    //         const criteriaInfo = this.criteriaRepository.create(condition.criteria);
+    //         criteriaInfos.push(criteriaInfo);
 
-            const conditionInfo = this.conditionRepository.create({
-                marketId: marketInfo.id,
-                criteriaId: criteriaInfo.id,
-                value: condition.value,
-                type: condition.type,
-            });
-            conditionInfos.push(conditionInfo);
-        });
+    //         const conditionInfo = this.conditionRepository.create({
+    //             marketId: marketInfo.id,
+    //             criteriaId: criteriaInfo.id,
+    //             value: condition.value,
+    //             type: condition.type,
+    //         });
+    //         conditionInfos.push(conditionInfo);
+    //     });
 
-        const infos = [userInfo, marketInfo, outcomeYesInfo, outcomeNoInfo, ...conditionInfos, ...criteriaInfos];
+    //     const infos = [userInfo, marketInfo, outcomeYesInfo, outcomeNoInfo, ...conditionInfos, ...criteriaInfos];
 
-        await this.marketRepository.manager
-            .transaction(async manager => {
-                await Promise.all(
-                    infos.map(async info => {
-                        await manager.save(info);
-                    }),
-                );
-            })
-            .catch(err => {
-                this.logger.error(err);
-                throw new BadRequestException();
-            });
+    //     await this.marketRepository.manager
+    //         .transaction(async manager => {
+    //             await Promise.all(
+    //                 infos.map(async info => {
+    //                     await manager.save(info);
+    //                 }),
+    //             );
+    //         })
+    //         .catch(err => {
+    //             this.logger.error(err);
+    //             throw new BadRequestException();
+    //         });
 
-        const msgMetaData = await this.kafkaProducer.produce({
-            topic: KafkaTopic.SUBMIT_TRANSACTION,
-            messages: [
-                {
-                    value: JSON.stringify(marketInfo),
-                },
-            ],
-        });
+    //     const msgMetaData = await this.kafkaProducer.produce({
+    //         topic: KafkaTopic.SUBMIT_TRANSACTION,
+    //         messages: [
+    //             {
+    //                 value: JSON.stringify(marketInfo),
+    //             },
+    //         ],
+    //     });
 
-        console.log(msgMetaData);
+    //     console.log(msgMetaData);
 
-        return marketInfo;
-    }
+    //     return marketInfo;
+    // }
 
     // TODO: remove this method
-    public async create2(userInfo: UserEntity, market: MarketInput, conditions: string): Promise<MarketEntity> {
+    public async create(userInfo: UserEntity, market: CreateMarketRequestDto): Promise<MarketEntity> {
         const marketInfo = this.marketRepository.create({
             ...market,
+            conditions: [],
             payoutTime: dayjs(market.endTime).add(3, 'day').unix(),
-            conditions_str: conditions,
+            conditions_str: market.conditions,
             userId: userInfo.id,
         });
 

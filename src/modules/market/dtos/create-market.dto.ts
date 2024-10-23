@@ -1,12 +1,45 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ConditionType } from '../types/condition';
 import { CriteriaType } from '../types/criteria';
-import { MarketInput } from '../types/market';
+import { IsNumber, IsOptional, IsString, IsUrl } from 'class-validator';
 
-export class CreateMarketRequestDto extends MarketInput {
+export class CreateMarketRequestDto {
+    @ApiProperty()
+    name: string;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString()
+    description?: string;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsUrl()
+    image?: string;
+
+    @ApiProperty()
+    @IsNumber()
+    startTime: number;
+
+    @ApiProperty()
+    @IsNumber()
+    endTime: number;
+
+    @ApiProperty()
+    colaterralToken: string;
+
+    @ApiProperty()
+    @IsOptional()
+    category?: string[];
+
     @ApiProperty()
     conditions: string;
     // conditions: ConditionInput[];
+
+    @ApiProperty()
+    @IsOptional()
+    @IsUrl()
+    source?: string;
 }
 
 export class CreateMarketResponseDto {}
