@@ -157,7 +157,6 @@ export class MarketService {
                 throw new BadRequestException();
             });
 
-        // TODO: push job create market transaction
         const msgMetaData = await this.kafkaProducer.produce({
             topic: KafkaTopic.SUBMIT_TRANSACTION,
             messages: [
@@ -228,7 +227,6 @@ export class MarketService {
             ),
         );
 
-        // TODO: push job create market transaction
         const msgMetaData = await this.kafkaProducer.produce({
             topic: KafkaTopic.SUBMIT_TRANSACTION,
             messages: [

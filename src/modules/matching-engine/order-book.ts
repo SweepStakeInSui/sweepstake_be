@@ -23,6 +23,13 @@ export class MatchedOrder {
     price: bigint;
 }
 
+export class Liquidity {
+    price: bigint;
+    amount: bigint;
+    side: OrderSide;
+    type: OutcomeType;
+}
+
 export class OrderBook {
     private unit: bigint;
 
@@ -31,13 +38,18 @@ export class OrderBook {
     private outcomeYesId: string;
     private outcomeNoId: string;
 
+    private yesLiquidities: Map<string, bigint> = new Map();
+    private noLiquidities: Map<string, bigint> = new Map();
+
     private price: {
         [key: string]: bigint;
     } = {};
 
-    private liquidity: {
-        [key: string]: bigint;
-    } = {};
+    private liquidities: Map<string, bigint>;
+
+    // private liquidities: {
+    //     [key: string]: bigint;
+    // } = {};
 
     private queues: {
         [key: string]: PriorityQueue<OrderEntity>;
@@ -55,15 +67,17 @@ export class OrderBook {
         this.queues['Bid-No'] = new PriorityQueue<OrderEntity>(this.orderByNonIncreasing);
         this.queues['Ask-No'] = new PriorityQueue<OrderEntity>(this.orderByNonDecreasing);
 
-        this.liquidity['Bid-Yes'] = 0n;
-        this.liquidity['Ask-Yes'] = 0n;
-        this.liquidity['Bid-No'] = 0n;
-        this.liquidity['Ask-No'] = 0n;
+        this.liquidities = new Map();
 
-        this.price['Bid-Yes'] = 0n;
-        this.price['Ask-Yes'] = 0n;
-        this.price['Bid-No'] = 0n;
-        this.price['Ask-No'] = 0n;
+        this.liquidities['Bid-Yes'] = 0n;
+        this.liquidities['Ask-Yes'] = 0n;
+        this.liquidities['Bid-No'] = 0n;
+        this.liquidities['Ask-No'] = 0n;
+
+        // this.volumes['Bid-Yes'] = 0n;
+        // this.volumes['Ask-Yes'] = 0n;
+        // this.volumes['Bid-No'] = 0n;
+        // this.volumes['Ask-No'] = 0n;
 
         this.updatePrice();
     }
@@ -88,7 +102,7 @@ export class OrderBook {
     }
 
     public getOrderBook() {
-        return this.queues;
+        return this.liquidities;
     }
 
     private orderByNonDecreasing = (a: OrderEntity, b: OrderEntity) => {
@@ -100,21 +114,6 @@ export class OrderBook {
     };
 
     public matchOrder(order: OrderEntity) {
-        Object.entries(this.queues).map(([key, queue]) => {
-            log(
-                key,
-                queue.toArray().map(o => {
-                    return {
-                        id: o.id,
-                        outcomeId: o.outcomeId,
-                        price: o.price,
-                        amount: o.amount,
-                        fullfilled: o.fullfilled,
-                    };
-                }),
-            );
-        });
-
         let matches: Match;
 
         switch (order.type) {
@@ -139,18 +138,35 @@ export class OrderBook {
 
         if (orderIdx !== -1) {
             this.queues[`${order.side}-${order.outcome.type}`].removeIndex(orderIdx);
-            this.liquidity[`${order.side}-${order.outcome.type}`] -= order.amount;
+            this.liquidities[`${order.side}-${order.outcome.type}`] -= order.amount;
         }
     }
 
+    private addOrder(order: OrderEntity) {
+        this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
+        this.addLiquidity(order.side, order.outcome.type, order.price, order.amount);
+    }
+
+    private addLiquidity(side: OrderSide, outcome: OutcomeType, price: bigint, amount: bigint) {
+        if (!this.liquidities[`${side}-${outcome}-${price}`]) {
+            this.liquidities[`${side}-${outcome}-${price}`] = 0n;
+        }
+        this.liquidities[`${side}-${outcome}-${price}`] += amount;
+        this.liquidities[`${side}-${outcome}`] += amount;
+    }
+
+    private removeLiquidity(side: OrderSide, outcome: OutcomeType, price: bigint, amount: bigint) {
+        this.liquidities[`${side}-${outcome}-${price}`] -= amount;
+        this.liquidities[`${side}-${outcome}`] -= amount;
+    }
     private matchMarketOrder(order: OrderEntity) {
         const matches: Match = {
             order: order,
             matchedOrders: [],
         };
         const liquidity =
-            this.liquidity[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`] +
-            this.liquidity[
+            this.liquidities[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`] +
+            this.liquidities[
                 `${order.side}-${order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`
             ];
 
@@ -196,6 +212,7 @@ export class OrderBook {
             // this.executeTrade(order, oppositeOrder, matchAmount);
 
             matches.matchedOrders.push({ order: oppositeOrder, amount: matchAmount, price: oppositeOrder.price });
+            this.removeLiquidity(oppositeOrder.side, oppositeOrder.outcome.type, oppositeOrder.price, matchAmount);
 
             order.fullfilled += matchAmount;
             oppositeOrder.fullfilled += matchAmount;
@@ -235,6 +252,7 @@ export class OrderBook {
             // this.executeTrade(order, oppositeOrder, matchAmount);
 
             matches.matchedOrders.push({ order: oppositeOrder, amount: matchAmount, price: oppositeOrder.price });
+            this.removeLiquidity(oppositeOrder.side, oppositeOrder.outcome.type, oppositeOrder.price, matchAmount);
 
             order.fullfilled += matchAmount;
             oppositeOrder.fullfilled += matchAmount;
@@ -256,8 +274,7 @@ export class OrderBook {
         this.matchLimitCrossOrders(order, matches);
 
         if (order.fullfilled < order.amount) {
-            this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
-            this.liquidity[`${order.side}-${order.outcome.type}`] += order.amount;
+            this.addOrder(order);
         }
         return matches;
     }
@@ -293,7 +310,10 @@ export class OrderBook {
                 const matchedPrice = BigIntUtil.min(order.price, oppositeOrder.price);
 
                 log(`matched ${order.side} limit ${matchAmount}`);
+
                 matches.matchedOrders.push({ order: oppositeOrder, amount: matchAmount, price: matchedPrice });
+                this.removeLiquidity(oppositeOrder.side, oppositeOrder.outcome.type, oppositeOrder.price, matchAmount);
+
                 // this.executeTrade(order, oppositeOrder, matchAmount);
 
                 order.fullfilled += matchAmount;
@@ -344,11 +364,9 @@ export class OrderBook {
                 );
 
                 log('matched cross asset');
-                matches.matchedOrders.push({
-                    order: matchedOrder,
-                    amount: matchAmount,
-                    price: order.price,
-                });
+
+                matches.matchedOrders.push({ order: matchedOrder, amount: matchAmount, price: order.price });
+                this.removeLiquidity(matchedOrder.side, matchedOrder.outcome.type, matchedOrder.price, matchAmount);
 
                 // this.executeTrade(matchedOrder, order, matchAmount);
 
