@@ -311,7 +311,7 @@ export class EventService {
 
         const notificationInfos = await this.notificationRepository.create([
             {
-                userId: orderNoId.userId,
+                userId: orderNoInfo.userId,
                 type: NotificationType.OrderExecuted,
                 message: `You have burned ${orderNoInfo.amount} from your account`,
                 data: {
@@ -320,7 +320,7 @@ export class EventService {
                 },
             },
             {
-                userId: orderYesId.userId,
+                userId: orderYesInfo.userId,
                 type: NotificationType.OrderExecuted,
                 message: `You have burned ${orderYesInfo.amount} from your account`,
                 data: {
@@ -368,7 +368,7 @@ export class EventService {
 
         const notificationInfos = await this.notificationRepository.create([
             {
-                userId: makerOrderId.userId,
+                userId: makerOrderInfo.userId,
                 type: NotificationType.OrderExecuted,
                 message: `You have transferred ${makerOrderInfo.amount} from your account`,
                 data: {
