@@ -173,7 +173,7 @@ export class MarketService {
         const marketInfo = this.marketRepository.create({
             ...market,
             conditions: [],
-            payoutTime: dayjs(market.endTime).add(3, 'day').unix(),
+            payoutTime: dayjs.unix(market.endTime).add(3, 'day').unix(),
             conditions_str: market.conditions,
             userId: userInfo.id,
         });
