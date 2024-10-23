@@ -17,8 +17,8 @@ export class NotificationEntity extends BaseEntity {
     @Column({ type: 'json' })
     public data: object;
 
-    @Column({ type: 'int', default: dayjs().unix() })
-    timestamp: number;
+    @Column({ type: 'int' })
+    timestamp: number = dayjs().unix();
 
     @Column({ type: 'enum', enum: NotificationStatus, default: NotificationStatus.Unread })
     public status: NotificationStatus;

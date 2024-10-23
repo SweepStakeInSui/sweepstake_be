@@ -17,6 +17,8 @@ import { NotificationType } from '@modules/notification/types/notification';
 import { BalanceChangeRepository } from '@models/repositories/balance-change.repository';
 import dayjs from 'dayjs';
 import { BalanceChangeStatus, BalanceChangeType } from '@modules/user/types/balance-change.type';
+import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
+import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 
 @Injectable()
 export class EventService {
@@ -30,6 +32,7 @@ export class EventService {
         protected loggerService: LoggerService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
+        private kafkaProducer: KafkaProducerService,
 
         private readonly marketRepository: MarketRepository,
         private readonly userRepository: UserRepository,
@@ -109,16 +112,27 @@ export class EventService {
             this.logger.error('User not found');
         }
 
-        const notificationInfo = await this.notificationRepository.create({
-            userId: userInfo.id,
-            type: NotificationType.Deposited,
-            message: `You have deposited ${amount} to your account`,
-            data: {
-                amount,
-            },
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CREATE_NOTIFICATION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        notifications: [
+                            {
+                                userId: userInfo.id,
+                                type: NotificationType.Deposited,
+                                message: `You have deposited ${amount} to your account`,
+                                data: {
+                                    amount,
+                                },
+                            },
+                        ],
+                    }),
+                },
+            ],
         });
 
-        await this.notificationRepository.save(notificationInfo);
+        console.log(msgMetaData);
     }
 
     private async processWithdrawEvent(event: SuiEvent) {
@@ -148,16 +162,27 @@ export class EventService {
 
         await this.balanceChangeRepository.save(withdrawInfo);
 
-        const notificationInfo = await this.notificationRepository.create({
-            userId: owner,
-            type: NotificationType.Withdrawn,
-            message: `You have withdrown ${amount} to your account`,
-            data: {
-                amount,
-            },
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CREATE_NOTIFICATION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        notifications: [
+                            {
+                                userId: owner,
+                                type: NotificationType.Withdrawn,
+                                message: `You have withdrown ${amount} to your account`,
+                                data: {
+                                    amount,
+                                },
+                            },
+                        ],
+                    }),
+                },
+            ],
         });
 
-        await this.notificationRepository.save(notificationInfo);
+        console.log(msgMetaData);
     }
 
     private async proccessNewMarketEvent(event: SuiEvent) {
@@ -175,16 +200,27 @@ export class EventService {
 
         await this.marketRepository.save(marketInfo);
 
-        const notificationInfo = await this.notificationRepository.create({
-            userId: marketInfo.userId,
-            type: NotificationType.MarketCreated,
-            message: `Your market ${marketInfo.name} has been created`,
-            data: {
-                marketInfo,
-            },
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CREATE_NOTIFICATION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        notifications: [
+                            {
+                                userId: marketInfo.userId,
+                                type: NotificationType.MarketCreated,
+                                message: `Your market ${marketInfo.name} has been created`,
+                                data: {
+                                    marketInfo,
+                                },
+                            },
+                        ],
+                    }),
+                },
+            ],
         });
 
-        await this.notificationRepository.save(notificationInfo);
+        console.log(msgMetaData);
     }
 
     private async proccessMintYesEvent(event: SuiEvent) {
@@ -213,17 +249,28 @@ export class EventService {
 
         await this.shareRepository.save(shareInfo);
 
-        const notificationInfo = await this.notificationRepository.create({
-            userId: orderInfo.userId,
-            type: NotificationType.OrderExecuted,
-            message: `You have minted ${amount} to your account`,
-            data: {
-                amount,
-                outcomeId: orderInfo.outcomeId,
-            },
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CREATE_NOTIFICATION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        notifications: [
+                            {
+                                userId: orderInfo.userId,
+                                type: NotificationType.OrderExecuted,
+                                message: `You have minted ${amount} to your account`,
+                                data: {
+                                    amount,
+                                    outcomeId: orderInfo.outcomeId,
+                                },
+                            },
+                        ],
+                    }),
+                },
+            ],
         });
 
-        await this.notificationRepository.save(notificationInfo);
+        console.log(msgMetaData);
     }
 
     private async proccessMintNoEvent(event: SuiEvent) {
@@ -252,17 +299,28 @@ export class EventService {
 
         await this.shareRepository.save(shareInfo);
 
-        const notificationInfo = await this.notificationRepository.create({
-            userId: orderInfo.userId,
-            type: NotificationType.OrderExecuted,
-            message: `You have minted ${amount} to your account`,
-            data: {
-                amount,
-                outcomeId: orderInfo.outcomeId,
-            },
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CREATE_NOTIFICATION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        notifications: [
+                            {
+                                userId: orderInfo.userId,
+                                type: NotificationType.OrderExecuted,
+                                message: `You have minted ${amount} to your account`,
+                                data: {
+                                    amount,
+                                    outcomeId: orderInfo.outcomeId,
+                                },
+                            },
+                        ],
+                    }),
+                },
+            ],
         });
 
-        await this.notificationRepository.save(notificationInfo);
+        console.log(msgMetaData);
     }
 
     private async proccessMergeEvent(event: SuiEvent) {
@@ -309,28 +367,37 @@ export class EventService {
             await manager.save(userNoInfo);
         });
 
-        const notificationInfos = await this.notificationRepository.create([
-            {
-                userId: orderNoInfo.userId,
-                type: NotificationType.OrderExecuted,
-                message: `You have burned ${orderNoInfo.amount} from your account`,
-                data: {
-                    amount: orderNoInfo.amount,
-                    outcomeId: orderNoInfo.outcomeId,
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CREATE_NOTIFICATION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        notifications: [
+                            {
+                                userId: orderNoInfo.userId,
+                                type: NotificationType.OrderExecuted,
+                                message: `You have burned ${orderNoInfo.amount} from your account`,
+                                data: {
+                                    amount: orderNoInfo.amount,
+                                    outcomeId: orderNoInfo.outcomeId,
+                                },
+                            },
+                            {
+                                userId: orderYesInfo.userId,
+                                type: NotificationType.OrderExecuted,
+                                message: `You have burned ${orderYesInfo.amount} from your account`,
+                                data: {
+                                    amount: orderYesInfo.amount,
+                                    type: orderYesInfo.outcomeId,
+                                },
+                            },
+                        ],
+                    }),
                 },
-            },
-            {
-                userId: orderYesInfo.userId,
-                type: NotificationType.OrderExecuted,
-                message: `You have burned ${orderYesInfo.amount} from your account`,
-                data: {
-                    amount: orderYesInfo.amount,
-                    type: orderYesInfo.outcomeId,
-                },
-            },
-        ]);
+            ],
+        });
 
-        await this.notificationRepository.save(notificationInfos);
+        console.log(msgMetaData);
     }
 
     private async proccessTransferEvent(event: SuiEvent) {
@@ -366,27 +433,36 @@ export class EventService {
             await manager.save(takerShareInfo);
         });
 
-        const notificationInfos = await this.notificationRepository.create([
-            {
-                userId: makerOrderInfo.userId,
-                type: NotificationType.OrderExecuted,
-                message: `You have transferred ${makerOrderInfo.amount} from your account`,
-                data: {
-                    amount: makerOrderInfo.amount,
-                    type: 'send',
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CREATE_NOTIFICATION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        notifications: [
+                            {
+                                userId: makerOrderInfo.userId,
+                                type: NotificationType.OrderExecuted,
+                                message: `You have transferred ${makerOrderInfo.amount} from your account`,
+                                data: {
+                                    amount: makerOrderInfo.amount,
+                                    type: 'send',
+                                },
+                            },
+                            {
+                                userId: takerOrderInfo.userId,
+                                type: NotificationType.OrderExecuted,
+                                message: `You have received ${takerOrderInfo.amount} from your account`,
+                                data: {
+                                    amount: takerOrderInfo.amount,
+                                    type: 'receive',
+                                },
+                            },
+                        ],
+                    }),
                 },
-            },
-            {
-                userId: takerOrderInfo.userId,
-                type: NotificationType.OrderExecuted,
-                message: `You have received ${takerOrderInfo.amount} from your account`,
-                data: {
-                    amount: takerOrderInfo.amount,
-                    type: 'receive',
-                },
-            },
-        ]);
+            ],
+        });
 
-        await this.notificationRepository.save(notificationInfos);
+        console.log(msgMetaData);
     }
 }

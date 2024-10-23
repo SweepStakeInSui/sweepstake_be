@@ -9,8 +9,10 @@ import { SubmitTransactionConsumer } from './consumers/submit-transaction.consum
 import { ChainModule } from '@modules/chain/chain.module';
 import { WaitTransactionConsumer } from './consumers/wait-transaction.consumer';
 import { ProccessEventConsumer } from './consumers/proccess-event';
+import { CreateNotificationConsumer } from './consumers/create-notification.consumer';
+import { NotificationModule } from '@modules/notification/notification.module';
 
-const modules = [MatchingEngineModule, OrderModule, ChainModule];
+const modules = [MatchingEngineModule, OrderModule, ChainModule, NotificationModule];
 const consumers = [
     MatchOrderConsumer,
     CreateMarketProcessor,
@@ -18,6 +20,7 @@ const consumers = [
     SubmitTransactionConsumer,
     WaitTransactionConsumer,
     ProccessEventConsumer,
+    CreateNotificationConsumer,
 ];
 
 @Module({
