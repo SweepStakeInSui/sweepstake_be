@@ -83,18 +83,10 @@ export class OrderBook {
     }
 
     private updatePrice() {
-        this.price['Bid-Yes'] = this.queues['Bid-Yes'].isEmpty()
-            ? this.price['Bid-Yes']
-            : this.queues['Bid-Yes'].peek().price;
-        this.price['Ask-Yes'] = this.queues['Ask-Yes'].isEmpty()
-            ? this.price['Ask-Yes']
-            : this.queues['Ask-Yes'].peek().price;
-        this.price['Bid-No'] = this.queues['Bid-No'].isEmpty()
-            ? this.price['Bid-No']
-            : this.queues['Bid-No'].peek().price;
-        this.price['Ask-No'] = this.queues['Ask-No'].isEmpty()
-            ? this.price['Ask-No']
-            : this.queues['Ask-No'].peek().price;
+        this.price['Bid-Yes'] = this.queues['Bid-Yes'].isEmpty() ? 0n : this.queues['Bid-Yes'].peek().price;
+        this.price['Ask-Yes'] = this.queues['Ask-Yes'].isEmpty() ? 0n : this.queues['Ask-Yes'].peek().price;
+        this.price['Bid-No'] = this.queues['Bid-No'].isEmpty() ? 0n : this.queues['Bid-No'].peek().price;
+        this.price['Ask-No'] = this.queues['Ask-No'].isEmpty() ? 0n : this.queues['Ask-No'].peek().price;
     }
 
     public getPrice() {

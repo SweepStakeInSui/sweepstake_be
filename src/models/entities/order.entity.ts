@@ -43,7 +43,7 @@ export class OrderEntity extends BaseEntity {
     @Transform(transformBigInt)
     price?: bigint;
 
-    // max 1000 = 100%
+    // max 1000 = 100%, 1 = 0.1%,
     @Column({ type: 'bigint', nullable: true, transformer: bigint })
     @Transform(transformBigInt)
     slippage?: bigint;
