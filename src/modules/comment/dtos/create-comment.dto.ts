@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, Length } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCommentRequestDto {
@@ -8,6 +8,7 @@ export class CreateCommentRequestDto {
 
     @ApiProperty()
     @IsString()
+    @Length(1, 800)
     content: string;
 
     @ApiProperty({ required: false })

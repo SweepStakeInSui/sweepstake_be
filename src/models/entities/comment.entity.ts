@@ -3,7 +3,7 @@ import { BaseEntity } from '@shared/base/models/base.entity';
 
 @Entity('comment')
 export class CommentEntity extends BaseEntity {
-    @Column({ type: 'varchar' })
+    @Column({ type: 'text' })
     content: string;
 
     @Column({ type: 'int', default: 0 })
