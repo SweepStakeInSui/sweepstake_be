@@ -31,6 +31,7 @@ export class NotificationService {
             where: where,
             order: {
                 status: 'asc',
+                timestamp: 'desc',
             },
         });
     }
