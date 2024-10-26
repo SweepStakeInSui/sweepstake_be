@@ -10,6 +10,7 @@ import { CommentModule } from './comment/comment.module';
 import { CategoryModule } from '@modules/category/category.module';
 import { FileModule } from './file/file.module';
 import { AnalyticModule } from './analytic/analytic.module';
+import { OracleModule } from '@modules/oracle/oracle.module';
 import { JobModule } from './job/job.module';
 
 export const Modules = [
@@ -20,6 +21,8 @@ export const Modules = [
     MarketModule,
     OrderModule,
     MatchingEngineModule,
+    OrderModule,
+    OracleModule,
 
     ChainModule,
     ConsumerModule,
