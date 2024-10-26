@@ -30,6 +30,8 @@ import {
     UpdateCommentDto,
 } from '@modules/comment/dtos/create-comment.dto';
 import { GetOrderBookResponseDto } from '../dtos/get-order-book.dto';
+import { OracleService } from '@modules/oracle/services/oracle.service';
+import { GetDataResponseDto } from '@modules/oracle/dtos/get-data.dto';
 
 @ApiTags('market')
 // @UseGuards(UserGuard)
@@ -39,6 +41,7 @@ export class MarketController {
         private loggerService: LoggerService,
         private marketService: MarketService,
         private commentService: CommentService,
+        private oracleService: OracleService,
     ) {
         this.logger = this.loggerService.getLogger(MarketController.name);
     }
@@ -221,6 +224,15 @@ export class MarketController {
     @ApiOkResponsePayload(GetOrderBookResponseDto, EApiOkResponsePayload.OBJECT, true)
     async getOrderBook(@Param('marketId') marketId: string): Promise<any> {
         return await this.marketService.getOrderBook(marketId);
+    }
+
+    @Get('/oracle/:marketId')
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(GetDataResponseDto, EApiOkResponsePayload.OBJECT)
+    async getOracleData(@Param('marketId') marketId: string): Promise<GetDataResponseDto> {
+        return this.oracleService.getWinner(marketId);
     }
 
     @Get('/top-holders/:marketId')

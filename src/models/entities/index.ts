@@ -15,6 +15,7 @@ import { UserEntity } from './user.entity';
 import { CommentEntity } from '@models/entities/comment.entity';
 import { CategoryEntity } from '@models/entities/category.entity';
 import { BalanceChangeEntity } from './balance-change.entity';
+import { OracleEntity } from '@models/entities/oracle.entity';
 import { SnapshotPriceEntity } from './snapshot-price.entity';
 
 export const Entities = [
@@ -30,6 +31,7 @@ export const Entities = [
     CommentEntity,
     CategoryEntity,
     ShareEntity,
+    OracleEntity,
 
     OrderEntity,
     TradeEntity,
