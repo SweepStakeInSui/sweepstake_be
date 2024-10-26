@@ -29,3 +29,12 @@ export const redisOptions: RedisModuleAsyncOptions = {
             errorLog: true,
         }) as RedisModuleOptions,
 };
+
+export const bullConfig = {
+    redis: {
+        host: redisConfig.host,
+        port: redisConfig.port,
+        password: redisConfig.password,
+        db: redisConfig.db,
+    },
+};

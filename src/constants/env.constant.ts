@@ -59,4 +59,7 @@ export enum EEnvKey {
     // Config
     DECIMALS = 'DECIMALS',
     FEE_CREATE_MARKET = 'FEE_CREATE_MARKET',
+
+    // Oracle
+    ADMIN_PRIVATE_KEY_AMOY = 'ADMIN_PRIVATE_KEY_AMOY',
 }

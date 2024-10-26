@@ -22,6 +22,10 @@ import { TransactionService } from '@modules/chain/services/transaction.service'
 import { EEnvKey } from '@constants/env.constant';
 import dayjs from 'dayjs';
 import { MatchingEngineService } from '@modules/matching-engine/services/matching-engine.service';
+import { OracleRepository } from '@models/repositories/oracle.repository';
+import { OracleService } from '@modules/oracle/services/oracle.service';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { OrderSide } from '@modules/order/types/order';
 import { ShareRepository } from '@models/repositories/share.repository';
 import { ShareEntity } from '@models/entities/share.entity';
@@ -36,15 +40,18 @@ export class MarketService {
         protected jwtService: JwtService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
+        @InjectQueue('market') private readonly marketQueue: Queue,
         private kafkaProducer: KafkaProducerService,
         private transactionService: TransactionService,
         private matchingEngineService: MatchingEngineService,
 
+        private oracleServices: OracleService,
         private marketRepository: MarketRepository,
         private outcomeRepository: OutcomeRepository,
         private conditionRepository: ConditionRepository,
         private criteriaRepository: CriteriaRepository,
         private categoryRepository: CategoryRepository,
+        private oracleRepository: OracleRepository,
         private shareRepository: ShareRepository,
         private orderRepository: OrderRepository,
     ) {
@@ -192,6 +199,10 @@ export class MarketService {
 
     // TODO: remove this method
     public async create(userInfo: UserEntity, market: CreateMarketRequestDto): Promise<MarketEntity> {
+        if (new Date(market.endTime * 1000) < new Date()) {
+            throw new BadRequestException('Invalid end time');
+        }
+        const questionID = this.oracleServices.calculateQuestionID(market.description);
         const marketInfo = this.marketRepository.create({
             ...market,
             conditions: [],
@@ -199,6 +210,12 @@ export class MarketService {
             conditions_str: market.conditions,
             userId: userInfo.id,
         });
+
+        const oracle = this.oracleRepository.create({
+            marketId: marketInfo.id,
+            questionId: questionID,
+        });
+        await this.oracleRepository.save(oracle);
 
         userInfo.reduceBalance(BigInt(this.configService.get(EEnvKey.FEE_CREATE_MARKET)));
 
@@ -234,7 +251,17 @@ export class MarketService {
                 this.logger.error(err);
                 throw new BadRequestException();
             });
-
+        await this.marketQueue.add(
+            'requestData',
+            {
+                creator: userInfo.address,
+                marketId: marketInfo.id,
+                description: marketInfo.description,
+            },
+            {
+                delay: new Date(marketInfo.endTime * 1000).getTime() - Date.now(),
+            },
+        );
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
             await this.transactionService.buildCreateMarketTransaction(
                 marketInfo.id,
@@ -255,7 +282,6 @@ export class MarketService {
                 },
             ],
         });
-
         console.log(msgMetaData);
 
         return marketInfo;
