@@ -2,6 +2,8 @@ import { Column, Entity, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { OutcomeEntity } from './outcome.entity';
 import { ConditionEntity } from './condition.entity';
+import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
+import { Transform } from 'class-transformer';
 
 @Entity({ name: 'market' })
 export class MarketEntity extends BaseEntity {
@@ -54,4 +56,8 @@ export class MarketEntity extends BaseEntity {
 
     @Column({ type: 'varchar', nullable: true })
     transactionHash?: string;
+
+    @Column({ type: 'bigint', transformer: bigint })
+    @Transform(transformBigInt)
+    volume: bigint = 0n;
 }

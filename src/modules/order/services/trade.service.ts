@@ -81,6 +81,10 @@ export class TradeService {
 
                     const marketInfo = await this.marketRepository.findOneBy({ id: matchedOrder.order.marketId });
 
+                    marketInfo.volume += matchedOrder.amount * matchedOrder.price;
+
+                    await manager.save(marketInfo);
+
                     // TODO: improve this stupid switch case to generate trade transaction data
                     switch (tradeType) {
                         case TradeType.Transfer:
@@ -144,19 +148,6 @@ export class TradeService {
                             }
                             break;
                     }
-
-                    // trades.push({
-                    //     marketId: marketInfo.onchainId,
-                    //     tradeId: trade.id,
-                    //     makerOrderid: matchedOrder.order.id,
-                    //     maker: makerAddress,
-                    //     makerAmount: matchedOrder.amount,
-                    //     takerOderId: order.id,
-                    //     taker: takerAddress,
-                    //     takeAmount: matchedOrder.amount,
-                    //     tradeType,
-                    //     assetType,
-                    // });
                 }),
             );
         });

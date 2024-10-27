@@ -12,7 +12,6 @@ import { UserRepository } from '@models/repositories/user.repository';
 import { ShareRepository } from '@models/repositories/share.repository';
 import { OrderRepository } from '@models/repositories/order.repository';
 import { TradeRepository } from '@models/repositories/trade.repository';
-import { NotificationRepository } from '@models/repositories/notification.repository';
 import { NotificationType } from '@modules/notification/types/notification';
 import { BalanceChangeRepository } from '@models/repositories/balance-change.repository';
 import dayjs from 'dayjs';
@@ -39,7 +38,6 @@ export class EventService {
         private readonly shareRepository: ShareRepository,
         private readonly orderRepository: OrderRepository,
         private readonly tradeRepository: TradeRepository,
-        private readonly notificationRepository: NotificationRepository,
         private readonly balanceChangeRepository: BalanceChangeRepository,
     ) {
         this.logger = this.loggerService.getLogger(CrawlerService.name);
