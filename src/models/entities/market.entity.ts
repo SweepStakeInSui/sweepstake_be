@@ -60,4 +60,8 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'bigint', transformer: bigint })
     @Transform(transformBigInt)
     volume: bigint = 0n;
+
+    @Column({ type: 'bigint', transformer: bigint })
+    @Transform(transformBigInt)
+    tradeCount: bigint = 0n;
 }

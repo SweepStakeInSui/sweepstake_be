@@ -82,6 +82,7 @@ export class TradeService {
                     const marketInfo = await this.marketRepository.findOneBy({ id: matchedOrder.order.marketId });
 
                     marketInfo.volume += matchedOrder.amount * matchedOrder.price;
+                    marketInfo.tradeCount += 1n;
 
                     await manager.save(marketInfo);
 
