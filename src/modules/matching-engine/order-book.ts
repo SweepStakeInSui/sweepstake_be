@@ -45,7 +45,7 @@ export class OrderBook {
         [key: string]: bigint;
     } = {};
 
-    private liquidities: Map<string, bigint>;
+    private liquidities: Map<string, bigint> = new Map();
 
     // private liquidities: {
     //     [key: string]: bigint;
@@ -139,17 +139,17 @@ export class OrderBook {
         this.addLiquidity(order.side, order.outcome.type, order.price, order.amount);
     }
 
-    private addLiquidity(side: OrderSide, outcome: OutcomeType, price: bigint, amount: bigint) {
-        if (!this.liquidities[`${side}-${outcome}-${price}`]) {
-            this.liquidities[`${side}-${outcome}-${price}`] = 0n;
+    private addLiquidity(side: OrderSide, type: OutcomeType, price: bigint, amount: bigint) {
+        if (!this.liquidities[`${side}-${type}-${price}`]) {
+            this.liquidities[`${side}-${type}-${price}`] = 0n;
         }
-        this.liquidities[`${side}-${outcome}-${price}`] += amount;
-        this.liquidities[`${side}-${outcome}`] += amount;
+        this.liquidities[`${side}-${type}-${price}`] += amount;
+        this.liquidities[`${side}-${type}`] += amount;
     }
 
-    private removeLiquidity(side: OrderSide, outcome: OutcomeType, price: bigint, amount: bigint) {
-        this.liquidities[`${side}-${outcome}-${price}`] -= amount;
-        this.liquidities[`${side}-${outcome}`] -= amount;
+    private removeLiquidity(side: OrderSide, type: OutcomeType, price: bigint, amount: bigint) {
+        this.liquidities[`${side}-${type}-${price}`] -= amount;
+        this.liquidities[`${side}-${type}`] -= amount;
     }
     private matchMarketOrder(order: OrderEntity) {
         const matches: Match = {

@@ -22,6 +22,7 @@ import { TransactionService } from '@modules/chain/services/transaction.service'
 import { EEnvKey } from '@constants/env.constant';
 import dayjs from 'dayjs';
 import { MatchingEngineService } from '@modules/matching-engine/services/matching-engine.service';
+import { OrderSide } from '@modules/order/types/order';
 
 export class MarketService {
     protected logger: Logger;
@@ -246,6 +247,63 @@ export class MarketService {
         }
 
         const book = await this.matchingEngineService.getOrderBook(marketInfo.id);
-        return book;
+
+        const bookArray = Object.entries(book).map(([key, liquidity]) => {
+            const [side, type, price] = key.split('-');
+
+            return { side, type, price, liquidity };
+        });
+
+        const bidYes = bookArray
+            .filter(item => item.type === OutcomeType.Yes && item.side === OrderSide.Bid)
+            .filter(item => item.liquidity > 0)
+            .sort((a, b) => {
+                if (a.price < b.price) {
+                    return 1;
+                }
+                if (a.price > b.price) {
+                    return -1;
+                }
+                return 0;
+            });
+
+        const askYes = bookArray
+            .filter(item => item.type === OutcomeType.Yes && item.side === OrderSide.Ask)
+            .filter(item => item.liquidity > 0)
+            .sort((a, b) => {
+                if (a.price < b.price) {
+                    return -1;
+                }
+                if (a.price > b.price) {
+                    return 1;
+                }
+                return 0;
+            });
+        const bidNo = bookArray
+            .filter(item => item.type === OutcomeType.No && item.side === OrderSide.Bid)
+            .filter(item => item.liquidity > 0)
+            .sort((a, b) => {
+                if (a.price < b.price) {
+                    return 1;
+                }
+                if (a.price > b.price) {
+                    return -1;
+                }
+                return 0;
+            });
+
+        const askNo = bookArray
+            .filter(item => item.type === OutcomeType.No && item.side === OrderSide.Ask)
+            .filter(item => item.liquidity > 0)
+            .sort((a, b) => {
+                if (a.price < b.price) {
+                    return -1;
+                }
+                if (a.price > b.price) {
+                    return 1;
+                }
+                return 0;
+            });
+        return { bidYes, askYes, bidNo, askNo };
     }
 }
