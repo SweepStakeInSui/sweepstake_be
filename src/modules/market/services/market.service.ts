@@ -23,6 +23,8 @@ import { EEnvKey } from '@constants/env.constant';
 import dayjs from 'dayjs';
 import { MatchingEngineService } from '@modules/matching-engine/services/matching-engine.service';
 import { OrderSide } from '@modules/order/types/order';
+import { ShareRepository } from '@models/repositories/share.repository';
+import { ShareEntity } from '@models/entities/share.entity';
 
 export class MarketService {
     protected logger: Logger;
@@ -42,6 +44,7 @@ export class MarketService {
         private conditionRepository: ConditionRepository,
         private criteriaRepository: CriteriaRepository,
         private categoryRepository: CategoryRepository,
+        private shareRepository: ShareRepository,
     ) {
         this.logger = this.loggerService.getLogger(MarketService.name);
         this.configService = configService;
@@ -313,5 +316,21 @@ export class MarketService {
                 return 0;
             });
         return { bidYes, askYes, bidNo, askNo };
+    }
+
+    async getTopHolders(options: IPaginationOptions, marketId: string): Promise<Pagination<ShareEntity>[]> {
+        const outcomeInfos = await this.outcomeRepository.findBy({ marketId });
+
+        return await Promise.all(
+            outcomeInfos.map(
+                async outcomeInfo =>
+                    await paginate<ShareEntity>(this.shareRepository, options, {
+                        where: { outcomeId: outcomeInfo.id },
+                        order: {
+                            balance: 'desc',
+                        },
+                    }),
+            ),
+        );
     }
 }

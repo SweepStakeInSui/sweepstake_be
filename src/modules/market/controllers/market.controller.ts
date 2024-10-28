@@ -217,4 +217,24 @@ export class MarketController {
     async getOrderBook(@Param('marketId') marketId: string): Promise<any> {
         return await this.marketService.getOrderBook(marketId);
     }
+
+    @Get('/top-holders/:marketId')
+    @ApiOperation({
+        description: '',
+    })
+    @ApiOkResponsePayload(GetOrderBookResponseDto, EApiOkResponsePayload.OBJECT, true)
+    async getTopHolders(
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+        @Param('marketId') marketId: string,
+    ): Promise<GetMarketListRequestDto> {
+        limit = limit > 100 ? 100 : limit;
+        return await this.marketService.getTopHolders(
+            {
+                page,
+                limit,
+            },
+            marketId,
+        );
+    }
 }
