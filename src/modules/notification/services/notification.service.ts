@@ -27,7 +27,7 @@ export class NotificationService {
         options: IPaginationOptions,
         where: FindOptionsWhere<NotificationEntity>,
     ): Promise<Pagination<NotificationEntity>> {
-        return paginate<NotificationEntity>(this.notificationRepository, options, {
+        return await paginate<NotificationEntity>(this.notificationRepository, options, {
             where: where,
             order: {
                 status: 'asc',

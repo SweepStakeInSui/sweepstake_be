@@ -71,7 +71,15 @@ export class MarketService {
             queryBuilder.andWhere('market.userId = :userId', { userId: filters.userId });
         }
 
-        return paginate<MarketEntity>(queryBuilder, options);
+        return await paginate<MarketEntity>(queryBuilder, options);
+    }
+
+    public async popular(options: IPaginationOptions): Promise<Pagination<MarketEntity>> {
+        return await paginate<MarketEntity>(this.marketRepository, options, {
+            order: {
+                volume: 'desc',
+            },
+        });
     }
 
     async search(name: string) {
