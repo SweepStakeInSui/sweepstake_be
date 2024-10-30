@@ -12,6 +12,9 @@ import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginat
 import { FindOptionsWhere } from 'typeorm';
 import { UserEntity } from '@models/entities/user.entity';
 import { UpdateCommentDto } from '@modules/comment/dtos/create-comment.dto';
+import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
+import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { NotificationType } from '@modules/notification/types/notification';
 
 export class CommentService {
     protected logger: Logger;
@@ -21,6 +24,9 @@ export class CommentService {
         protected loggerService: LoggerService,
         protected jwtService: JwtService,
         configService: ConfigService,
+
+        private kafkaProducer: KafkaProducerService,
+
         @InjectRedis() private readonly redis: Redis,
         private readonly commentRepository: CommentRepository,
         private readonly marketRepository: MarketRepository,
@@ -79,6 +85,30 @@ export class CommentService {
             if (parentComment) {
                 comment.parentComment = parentComment;
             }
+
+            const msgMetaData = await this.kafkaProducer.produce({
+                topic: KafkaTopic.CREATE_NOTIFICATION,
+                messages: [
+                    {
+                        value: JSON.stringify({
+                            notifications: [
+                                {
+                                    userId: parentComment.userId,
+                                    type: NotificationType.CommentReply,
+                                    message: `${userInfo.username} relied to your comment`,
+                                    data: {
+                                        parentComment,
+                                        comment,
+                                        user: userInfo,
+                                    },
+                                },
+                            ],
+                        }),
+                    },
+                ],
+            });
+
+            console.log(msgMetaData);
         }
 
         return await this.commentRepository.save(comment);
@@ -105,6 +135,30 @@ export class CommentService {
         }
 
         await this.commentRepository.save(comment);
+
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.CREATE_NOTIFICATION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        notifications: [
+                            {
+                                userId: comment.userId,
+                                type: NotificationType.CommentLike,
+                                message: `${userInfo.username} liked to your comment`,
+                                data: {
+                                    comment,
+                                    user: userInfo,
+                                },
+                            },
+                        ],
+                    }),
+                },
+            ],
+        });
+
+        console.log(msgMetaData);
+
         return true;
     }
 

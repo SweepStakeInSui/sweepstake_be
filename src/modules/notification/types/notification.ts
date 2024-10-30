@@ -8,4 +8,6 @@ export enum NotificationType {
     'Withdrawn' = 'withdrawn',
     'OrderExecuted' = 'orderExecuted',
     'MarketCreated' = 'marketCreated',
+    'CommentLike' = 'comment-like',
+    'CommentReply' = 'comment-reply',
 }
