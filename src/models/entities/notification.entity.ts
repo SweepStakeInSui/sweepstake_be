@@ -1,7 +1,8 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '@shared/base/models/base.entity';
 import { NotificationStatus, NotificationType } from '@modules/notification/types/notification';
 import dayjs from 'dayjs';
+import { UserEntity } from './user.entity';
 
 @Entity({ name: 'notification' })
 export class NotificationEntity extends BaseEntity {
@@ -22,4 +23,7 @@ export class NotificationEntity extends BaseEntity {
 
     @Column({ type: 'enum', enum: NotificationStatus, default: NotificationStatus.Unread })
     public status: NotificationStatus;
+
+    @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
+    public user: UserEntity;
 }

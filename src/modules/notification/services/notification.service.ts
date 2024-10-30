@@ -33,6 +33,9 @@ export class NotificationService {
                 status: 'asc',
                 timestamp: 'desc',
             },
+            relations: {
+                user: true,
+            },
         });
     }
 
