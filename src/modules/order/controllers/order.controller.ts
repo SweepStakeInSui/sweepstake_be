@@ -55,13 +55,15 @@ export class OrderController {
     @ApiQuery({ name: 'page', required: false, type: Number })
     @ApiQuery({ name: 'limit', required: false, type: Number })
     @ApiQuery({ name: 'user', required: false, type: String })
+    @ApiQuery({ name: 'market', required: false, type: String })
     @ApiOkResponsePayload(GetOrdersResponseDto, EApiOkResponsePayload.OBJECT)
     async getOrders(
         @CurrentUser() user: UserEntity,
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
         @Query('user') userId?: string,
+        @Query('market') marketId?: string,
     ): Promise<Pagination<OrderEntity>> {
-        return await this.orderService.paginate({ page, limit }, userId);
+        return await this.orderService.paginate({ page, limit }, { userId, marketId });
     }
 }

@@ -21,6 +21,7 @@ import { BigIntUtil } from '@shared/utils/bigint';
 import { OrderEntity } from '@models/entities/order.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EEnvKey } from '@constants/env.constant';
+import { FindOptionsWhere } from 'typeorm';
 
 export class OrderService {
     protected logger: Logger;
@@ -191,10 +192,14 @@ export class OrderService {
         log(msgMetadata);
     }
 
-    public async paginate(options: IPaginationOptions, userId: string): Promise<Pagination<OrderEntity>> {
+    public async paginate(
+        options: IPaginationOptions,
+        where: FindOptionsWhere<OrderEntity>,
+    ): Promise<Pagination<OrderEntity>> {
         return paginate<OrderEntity>(this.orderRepository, options, {
-            where: {
-                userId,
+            where,
+            order: {
+                timestamp: 'desc',
             },
             relations: {
                 outcome: {
