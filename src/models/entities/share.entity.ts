@@ -3,6 +3,7 @@ import { BaseEntity } from '@shared/base/models/base.entity';
 import { Transform } from 'class-transformer';
 import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
 import { OutcomeEntity } from './outcome.entity';
+import { UserEntity } from './user.entity';
 
 @Entity({ name: 'share' })
 export class ShareEntity extends BaseEntity {
@@ -29,4 +30,7 @@ export class ShareEntity extends BaseEntity {
 
     @ManyToOne(() => OutcomeEntity, { createForeignKeyConstraints: false })
     public outcome: OutcomeEntity;
+
+    @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
+    public user: UserEntity;
 }
