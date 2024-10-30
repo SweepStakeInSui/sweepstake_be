@@ -200,6 +200,7 @@ export class OrderService {
                 outcome: {
                     market: true,
                 },
+                user: true,
             },
         });
     }
