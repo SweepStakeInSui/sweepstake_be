@@ -77,12 +77,20 @@ export class MarketService {
         return await paginate<MarketEntity>(queryBuilder, options);
     }
 
-    public async popular(options: IPaginationOptions): Promise<Pagination<MarketEntity>> {
-        return await paginate<MarketEntity>(this.marketRepository, options, {
-            order: {
-                volume: 'desc',
-            },
-        });
+    public async popular(options: IPaginationOptions, categories?: string): Promise<Pagination<MarketEntity>> {
+        const queryBuilder = this.marketRepository.createQueryBuilder('market');
+
+        if (categories) {
+            const categoryNames = categories.split(',').map(name => name.trim());
+            categoryNames.forEach((category, index) => {
+                queryBuilder.andWhere(`FIND_IN_SET(:category${index}, market.category)`, {
+                    [`category${index}`]: category,
+                });
+            });
+        }
+        queryBuilder.orderBy('market.volume', 'DESC');
+
+        return await paginate<MarketEntity>(queryBuilder, options);
     }
 
     async search(name: string) {
@@ -329,6 +337,7 @@ export class MarketService {
                         order: {
                             balance: 'desc',
                         },
+                        relations: ['user'],
                     }),
             ),
         );

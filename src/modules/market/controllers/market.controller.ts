@@ -51,16 +51,21 @@ export class MarketController {
     @ApiOperation({
         description: '',
     })
+    @ApiQuery({ name: 'category', required: false, type: String })
     @ApiOkResponsePayload(GetMarketListResponseDto, EApiOkResponsePayload.OBJECT, true)
     async getPopularMarket(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+        @Query('category') categories?: string,
     ): Promise<GetMarketListRequestDto> {
         limit = limit > 100 ? 100 : limit;
-        return await this.marketService.popular({
-            page,
-            limit,
-        });
+        return await this.marketService.popular(
+            {
+                page,
+                limit,
+            },
+            categories,
+        );
     }
 
     @Get('/')
