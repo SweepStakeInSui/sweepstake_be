@@ -326,20 +326,24 @@ export class MarketService {
         return { bidYes, askYes, bidNo, askNo };
     }
 
-    async getTopHolders(options: IPaginationOptions, marketId: string): Promise<Pagination<ShareEntity>[]> {
+    async getTopHolders(options: IPaginationOptions, marketId: string) {
         const outcomeInfos = await this.outcomeRepository.findBy({ marketId });
 
         return await Promise.all(
-            outcomeInfos.map(
-                async outcomeInfo =>
-                    await paginate<ShareEntity>(this.shareRepository, options, {
-                        where: { outcomeId: outcomeInfo.id },
-                        order: {
-                            balance: 'desc',
-                        },
-                        relations: ['user'],
-                    }),
-            ),
+            outcomeInfos.map(async outcomeInfo => {
+                const topHolders = await paginate<ShareEntity>(this.shareRepository, options, {
+                    where: { outcomeId: outcomeInfo.id },
+                    order: {
+                        balance: 'desc',
+                    },
+                    relations: ['user'],
+                });
+
+                return {
+                    outcome: outcomeInfo,
+                    topHolders,
+                };
+            }),
         );
     }
 }
