@@ -4,6 +4,7 @@ import { OutcomeEntity } from './outcome.entity';
 import { ConditionEntity } from './condition.entity';
 import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int.transformer';
 import { Transform } from 'class-transformer';
+import { Source } from '@modules/market/dtos/create-market.dto';
 
 @Entity({ name: 'market' })
 export class MarketEntity extends BaseEntity {
@@ -48,8 +49,8 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'text' })
     conditions_str: string;
 
-    @Column({ type: 'text', nullable: true })
-    source?: string;
+    @Column({ type: 'simple-array', nullable: true })
+    sources?: Source[];
 
     @Column({ type: 'varchar', nullable: true })
     onchainId?: string;
