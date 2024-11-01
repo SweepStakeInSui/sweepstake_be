@@ -49,8 +49,9 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'text' })
     conditions_str: string;
 
-    @Column({ type: 'simple-array', nullable: true })
+    @Column({ type: 'json', nullable: true })
     sources?: Source[];
+    d;
 
     @Column({ type: 'varchar', nullable: true })
     onchainId?: string;
