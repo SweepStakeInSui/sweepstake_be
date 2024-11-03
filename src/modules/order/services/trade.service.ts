@@ -75,9 +75,11 @@ export class TradeService {
                     }
                     await manager.save(order);
 
-                    const makerAddress = (await this.userRepository.findOneBy({ id: matchedOrder.order.userId }))
-                        .address;
-                    const takerAddress = (await this.userRepository.findOneBy({ id: order.userId })).address;
+                    const maker = await this.userRepository.findOneBy({ id: matchedOrder.order.userId });
+
+                    const makerAddress = maker.address;
+                    const taker = await this.userRepository.findOneBy({ id: order.userId });
+                    const takerAddress = taker.address;
 
                     const marketInfo = await this.marketRepository.findOneBy({ id: matchedOrder.order.marketId });
 
@@ -85,6 +87,11 @@ export class TradeService {
                     marketInfo.tradeCount += 1n;
 
                     await manager.save(marketInfo);
+
+                    maker.volume += matchedOrder.amount * matchedOrder.price;
+                    taker.volume += matchedOrder.amount * matchedOrder.price;
+
+                    await manager.save([maker, taker]);
 
                     // TODO: improve this stupid switch case to generate trade transaction data
                     switch (tradeType) {

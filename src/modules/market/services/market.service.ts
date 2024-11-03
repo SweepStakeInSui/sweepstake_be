@@ -25,6 +25,7 @@ import { MatchingEngineService } from '@modules/matching-engine/services/matchin
 import { OrderSide } from '@modules/order/types/order';
 import { ShareRepository } from '@models/repositories/share.repository';
 import { ShareEntity } from '@models/entities/share.entity';
+import { OrderRepository } from '@models/repositories/order.repository';
 
 export class MarketService {
     protected logger: Logger;
@@ -45,6 +46,7 @@ export class MarketService {
         private criteriaRepository: CriteriaRepository,
         private categoryRepository: CategoryRepository,
         private shareRepository: ShareRepository,
+        private orderRepository: OrderRepository,
     ) {
         this.logger = this.loggerService.getLogger(MarketService.name);
         this.configService = configService;

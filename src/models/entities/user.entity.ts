@@ -21,6 +21,10 @@ export class UserEntity extends BaseEntity {
     @Transform(transformBigInt)
     public balance: bigint = 0n;
 
+    @Column({ type: 'bigint', transformer: bigint })
+    @Transform(transformBigInt)
+    public volume: bigint = 0n;
+
     public reduceBalance(amount: bigint) {
         if (this.balance < amount) {
             throw new Error('Insufficient balance');

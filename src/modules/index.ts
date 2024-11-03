@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { CommentModule } from './comment/comment.module';
 import { CategoryModule } from '@modules/category/category.module';
 import { FileModule } from './file/file.module';
+import { AnalyticModule } from './analytic/analytic.module';
 
 export const Modules = [
     AuthModule,
@@ -26,4 +27,6 @@ export const Modules = [
     CategoryModule,
 
     FileModule,
+
+    AnalyticModule,
 ];
