@@ -65,6 +65,7 @@ export class WalletService {
             userId: userInfo.id,
             amount,
             type: BalanceChangeType.Withdraw,
+            to: address,
         });
 
         await this.userRepository.manager.transaction(async manager => {
@@ -102,6 +103,7 @@ export class WalletService {
             },
             {
                 where: { userId: userInfo.id, ...where },
+                order: { timestamp: 'DESC' },
             },
         );
     }

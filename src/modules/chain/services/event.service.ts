@@ -97,6 +97,7 @@ export class EventService {
             const depositInfo = await this.balanceChangeRepository.create({
                 userId: userInfo.id,
                 amount,
+                from: event.sender,
                 type: BalanceChangeType.Deposit,
                 status: BalanceChangeStatus.Success,
                 timestamp: event.timestampMs ? dayjs(event.timestampMs).unix() : dayjs().unix(),

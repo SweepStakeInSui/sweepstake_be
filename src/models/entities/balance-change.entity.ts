@@ -21,6 +21,12 @@ export class BalanceChangeEntity extends BaseEntity {
     @Transform(transformBigInt)
     amount: bigint;
 
+    @Column({ type: 'varchar', nullable: true })
+    from?: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    to?: string;
+
     @Column({ type: 'int', default: dayjs().unix() })
     timestamp: number;
 
