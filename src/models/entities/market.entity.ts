@@ -65,4 +65,9 @@ export class MarketEntity extends BaseEntity {
     @Column({ type: 'bigint', transformer: bigint })
     @Transform(transformBigInt)
     tradeCount: bigint = 0n;
+
+    // max 1000 = 100%, 1 = 0.1%,
+    @Column({ type: 'bigint', transformer: bigint, default: 0n })
+    @Transform(transformBigInt)
+    percentage: bigint = 0n;
 }

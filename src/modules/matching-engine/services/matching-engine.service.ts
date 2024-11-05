@@ -144,6 +144,15 @@ export class MatchingEngineService {
         );
 
         await this.outcomeRepository.save([outcomeInfo, oppositeOutcomeInfo]);
+
+        marketInfo.percentage =
+            outcomeInfo.type == OutcomeType.Yes
+                ? (outcomeInfo.askPrice - outcomeInfo.bidLiquidity) / 2n + outcomeInfo.bidLiquidity
+                : (oppositeOutcomeInfo.askPrice - oppositeOutcomeInfo.bidLiquidity) / 2n +
+                  oppositeOutcomeInfo.bidLiquidity;
+
+        await this.marketRepository.save(marketInfo);
+
         if (matches.matchedOrders.length == 0) {
             if (order.type == OrderType.FOK) {
                 order.status = OrderStatus.Cancelled;
