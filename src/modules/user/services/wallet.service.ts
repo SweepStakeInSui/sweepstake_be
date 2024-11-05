@@ -14,6 +14,7 @@ import { BalanceChangeRepository } from '@models/repositories/balance-change.rep
 import { paginate } from 'nestjs-typeorm-paginate';
 import { BalanceChangeEntity } from '@models/entities/balance-change.entity';
 import { BalanceChangeType } from '../types/balance-change.type';
+import { FindOptionsWhere } from 'typeorm';
 
 @Injectable()
 export class WalletService {
@@ -87,7 +88,12 @@ export class WalletService {
         console.log(msgMetadata);
     }
 
-    public async getTransactionHistory(userInfo: UserEntity, page: number, limit: number) {
+    public async getTransactionHistory(
+        userInfo: UserEntity,
+        page: number,
+        limit: number,
+        where: FindOptionsWhere<BalanceChangeEntity>,
+    ) {
         return await paginate<BalanceChangeEntity>(
             this.balanceChangeRepository,
             {
@@ -95,7 +101,7 @@ export class WalletService {
                 limit,
             },
             {
-                where: { userId: userInfo.id },
+                where: { userId: userInfo.id, ...where },
             },
         );
     }

@@ -17,6 +17,7 @@ import { BalanceChangeEntity } from '@models/entities/balance-change.entity';
 import { ShareService } from '../services/share.service';
 import { ShareEntity } from '@models/entities/share.entity';
 import { UpdateProfileRequestDto } from '../dtos/update-profile.dto';
+import { BalanceChangeType } from '../types/balance-change.type';
 
 @ApiTags('user')
 @Controller('user')
@@ -116,13 +117,15 @@ export class UserController {
     })
     @ApiQuery({ name: 'page', required: false, type: Number })
     @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiQuery({ name: 'type', required: false, enum: BalanceChangeType })
     @ApiOkResponsePayload(ProfileResponseDto, EApiOkResponsePayload.OBJECT)
     async getTransactionHistory(
         @CurrentUser() user: UserEntity,
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+        @Query('type') type?: BalanceChangeType,
     ): Promise<Pagination<BalanceChangeEntity>> {
-        return await this.walletService.getTransactionHistory(user, page, limit);
+        return await this.walletService.getTransactionHistory(user, page, limit, { type });
     }
 
     @UseGuards(AccessTokenGuard)
