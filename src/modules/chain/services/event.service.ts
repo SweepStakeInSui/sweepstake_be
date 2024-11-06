@@ -135,20 +135,10 @@ export class EventService {
     }
 
     private async processWithdrawEvent(event: SuiEvent) {
-        const { withdraw_id: withdrawId, owner, amount } = event.parsedJson as any;
-
-        const userInfo = await this.userRepository.findOneBy({
-            address: owner,
-        });
-
-        if (!userInfo) {
-            this.logger.error('User not found');
-            return;
-        }
+        const { withdraw_id: withdrawId, amount } = event.parsedJson as any;
 
         const withdrawInfo = await this.balanceChangeRepository.findOneBy({
             id: withdrawId,
-            userId: userInfo.id,
         });
 
         if (!withdrawInfo) {
@@ -168,7 +158,7 @@ export class EventService {
                     value: JSON.stringify({
                         notifications: [
                             {
-                                userId: owner,
+                                userId: withdrawInfo.userId,
                                 type: NotificationType.Withdrawn,
                                 message: `You have withdrown ${amount} to your account`,
                                 data: {
