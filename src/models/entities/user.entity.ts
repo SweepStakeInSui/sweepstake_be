@@ -5,7 +5,7 @@ import { Transform } from 'class-transformer';
 
 @Entity({ name: 'user' })
 export class UserEntity extends BaseEntity {
-    @Column({ type: 'varchar', unique: true })
+    @Column({ type: 'varchar' })
     public username: string = 'Unnamed';
 
     @Column({ type: 'varchar', nullable: true, unique: true })
