@@ -16,5 +16,5 @@ export class OracleEntity extends BaseEntity {
     public settleHash: string;
 
     @Column({ type: 'varchar', nullable: true })
-    public winner?: string;
+    public winner?: boolean;
 }
