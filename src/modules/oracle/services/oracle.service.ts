@@ -10,6 +10,7 @@ import { abi } from '@modules/oracle/abi/abi';
 import { OracleRepository } from '@models/repositories/oracle.repository';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { RewardService } from '@modules/oracle/services/reward.service';
 
 export class OracleService {
     protected logger: Logger;
@@ -29,6 +30,7 @@ export class OracleService {
         @InjectRedis() private readonly redis: Redis,
 
         private readonly oracleRepository: OracleRepository,
+        private readonly rewardService: RewardService,
 
         @InjectQueue('market') private readonly marketQueue: Queue,
     ) {
@@ -74,14 +76,15 @@ export class OracleService {
         try {
             const tx = await this.sweepstakeUmaContract.settleRequest(questionId);
             oracleEntity.settleHash = tx.hash;
-            oracleEntity.winner = (await this.getSettledData(questionId)).toString();
+            oracleEntity.winner = await this.getSettledData(questionId);
             await this.oracleRepository.save(oracleEntity);
+            await this.rewardService.syncReward(oracleEntity.marketId);
         } catch (e) {
             console.error(e);
         }
     }
 
-    public async getSettledData(questionId: string) {
+    public async getSettledData(questionId: string): Promise<boolean> {
         const settledData = await this.sweepstakeUmaContract.getSettledData(questionId);
         return settledData == '1000000000000000000';
     }

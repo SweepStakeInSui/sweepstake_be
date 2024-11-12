@@ -251,6 +251,21 @@ export class TransactionService {
         return tx;
     }
 
+    public async buildClaimRewardTransaction(id: string, market_id: string, winner: boolean) {
+        const tx = new Transaction();
+        tx.moveCall({
+            arguments: [
+                tx.object(this.conditionalMarketAdminCap),
+                tx.pure.string(id),
+                tx.pure.string(market_id),
+                tx.pure.bool(winner),
+            ],
+            target: buildTransactionTarget(this.conditionalMarketContract, 'conditional_market', 'claim_reward'),
+        });
+
+        return tx;
+    }
+
     public async signAdminTransaction(tx: Transaction) {
         tx.setGasBudget(10000000);
         tx.setSender(this.adminKeypair.toSuiAddress());
@@ -260,6 +275,17 @@ export class TransactionService {
             client: this.rpcClient,
         });
         // return await this.signTransaction(txBytes, this.adminKeypair);
+    }
+
+    // for reward service only
+    public async signAdminAndExecuteTransaction(tx: Transaction) {
+        tx.setGasBudget(10000000);
+        tx.setSender(this.adminKeypair.toSuiAddress());
+
+        await this.rpcClient.signAndExecuteTransaction({
+            signer: this.adminKeypair,
+            transaction: tx,
+        });
     }
 
     public async signTransaction(txBytes: Uint8Array, keypair: Keypair) {

@@ -6,12 +6,13 @@ import { CommentModule } from '@modules/comment/comment.module';
 import { CommentService } from '@modules/comment/services/comment.service';
 import { MatchingEngineModule } from '@modules/matching-engine/matching-engine.module';
 import { BullModule } from '@nestjs/bull';
-import { MarketProcessor } from '@modules/market/processors/market.processor';
+import { MarketProcessor } from '@modules/job/processors/market.processor';
 import { OracleService } from '@modules/oracle/services/oracle.service';
 import { bullConfig } from '@config/redis.config';
+import { RewardService } from '@modules/oracle/services/reward.service';
 
 const controllers = [MarketController];
-const services = [MarketService, CommentService, MarketProcessor, OracleService];
+const services = [MarketService, CommentService, MarketProcessor, OracleService, RewardService];
 const bullCon = BullModule.forRoot(bullConfig);
 const bullModule = BullModule.registerQueue({
     name: 'market',
