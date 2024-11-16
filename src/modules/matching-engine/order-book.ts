@@ -138,7 +138,7 @@ export class OrderBook {
         this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
         this.addLiquidity(order.side, order.outcome.type, order.price, order.amount - order.fullfilled);
         this.addLiquidity(
-            order.side,
+            order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid,
             order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes,
             this.unit - order.price,
             order.amount - order.fullfilled,
