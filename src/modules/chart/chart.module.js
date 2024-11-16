@@ -8,4 +8,4 @@ const services = [];
     controllers: [...controllers],
     providers: [...services],
 })
-export class JobModule {}
+export class ChartModule {}

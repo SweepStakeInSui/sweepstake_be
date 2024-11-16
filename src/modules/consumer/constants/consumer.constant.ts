@@ -6,6 +6,7 @@ export const KafkaTopic = {
     WAIT_TRANSACTION: 'wait-transaction',
     PROCCESS_EVENT: 'process-event',
     CREATE_NOTIFICATION: 'create-notification',
+    SNAPSHOT_PRICE: 'snapshot-price',
 };
 
 export const KafkaGroup = 'kafka';

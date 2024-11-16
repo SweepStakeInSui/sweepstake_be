@@ -2,10 +2,7 @@ import { UserEntity } from '@models/entities/user.entity';
 import { UserRepository } from '@models/repositories/user.repository';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
-import { InjectRedis } from '@songkeys/nestjs-redis';
-import Redis from 'ioredis';
 import { Logger } from 'log4js';
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 
@@ -16,9 +13,7 @@ export class LeaderboardService {
 
     constructor(
         protected loggerService: LoggerService,
-        protected jwtService: JwtService,
         configService: ConfigService,
-        @InjectRedis() private readonly redis: Redis,
 
         private readonly userRepository: UserRepository,
     ) {
