@@ -91,11 +91,11 @@ export class OrderService {
                 case OrderType.FOK:
                     switch (orderInfo.side) {
                         case OrderSide.Bid: {
-                            orderInfo.price = outcomeInfo.askPrice;
+                            orderInfo.price = outcomeInfo.bidPrice;
                             break;
                         }
                         case OrderSide.Ask: {
-                            orderInfo.price = outcomeInfo.bidPrice;
+                            orderInfo.price = outcomeInfo.askPrice;
                             break;
                         }
                     }
