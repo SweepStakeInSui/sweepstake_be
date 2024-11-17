@@ -147,9 +147,8 @@ export class MatchingEngineService {
 
         marketInfo.percentage =
             outcomeInfo.type == OutcomeType.Yes
-                ? (outcomeInfo.askPrice - outcomeInfo.bidLiquidity) / 2n + outcomeInfo.bidLiquidity
-                : (oppositeOutcomeInfo.askPrice - oppositeOutcomeInfo.bidLiquidity) / 2n +
-                  oppositeOutcomeInfo.bidLiquidity;
+                ? (outcomeInfo.askPrice - outcomeInfo.bidPrice) / 2n + outcomeInfo.bidPrice
+                : (oppositeOutcomeInfo.askPrice - oppositeOutcomeInfo.bidPrice) / 2n + oppositeOutcomeInfo.bidPrice;
 
         await this.marketRepository.save(marketInfo);
 
