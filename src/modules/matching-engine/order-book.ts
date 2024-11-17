@@ -137,24 +137,31 @@ export class OrderBook {
     private addOrder(order: OrderEntity) {
         this.queues[`${order.side}-${order.outcome.type}`].enqueue(order);
         this.addLiquidity(order.side, order.outcome.type, order.price, order.amount - order.fullfilled);
-        this.addLiquidity(
-            order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid,
-            order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes,
-            this.unit - order.price,
-            order.amount - order.fullfilled,
-        );
     }
 
     private addLiquidity(side: OrderSide, type: OutcomeType, price: bigint, amount: bigint) {
-        if (!this.liquidities[`${side}-${type}-${price}`]) {
-            this.liquidities[`${side}-${type}-${price}`] = 0n;
+        const liquidity = `${side}-${type}-${price}`;
+        if (!this.liquidities[liquidity]) {
+            this.liquidities[liquidity] = 0n;
         }
-        this.liquidities[`${side}-${type}-${price}`] += amount;
+        this.liquidities[liquidity] += amount;
+
+        const oppLiquidity = `${side == OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${type == OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}-${this.unit - price}`;
+        if (!this.liquidities[oppLiquidity]) {
+            this.liquidities[oppLiquidity] = 0n;
+        }
+        this.liquidities[oppLiquidity] += amount;
+
         this.liquidities[`${side}-${type}`] += amount;
     }
 
     private removeLiquidity(side: OrderSide, type: OutcomeType, price: bigint, amount: bigint) {
-        this.liquidities[`${side}-${type}-${price}`] -= amount;
+        const liquidity = `${side}-${type}-${price}`;
+        this.liquidities[liquidity] -= amount;
+
+        const oppLiquidity = `${side == OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${type == OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}-${this.unit - price}`;
+        this.liquidities[oppLiquidity] -= amount;
+
         this.liquidities[`${side}-${type}`] -= amount;
     }
     private matchMarketOrder(order: OrderEntity) {
