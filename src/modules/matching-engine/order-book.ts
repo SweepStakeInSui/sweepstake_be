@@ -146,23 +146,29 @@ export class OrderBook {
         }
         this.liquidities[liquidity] += amount;
 
-        const oppLiquidity = `${side == OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${type == OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}-${this.unit - price}`;
+        const oppLiquidity = `${side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}-${this.unit - price}`;
         if (!this.liquidities[oppLiquidity]) {
             this.liquidities[oppLiquidity] = 0n;
         }
         this.liquidities[oppLiquidity] += amount;
 
         this.liquidities[`${side}-${type}`] += amount;
+        this.liquidities[
+            `${side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`
+        ] += amount;
     }
 
     private removeLiquidity(side: OrderSide, type: OutcomeType, price: bigint, amount: bigint) {
         const liquidity = `${side}-${type}-${price}`;
         this.liquidities[liquidity] -= amount;
 
-        const oppLiquidity = `${side == OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${type == OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}-${this.unit - price}`;
+        const oppLiquidity = `${side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}-${this.unit - price}`;
         this.liquidities[oppLiquidity] -= amount;
 
         this.liquidities[`${side}-${type}`] -= amount;
+        this.liquidities[
+            `${side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`
+        ] -= amount;
     }
     private matchMarketOrder(order: OrderEntity) {
         const matches: Match = {
