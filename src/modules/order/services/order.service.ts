@@ -16,8 +16,6 @@ import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 import { OrderSide, OrderStatus, OrderType } from '../types/order';
 import { log } from 'console';
 import { ShareRepository } from '@models/repositories/share.repository';
-import { OutcomeType } from '@modules/market/types/outcome';
-import { BigIntUtil } from '@shared/utils/bigint';
 import { OrderEntity } from '@models/entities/order.entity';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { EEnvKey } from '@constants/env.constant';
@@ -76,13 +74,6 @@ export class OrderService {
 
         const marketInfo = outcomeInfo.market;
 
-        const oppositeOutcomeInfo = await this.outcomeRepository.findOne({
-            where: {
-                marketId: marketInfo.id,
-                type: outcomeInfo.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes,
-            },
-        });
-
         if (
             !marketInfo ||
             !marketInfo.isActive ||
@@ -100,17 +91,11 @@ export class OrderService {
                 case OrderType.FOK:
                     switch (orderInfo.side) {
                         case OrderSide.Bid: {
-                            const sameAssetPrice = outcomeInfo.askPrice;
-                            const oppositeAssetPrice = oppositeOutcomeInfo.bidPrice;
-
-                            orderInfo.price = BigIntUtil.max(oppositeAssetPrice, this.unit - sameAssetPrice);
+                            orderInfo.price = outcomeInfo.askPrice;
                             break;
                         }
                         case OrderSide.Ask: {
-                            const sameAssetPrice = outcomeInfo.askPrice;
-                            const oppositeAssetPrice = oppositeOutcomeInfo.bidPrice;
-
-                            orderInfo.price = BigIntUtil.min(oppositeAssetPrice, this.unit - sameAssetPrice);
+                            orderInfo.price = outcomeInfo.bidPrice;
                             break;
                         }
                     }

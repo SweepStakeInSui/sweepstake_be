@@ -176,10 +176,7 @@ export class OrderBook {
             matchedOrders: [],
         };
         const liquidity =
-            this.liquidities[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`] +
-            this.liquidities[
-                `${order.side}-${order.outcome.type === OutcomeType.Yes ? OutcomeType.No : OutcomeType.Yes}`
-            ];
+            this.liquidities[`${order.side === OrderSide.Bid ? OrderSide.Ask : OrderSide.Bid}-${order.outcome.type}`];
 
         if (order.amount > liquidity) {
             log('liquidity', liquidity);
