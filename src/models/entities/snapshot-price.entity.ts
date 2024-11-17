@@ -7,7 +7,7 @@ import { SnapshotTime } from '@modules/analytic/types/snapshot.type';
 @Entity({ name: 'price-snapshot' })
 export class SnapshotPriceEntity extends BaseEntity {
     @Column({ type: 'varchar' })
-    outcomeId: string;
+    marketId: string;
 
     @Column({ type: 'bigint', nullable: true, transformer: bigint })
     @Transform(transformBigInt)

@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { MatchOrderConsumer } from './consumers/match-order.consumer';
 import { MatchingEngineModule } from '@modules/matching-engine/matching-engine.module';
 import { CreateMarketProcessor } from './consumers/create-market-event.consumer';
@@ -11,8 +10,10 @@ import { WaitTransactionConsumer } from './consumers/wait-transaction.consumer';
 import { ProccessEventConsumer } from './consumers/proccess-event';
 import { CreateNotificationConsumer } from './consumers/create-notification.consumer';
 import { NotificationModule } from '@modules/notification/notification.module';
+import { SnapshotPriceConsumer } from './consumers/snapshot-price.consumer';
+import { AnalyticModule } from '@modules/analytic/analytic.module';
 
-const modules = [MatchingEngineModule, OrderModule, ChainModule, NotificationModule];
+const modules = [MatchingEngineModule, OrderModule, ChainModule, NotificationModule, AnalyticModule];
 const consumers = [
     MatchOrderConsumer,
     CreateMarketProcessor,
@@ -21,10 +22,11 @@ const consumers = [
     WaitTransactionConsumer,
     ProccessEventConsumer,
     CreateNotificationConsumer,
+    SnapshotPriceConsumer,
 ];
 
 @Module({
-    imports: [TypeOrmModule.forFeature([]), ...modules],
+    imports: [...modules],
     controllers: [],
     providers: [...consumers],
 })

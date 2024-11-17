@@ -13,6 +13,7 @@ import { UserRepository } from './user.repository';
 import { CommentRepository } from '@models/repositories/comment.repository';
 import { CategoryRepository } from '@models/repositories/category.repository';
 import { BalanceChangeRepository } from './balance-change.repository';
+import { SnapshotPriceRepository } from './snapshot-price.repository';
 
 export const Repositories = [
     AuthRepository,
@@ -36,4 +37,6 @@ export const Repositories = [
     TransactionRepository,
 
     NotificationRepository,
+
+    SnapshotPriceRepository,
 ];

@@ -2,6 +2,7 @@ import { OutcomeRepository } from '@models/repositories/outcome.repository';
 import { SnapshotPriceRepository } from '@models/repositories/snapshot-price.repository';
 import { SnapshotTime } from '@modules/analytic/types/snapshot.type';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { OutcomeType } from '@modules/market/types/outcome';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -11,7 +12,7 @@ import dayjs from 'dayjs';
 import { Logger } from 'log4js';
 
 @Injectable()
-export class SnapshotPriceProcessor {
+export class SnapshotPriceTask {
     constructor(
         private loggerService: LoggerService,
         private kafkaProducer: KafkaProducerService,
@@ -19,7 +20,7 @@ export class SnapshotPriceProcessor {
         private readonly outcomeRepository: OutcomeRepository,
         private readonly snapshotPriceRepository: SnapshotPriceRepository,
     ) {
-        this.logger = this.loggerService.getLogger(SnapshotPriceProcessor.name);
+        this.logger = this.loggerService.getLogger(SnapshotPriceTask.name);
     }
 
     private logger: Logger;
@@ -61,6 +62,7 @@ export class SnapshotPriceProcessor {
                 market: {
                     isActive: true,
                 },
+                type: OutcomeType.Yes,
             },
             relations: ['market'],
         });
@@ -68,7 +70,7 @@ export class SnapshotPriceProcessor {
         Promise.all(
             outcomeInfos.map(async outcomeInfo => {
                 const snapshotPriceInfo = this.snapshotPriceRepository.create({
-                    outcomeId: outcomeInfo.id,
+                    marketId: outcomeInfo.market.id,
                     snapshotTime,
                     timestamp: dayjs().unix(),
                 });

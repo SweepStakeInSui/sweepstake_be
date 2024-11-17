@@ -1,7 +1,7 @@
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
 import { Body, Controller, DefaultValuePipe, Get, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { CurrentUser } from '@modules/auth/decorators/current-user.decorator';
 import { UserEntity } from '@models/entities/user.entity';
@@ -28,6 +28,8 @@ export class NotificationController {
     @ApiOperation({
         description: '',
     })
+    @ApiQuery({ name: 'page', required: false, type: Number })
+    @ApiQuery({ name: 'limit', required: false, type: Number })
     @ApiOkResponsePayload(GetNotificationResponseDto, EApiOkResponsePayload.OBJECT, true)
     async getNotification(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,

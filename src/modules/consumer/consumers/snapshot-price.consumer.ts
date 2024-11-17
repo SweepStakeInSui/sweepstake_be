@@ -15,10 +15,10 @@ export class SnapshotPriceConsumer implements OnModuleInit {
     ) {}
 
     async onModuleInit() {
-        await this.kafkaAdminService.createTopics([KafkaTopic.PROCCESS_EVENT]);
+        await this.kafkaAdminService.createTopics([KafkaTopic.SNAPSHOT_PRICE]);
         await this.kafkaConsumerService.consume(
             v4(),
-            { topics: [KafkaTopic.PROCCESS_EVENT] },
+            { topics: [KafkaTopic.SNAPSHOT_PRICE] },
             {
                 eachMessage: async ({ topic, partition, message }) => {
                     console.log({

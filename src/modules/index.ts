@@ -10,6 +10,7 @@ import { CommentModule } from './comment/comment.module';
 import { CategoryModule } from '@modules/category/category.module';
 import { FileModule } from './file/file.module';
 import { AnalyticModule } from './analytic/analytic.module';
+import { JobModule } from './job/job.module';
 
 export const Modules = [
     AuthModule,
@@ -29,4 +30,6 @@ export const Modules = [
     FileModule,
 
     AnalyticModule,
+
+    JobModule,
 ];

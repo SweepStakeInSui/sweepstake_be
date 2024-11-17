@@ -2,7 +2,7 @@ import { Logger } from 'log4js';
 import { LeaderboardService } from '../services/leaderboard.services.';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Controller, DefaultValuePipe, Get, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { GetTopVolumeResponseDto } from '../dtos/get-top-volume.dto';
 
@@ -21,6 +21,8 @@ export class LeaderboardController {
     @ApiOperation({
         description: '',
     })
+    @ApiQuery({ name: 'page', required: false, type: Number })
+    @ApiQuery({ name: 'limit', required: false, type: Number })
     @ApiOkResponsePayload(GetTopVolumeResponseDto, EApiOkResponsePayload.OBJECT)
     async getTopVolume(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
@@ -33,6 +35,8 @@ export class LeaderboardController {
     @ApiOperation({
         description: '',
     })
+    @ApiQuery({ name: 'page', required: false, type: Number })
+    @ApiQuery({ name: 'limit', required: false, type: Number })
     @ApiOkResponsePayload(GetTopVolumeResponseDto, EApiOkResponsePayload.OBJECT)
     async getTopProfit(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
