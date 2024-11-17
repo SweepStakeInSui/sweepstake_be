@@ -46,16 +46,17 @@ export class SnapshotService {
             }
             case SnapshotTime.ThirtyMinutes: {
                 const dt = dayjs.unix(snapshotInfo.timestamp);
-
-                const firstOfHour = dt.startOf('hour').unix();
-                const lastOfHour = dt.endOf('hour').unix();
+                const last = dt.subtract(30, 'minute').unix();
                 const snapshots = await this.snapshotPriceRepository.findBy({
                     snapshotTime: SnapshotTime.OneMinute,
                     marketId: snapshotInfo.marketId,
-                    timestamp: Between(firstOfHour, lastOfHour),
+                    timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce((sum, snapshot) => sum + snapshot.price, 0n);
+                const price = snapshots.reduce(
+                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                    0n,
+                );
 
                 snapshotInfo.price = price / BigInt(snapshots.length);
                 await this.snapshotPriceRepository.save(snapshotInfo);
@@ -63,14 +64,17 @@ export class SnapshotService {
             }
             case SnapshotTime.OneHour: {
                 const dt = dayjs.unix(snapshotInfo.timestamp);
-                const lastHour = dt.subtract(1, 'hour').unix();
+                const last = dt.subtract(1, 'hour').unix();
                 const snapshots = await this.snapshotPriceRepository.findBy({
-                    snapshotTime: SnapshotTime.OneHour,
+                    snapshotTime: SnapshotTime.OneMinute,
                     marketId: snapshotInfo.marketId,
-                    timestamp: Between(lastHour, snapshotInfo.timestamp),
+                    timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce((sum, snapshot) => sum + snapshot.price, 0n);
+                const price = snapshots.reduce(
+                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                    0n,
+                );
 
                 snapshotInfo.price = price / BigInt(snapshots.length);
                 await this.snapshotPriceRepository.save(snapshotInfo);
@@ -78,14 +82,17 @@ export class SnapshotService {
             }
             case SnapshotTime.FourHours: {
                 const dt = dayjs.unix(snapshotInfo.timestamp);
-                const lastHours = dt.subtract(4, 'hour').unix();
+                const last = dt.subtract(4, 'hour').unix();
                 const snapshots = await this.snapshotPriceRepository.findBy({
                     snapshotTime: SnapshotTime.OneHour,
                     marketId: snapshotInfo.marketId,
-                    timestamp: Between(lastHours, snapshotInfo.timestamp),
+                    timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce((sum, snapshot) => sum + snapshot.price, 0n);
+                const price = snapshots.reduce(
+                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                    0n,
+                );
 
                 snapshotInfo.price = price / BigInt(snapshots.length);
                 await this.snapshotPriceRepository.save(snapshotInfo);
@@ -94,14 +101,17 @@ export class SnapshotService {
 
             case SnapshotTime.OneDay: {
                 const dt = dayjs.unix(snapshotInfo.timestamp);
-                const lastHours = dt.subtract(1, 'day').unix();
+                const last = dt.subtract(1, 'day').unix();
                 const snapshots = await this.snapshotPriceRepository.findBy({
                     snapshotTime: SnapshotTime.OneHour,
                     marketId: snapshotInfo.marketId,
-                    timestamp: Between(lastHours, snapshotInfo.timestamp),
+                    timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce((sum, snapshot) => sum + snapshot.price, 0n);
+                const price = snapshots.reduce(
+                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                    0n,
+                );
 
                 snapshotInfo.price = price / BigInt(snapshots.length);
                 await this.snapshotPriceRepository.save(snapshotInfo);
@@ -109,14 +119,17 @@ export class SnapshotService {
             }
             case SnapshotTime.OneWeek: {
                 const dt = dayjs.unix(snapshotInfo.timestamp);
-                const lastHours = dt.subtract(1, 'week').unix();
+                const last = dt.subtract(1, 'week').unix();
                 const snapshots = await this.snapshotPriceRepository.findBy({
                     snapshotTime: SnapshotTime.OneDay,
                     marketId: snapshotInfo.marketId,
-                    timestamp: Between(lastHours, snapshotInfo.timestamp),
+                    timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce((sum, snapshot) => sum + snapshot.price, 0n);
+                const price = snapshots.reduce(
+                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                    0n,
+                );
 
                 snapshotInfo.price = price / BigInt(snapshots.length);
                 await this.snapshotPriceRepository.save(snapshotInfo);
@@ -125,14 +138,17 @@ export class SnapshotService {
 
             case SnapshotTime.OneMonth: {
                 const dt = dayjs.unix(snapshotInfo.timestamp);
-                const lastHours = dt.subtract(1, 'month').unix();
+                const last = dt.subtract(1, 'month').unix();
                 const snapshots = await this.snapshotPriceRepository.findBy({
                     snapshotTime: SnapshotTime.OneDay,
                     marketId: snapshotInfo.marketId,
-                    timestamp: Between(lastHours, snapshotInfo.timestamp),
+                    timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce((sum, snapshot) => sum + snapshot.price, 0n);
+                const price = snapshots.reduce(
+                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                    0n,
+                );
 
                 snapshotInfo.price = price / BigInt(snapshots.length);
                 await this.snapshotPriceRepository.save(snapshotInfo);
