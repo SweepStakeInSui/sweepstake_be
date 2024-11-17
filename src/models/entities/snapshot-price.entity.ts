@@ -4,7 +4,7 @@ import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int
 import { Transform } from 'class-transformer';
 import { SnapshotTime } from '@modules/analytic/types/snapshot.type';
 
-@Entity({ name: 'price-snapshot' })
+@Entity({ name: 'snapshot-price' })
 export class SnapshotPriceEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     marketId: string;
