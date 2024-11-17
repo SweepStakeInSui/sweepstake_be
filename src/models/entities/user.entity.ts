@@ -5,8 +5,11 @@ import { Transform } from 'class-transformer';
 
 @Entity({ name: 'user' })
 export class UserEntity extends BaseEntity {
-    @Column({ type: 'varchar' })
-    public username: string = 'Unnamed';
+    @Column({ type: 'varchar', unique: true })
+    public username: string;
+
+    @Column({ type: 'varchar', nullable: true })
+    public name?: string = 'Unnamed';
 
     @Column({ type: 'varchar', nullable: true, unique: true })
     public address?: string;

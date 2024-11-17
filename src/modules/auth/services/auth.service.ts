@@ -134,6 +134,7 @@ export class AuthService {
         const userInfo = this.userRepository.create({
             address,
             balance: 0n,
+            username: address,
         });
 
         authInfo = this.authRepository.create({
