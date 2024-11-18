@@ -31,6 +31,11 @@ export class SnapshotPriceTask {
         await this.snapshot(SnapshotTime.OneMinute);
     }
 
+    @Cron(CronExpression.EVERY_30_MINUTES)
+    async thirtyMinutesSnapshot() {
+        await this.snapshot(SnapshotTime.ThirtyMinutes);
+    }
+
     @Cron(CronExpression.EVERY_HOUR)
     async oneHourSnapshot() {
         await this.snapshot(SnapshotTime.OneHour);
