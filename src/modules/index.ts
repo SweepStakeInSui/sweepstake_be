@@ -21,7 +21,6 @@ export const Modules = [
     MarketModule,
     OrderModule,
     MatchingEngineModule,
-    OrderModule,
     OracleModule,
 
     ChainModule,

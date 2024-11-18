@@ -16,6 +16,7 @@ import { buildTransactionTarget } from '@shared/utils/sui';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import dayjs from 'dayjs';
 import { SuiGraphQLClient } from '@mysten/sui/graphql';
+import { TransactionTarget } from '@modules/chain/constants/target.constant';
 
 @Injectable()
 export class TransactionService {
@@ -139,7 +140,11 @@ export class TransactionService {
         tx.moveCall({
             typeArguments: [coinType],
             arguments: [tx.object(this.sweepstakeSuiTreasury), coin],
-            target: buildTransactionTarget(this.sweepstakeContract, 'sweepstake', 'deposit'),
+            target: buildTransactionTarget(
+                this.sweepstakeContract,
+                TransactionTarget.SweepStake,
+                TransactionTarget.Deposit,
+            ),
         });
         return tx;
     }
@@ -157,7 +162,11 @@ export class TransactionService {
                 tx.pure.u64(amount),
                 tx.pure.address(user),
             ],
-            target: buildTransactionTarget(this.sweepstakeContract, 'sweepstake', 'withdraw'),
+            target: buildTransactionTarget(
+                this.sweepstakeContract,
+                TransactionTarget.SweepStake,
+                TransactionTarget.Withdraw,
+            ),
         });
 
         return tx;
@@ -184,7 +193,11 @@ export class TransactionService {
                 tx.pure.u64(dayjs.unix(start_time).valueOf()),
                 tx.pure.u64(dayjs.unix(end_time).valueOf()),
             ],
-            target: buildTransactionTarget(this.conditionalMarketContract, 'conditional_market', 'create_market'),
+            target: buildTransactionTarget(
+                this.conditionalMarketContract,
+                TransactionTarget.Market,
+                TransactionTarget.CreateMarket,
+            ),
         });
 
         return tx;
@@ -244,7 +257,11 @@ export class TransactionService {
                     tx.pure.bool(assetType),
                     tx.pure.u64(tradeType),
                 ],
-                target: buildTransactionTarget(this.conditionalMarketContract, 'conditional_market', 'execute_order'),
+                target: buildTransactionTarget(
+                    this.conditionalMarketContract,
+                    TransactionTarget.Market,
+                    TransactionTarget.ExecuteOrder,
+                ),
             });
         }
 
@@ -260,7 +277,11 @@ export class TransactionService {
                 tx.pure.string(market_id),
                 tx.pure.bool(winner),
             ],
-            target: buildTransactionTarget(this.conditionalMarketContract, 'conditional_market', 'claim_reward'),
+            target: buildTransactionTarget(
+                this.conditionalMarketContract,
+                TransactionTarget.Market,
+                TransactionTarget.ClaimReward,
+            ),
         });
 
         return tx;
