@@ -8,28 +8,27 @@ import { MarketRepository } from '@models/repositories/market.repository';
 import { BadRequestException } from '@nestjs/common';
 import { OracleRepository } from '@models/repositories/oracle.repository';
 import { OutcomeRepository } from '@models/repositories/outcome.repository';
-import { OutcomeType } from '@modules/market/types/outcome';
 import { ShareRepository } from '@models/repositories/share.repository';
 import { UserRepository } from '@models/repositories/user.repository';
 import { TransactionService } from '@modules/chain/services/transaction.service';
+import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
+import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
 
 export class RewardService {
     protected logger: Logger;
     protected configService: ConfigService;
-
-    // Reward Part
 
     constructor(
         protected loggerService: LoggerService,
         protected jwtService: JwtService,
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
+        private kafkaProducer: KafkaProducerService,
         private marketRespository: MarketRepository,
         private oracleRepository: OracleRepository,
         private outcomeRepository: OutcomeRepository,
         private shareRepository: ShareRepository,
         private userRepository: UserRepository,
-
         private transactionService: TransactionService,
     ) {
         this.logger = this.loggerService.getLogger(RewardService.name);
@@ -44,31 +43,25 @@ export class RewardService {
         if (!marketInfo || !oracleInfo) {
             throw new BadRequestException('Market not found');
         }
-        const transaction = await this.transactionService.buildClaimRewardTransaction(
-            marketInfo.id,
-            marketInfo.onchainId,
-            oracleInfo.winner,
+        const { bytes, signature } = await this.transactionService.signAdminTransaction(
+            await this.transactionService.buildClaimRewardTransaction(
+                marketInfo.id,
+                marketInfo.onchainId,
+                oracleInfo.winner,
+            ),
         );
-        await this.transactionService.signAdminAndExecuteTransaction(transaction);
 
-        const result = oracleInfo.winner ? OutcomeType.Yes : OutcomeType.No;
-        const outcomeReward = await this.outcomeRepository.findOneBy({ marketId: marketId, type: result });
-        if (!outcomeReward) {
-            throw new BadRequestException('Outcome reward not found');
-        }
-
-        const usersRewarded = await this.shareRepository.find({
-            where: { outcomeId: outcomeReward.id },
-            relations: ['user'],
+        const msgMetaData = await this.kafkaProducer.produce({
+            topic: KafkaTopic.SUBMIT_TRANSACTION,
+            messages: [
+                {
+                    value: JSON.stringify({
+                        txData: bytes,
+                        signature: signature,
+                    }),
+                },
+            ],
         });
-
-        await Promise.all(
-            usersRewarded.map(async holder => {
-                const newBalance = holder.user.balance + holder.balance;
-                await this.userRepository.update(holder.user.id, {
-                    balance: newBalance,
-                });
-            }),
-        );
+        console.log(msgMetaData);
     }
 }

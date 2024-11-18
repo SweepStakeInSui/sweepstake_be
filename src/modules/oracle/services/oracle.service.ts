@@ -127,7 +127,7 @@ export class OracleService {
         return tx.hash;
     }
 
-    public calculateQuestionID(ancillaryString: string) {
+    public calculateQuestionId(ancillaryString: string) {
         return ethers.keccak256(ethers.toUtf8Bytes(ancillaryString));
     }
 }

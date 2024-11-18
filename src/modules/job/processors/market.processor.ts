@@ -16,6 +16,7 @@ export class MarketProcessor {
     async handleCheckMarketState(job: Job) {
         const { questionId } = job.data;
         const state = await this.oracleService.getSateData(questionId);
+        console.log('question_id', questionId, state);
         if (state.toString() == '3') {
             await this.oracleService.settleData(questionId);
         } else if (state.toString() == '0') {

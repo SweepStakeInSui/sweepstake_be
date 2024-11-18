@@ -10,4 +10,5 @@ export enum NotificationType {
     'MarketCreated' = 'marketCreated',
     'CommentLike' = 'comment-like',
     'CommentReply' = 'comment-reply',
+    'ClaimedReward' = 'claimedReward',
 }
