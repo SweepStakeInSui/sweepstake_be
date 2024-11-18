@@ -201,10 +201,10 @@ export class MarketService {
 
     // TODO: remove this method
     public async create(userInfo: UserEntity, market: CreateMarketRequestDto): Promise<MarketEntity> {
-        if (new Date(market.endTime * 1000) < new Date()) {
+        if (dayjs.unix(market.endTime).isBefore(dayjs().unix())) {
             throw new BadRequestException('Invalid end time');
         }
-        const questionID = this.oracleServices.calculateQuestionID(market.description);
+        const questionId = this.oracleServices.calculateQuestionId(market.description);
         const marketInfo = this.marketRepository.create({
             ...market,
             conditions: [],
@@ -215,7 +215,7 @@ export class MarketService {
 
         const oracle = this.oracleRepository.create({
             marketId: marketInfo.id,
-            questionId: questionID,
+            questionId: questionId,
         });
         await this.oracleRepository.save(oracle);
 
@@ -261,7 +261,7 @@ export class MarketService {
                 description: marketInfo.description,
             },
             {
-                delay: new Date(marketInfo.endTime * 1000).getTime() - Date.now(),
+                delay: dayjs.unix(market.endTime).diff(dayjs().unix()),
             },
         );
         const { bytes, signature } = await this.transactionService.signAdminTransaction(

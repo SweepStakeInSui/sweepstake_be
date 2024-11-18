@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { InjectRedis } from '@songkeys/nestjs-redis';
@@ -18,6 +18,9 @@ import dayjs from 'dayjs';
 import { BalanceChangeStatus, BalanceChangeType } from '@modules/user/types/balance-change.type';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { OracleRepository } from '@models/repositories/oracle.repository';
+import { OutcomeType } from '@modules/market/types/outcome';
+import { OutcomeRepository } from '@models/repositories/outcome.repository';
 
 @Injectable()
 export class EventService {
@@ -32,13 +35,14 @@ export class EventService {
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
         private kafkaProducer: KafkaProducerService,
-
         private readonly marketRepository: MarketRepository,
         private readonly userRepository: UserRepository,
         private readonly shareRepository: ShareRepository,
         private readonly orderRepository: OrderRepository,
         private readonly tradeRepository: TradeRepository,
         private readonly balanceChangeRepository: BalanceChangeRepository,
+        private readonly oracleRepository: OracleRepository,
+        private readonly outcomeRepository: OutcomeRepository,
     ) {
         this.logger = this.loggerService.getLogger(CrawlerService.name);
         this.configService = configService;
@@ -80,6 +84,9 @@ export class EventService {
                 case `${this.conditionalMarketContract}::conditional_market::MergeEvent`: {
                     await this.proccessMergeEvent(event);
                     break;
+                }
+                case `${this.conditionalMarketContract}::conditional_market::ClaimEvent`: {
+                    await this.proccessClaimEvent(event);
                 }
             }
         }
@@ -453,5 +460,63 @@ export class EventService {
         });
 
         console.log(msgMetaData);
+    }
+
+    private async proccessClaimEvent(event: SuiEvent) {
+        console.log(event.parsedJson);
+
+        const { market_id: marketId } = event.parsedJson as any;
+
+        const marketInfo = await this.marketRepository.findOneBy({
+            id: marketId,
+        });
+        const oracleInfo = await this.oracleRepository.findOneBy({
+            marketId,
+        });
+
+        if (!marketInfo || !oracleInfo) {
+            throw new BadRequestException('Market not found');
+        }
+
+        const result = oracleInfo.winner ? OutcomeType.Yes : OutcomeType.No;
+        const outcomeReward = await this.outcomeRepository.findOneBy({ marketId: marketId, type: result });
+        if (!outcomeReward) {
+            throw new BadRequestException('Outcome reward not found');
+        }
+
+        const usersRewarded = await this.shareRepository.find({
+            where: { outcomeId: outcomeReward.id },
+            relations: ['user'],
+        });
+
+        await Promise.all(
+            usersRewarded.map(async holder => {
+                const newBalance = holder.user.balance + holder.balance;
+                await this.userRepository.update(holder.user.id, {
+                    balance: newBalance,
+                });
+
+                const msgMetaData = await this.kafkaProducer.produce({
+                    topic: KafkaTopic.CREATE_NOTIFICATION,
+                    messages: [
+                        {
+                            value: JSON.stringify({
+                                notifications: [
+                                    {
+                                        userId: holder.user.id,
+                                        type: NotificationType.ClaimedReward,
+                                        message: `You have received ${holder.balance} as reward from market ${marketInfo.name}`,
+                                        data: {
+                                            amount: holder.balance,
+                                        },
+                                    },
+                                ],
+                            }),
+                        },
+                    ],
+                });
+                console.log(msgMetaData);
+            }),
+        );
     }
 }
