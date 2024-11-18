@@ -91,6 +91,8 @@ export class MarketService {
             });
         }
         queryBuilder.orderBy('market.volume', 'DESC');
+        queryBuilder.where('market.isActive = 1');
+        queryBuilder.where('market.endTime > :now', { now: dayjs().unix() });
 
         return await paginate<MarketEntity>(queryBuilder, options);
     }
