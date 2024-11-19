@@ -6,6 +6,7 @@ import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { GetTopVolumeResponseDto } from '../dtos/get-top-volume.dto';
 import { PriceHistoryService } from '../services/price-history.service';
 import { SnapshotTime } from '../types/snapshot.type';
+import dayjs from 'dayjs';
 
 @Controller('price-history')
 export class PriceHistoryController {
@@ -22,15 +23,15 @@ export class PriceHistoryController {
     @ApiOperation({
         description: '',
     })
-    @ApiQuery({ name: 'page', required: false, type: Number })
-    @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiQuery({ name: 'start', required: true, type: Number })
+    @ApiQuery({ name: 'end', required: true, type: Number })
     @ApiOkResponsePayload(GetTopVolumeResponseDto, EApiOkResponsePayload.OBJECT)
     async getTopVolume(
-        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+        @Query('start', new DefaultValuePipe(dayjs()), ParseIntPipe) start: number,
+        @Query('end', new DefaultValuePipe(dayjs()), ParseIntPipe) end: number,
         @Query('time') time: SnapshotTime = SnapshotTime.OneMinute,
         @Param('marketId') marketId: string,
     ) {
-        return await this.priceHistoryService.getPriceHistoy({ page, limit }, marketId, time);
+        return await this.priceHistoryService.getPriceHistoy(marketId, time, start, end);
     }
 }
