@@ -204,7 +204,6 @@ export class MarketService {
         if (dayjs.unix(market.endTime).isBefore(dayjs().unix())) {
             throw new BadRequestException('Invalid end time');
         }
-        const questionId = this.oracleServices.calculateQuestionId(market.description);
         const marketInfo = this.marketRepository.create({
             ...market,
             conditions: [],
@@ -213,11 +212,12 @@ export class MarketService {
             userId: userInfo.id,
         });
 
-        const oracle = this.oracleRepository.create({
+        const questionId = this.oracleServices.calculateQuestionId(marketInfo.id);
+
+        const oracleInfo = this.oracleRepository.create({
             marketId: marketInfo.id,
             questionId: questionId,
         });
-        await this.oracleRepository.save(oracle);
 
         userInfo.reduceBalance(BigInt(this.configService.get(EEnvKey.FEE_CREATE_MARKET)));
 
@@ -239,7 +239,7 @@ export class MarketService {
             bidPrice: 0n,
         });
 
-        const infos = [userInfo, marketInfo, outcomeYesInfo, outcomeNoInfo];
+        const infos = [userInfo, marketInfo, outcomeYesInfo, outcomeNoInfo, oracleInfo];
 
         await this.marketRepository.manager
             .transaction(async manager => {

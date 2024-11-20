@@ -38,7 +38,7 @@ export class OracleService {
         this.configService = configService;
 
         this.umaClient = new ethers.Wallet(
-            this.configService.get(EEnvKey.ADMIN_PRIVATE_KEY_AMOY),
+            this.configService.get(EEnvKey.ADMIN_PRIVATE_KEY_UMA),
             new ethers.JsonRpcProvider('https://polygon-amoy.blockpi.network/v1/rpc/public'),
         );
         this.sweepstakeUmaContract = new ethers.Contract(this.sweepstakeUmaAddress, abi, this.umaClient);
