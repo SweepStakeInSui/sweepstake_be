@@ -97,49 +97,10 @@ export class MatchingEngineService {
             },
         });
 
-        const askPrice = orderbookPrice[`${OrderSide.Ask}-${outcomeInfo.type}`];
-        const bidPrice = orderbookPrice[`${OrderSide.Bid}-${outcomeInfo.type}`];
-        const oppAskPrice = orderbookPrice[`${OrderSide.Ask}-${oppositeOutcomeInfo.type}`];
-        const oppBidPrice = orderbookPrice[`${OrderSide.Bid}-${oppositeOutcomeInfo.type}`];
-
-        console.log(askPrice, bidPrice, oppAskPrice, oppBidPrice);
-
-        // const a = (...args: bigint[]) => {
-        //     const b = [];
-        //     for (const arg of args) {
-        //         if (arg > 0n && arg < this.unit) {
-        //             b.push(arg);
-        //         }
-        //     }
-        //     return b;
-        // };
-
-        outcomeInfo.askPrice = askPrice;
-        outcomeInfo.bidPrice = bidPrice;
-        oppositeOutcomeInfo.askPrice = oppAskPrice;
-        oppositeOutcomeInfo.bidPrice = oppBidPrice;
-
-        // TODO: improve this logic
-        // outcomeInfo.askPrice = BigIntUtil.min(
-        //     ...(a(askPrice, this.unit - bidPrice, this.unit - oppAskPrice).length == 0
-        //         ? [0n]
-        //         : a(askPrice, this.unit - bidPrice, this.unit - oppAskPrice)),
-        // );
-        // outcomeInfo.bidPrice = BigIntUtil.max(
-        //     ...(a(bidPrice, this.unit - askPrice, this.unit - oppBidPrice).length == 0
-        //         ? [0n]
-        //         : a(bidPrice, this.unit - askPrice, this.unit - oppBidPrice)),
-        // );
-        // oppositeOutcomeInfo.askPrice = BigIntUtil.min(
-        //     ...(a(oppAskPrice, this.unit - oppBidPrice, this.unit - askPrice).length == 0
-        //         ? [0n]
-        //         : a(oppAskPrice, this.unit - oppBidPrice, this.unit - askPrice)),
-        // );
-        // oppositeOutcomeInfo.bidPrice = BigIntUtil.max(
-        //     ...(a(oppBidPrice, this.unit - oppAskPrice, this.unit - bidPrice).length == 0
-        //         ? [0n]
-        //         : a(oppBidPrice, this.unit - oppAskPrice, this.unit - bidPrice)),
-        // );
+        outcomeInfo.askPrice = orderbookPrice[`${OrderSide.Ask}-${outcomeInfo.type}`];
+        outcomeInfo.bidPrice = orderbookPrice[`${OrderSide.Bid}-${outcomeInfo.type}`];
+        oppositeOutcomeInfo.askPrice = orderbookPrice[`${OrderSide.Ask}-${oppositeOutcomeInfo.type}`];
+        oppositeOutcomeInfo.bidPrice = orderbookPrice[`${OrderSide.Bid}-${oppositeOutcomeInfo.type}`];
 
         console.log(
             outcomeInfo.askPrice,
