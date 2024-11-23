@@ -258,6 +258,7 @@ export class EventService {
                                 data: {
                                     amount,
                                     outcomeId: orderInfo.outcomeId,
+                                    orderId,
                                 },
                             },
                         ],
@@ -308,6 +309,7 @@ export class EventService {
                                 data: {
                                     amount,
                                     outcomeId: orderInfo.outcomeId,
+                                    orderId,
                                 },
                             },
                         ],
@@ -325,8 +327,8 @@ export class EventService {
         const {
             order_id_yes: orderYesId,
             order_id_no: orderNoId,
-            // amount_yes: amountYes,
-            // amount_no: amountNo,
+            amount_yes: amountYes,
+            amount_no: amountNo,
         } = event.parsedJson as any;
 
         const [orderYesInfo, orderNoInfo] = await Promise.all([
@@ -355,8 +357,8 @@ export class EventService {
         ]);
 
         // TODO: check if this is correct
-        userYesInfo.addBalance(orderYesInfo.amount * orderYesInfo.price);
-        userNoInfo.addBalance(orderNoInfo.amount * orderNoInfo.price);
+        userYesInfo.addBalance(amountYes * orderYesInfo.price);
+        userNoInfo.addBalance(amountNo * orderNoInfo.price);
 
         await this.userRepository.manager.transaction(async manager => {
             await manager.save(userYesInfo);
@@ -372,19 +374,21 @@ export class EventService {
                             {
                                 userId: orderNoInfo.userId,
                                 type: NotificationType.OrderExecuted,
-                                message: `You have burned ${orderNoInfo.amount} from your account`,
+                                message: `You have burned ${amountNo} from your account`,
                                 data: {
-                                    amount: orderNoInfo.amount,
+                                    amount: amountNo,
                                     outcomeId: orderNoInfo.outcomeId,
+                                    orderId: orderNoId,
                                 },
                             },
                             {
                                 userId: orderYesInfo.userId,
                                 type: NotificationType.OrderExecuted,
-                                message: `You have burned ${orderYesInfo.amount} from your account`,
+                                message: `You have burned ${amountYes} from your account`,
                                 data: {
-                                    amount: orderYesInfo.amount,
+                                    amount: amountYes,
                                     type: orderYesInfo.outcomeId,
+                                    orderId: orderYesId,
                                 },
                             },
                         ],
@@ -438,19 +442,21 @@ export class EventService {
                             {
                                 userId: makerOrderInfo.userId,
                                 type: NotificationType.OrderExecuted,
-                                message: `You have transferred ${makerOrderInfo.amount} from your account`,
+                                message: `You have transferred ${amount} from your account`,
                                 data: {
-                                    amount: makerOrderInfo.amount,
+                                    amount: amount,
                                     type: 'send',
+                                    orderId: makerOrderId,
                                 },
                             },
                             {
                                 userId: takerOrderInfo.userId,
                                 type: NotificationType.OrderExecuted,
-                                message: `You have received ${takerOrderInfo.amount} from your account`,
+                                message: `You have received ${amount} from your account`,
                                 data: {
-                                    amount: takerOrderInfo.amount,
+                                    amount: amount,
                                     type: 'receive',
+                                    orderId: takerOrderId,
                                 },
                             },
                         ],
