@@ -13,7 +13,7 @@ import { Between } from 'typeorm';
 import dayjs from 'dayjs';
 
 @Injectable()
-export class SnapshotService {
+export class SnapshotPriceService {
     protected logger: Logger;
     protected configService: ConfigService;
 
@@ -25,7 +25,7 @@ export class SnapshotService {
         private readonly outcomeRepository: OutcomeRepository,
         private readonly snapshotPriceRepository: SnapshotPriceRepository,
     ) {
-        this.logger = this.loggerService.getLogger(SnapshotService.name);
+        this.logger = this.loggerService.getLogger(SnapshotPriceService.name);
         this.configService = configService;
     }
 
