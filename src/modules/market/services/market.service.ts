@@ -261,7 +261,7 @@ export class MarketService {
                 description: marketInfo.description,
             },
             {
-                delay: dayjs.unix(market.endTime).diff(dayjs().unix()),
+                delay: dayjs(market.endTime * 1000).diff(dayjs()),
             },
         );
         const { bytes, signature } = await this.transactionService.signAdminTransaction(

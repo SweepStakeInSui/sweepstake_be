@@ -9,6 +9,7 @@ export class MarketProcessor {
     @Process('requestData')
     async handleRequestData(job: Job) {
         const { creator, marketId, description } = job.data;
+        console.log('requestData', creator, marketId, description);
         await this.oracleService.requestData(creator, marketId, description);
     }
 

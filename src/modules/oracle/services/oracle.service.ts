@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRedis } from '@songkeys/nestjs-redis';
 import Redis from 'ioredis';
 import { Logger } from 'log4js';
-import { ethers } from 'ethers';
+import { Contract, ethers, Interface, JsonRpcProvider, Wallet } from 'ethers';
 import { EEnvKey } from '@constants/env.constant';
 import { abi } from '@modules/oracle/abi/abi';
 import { OracleRepository } from '@models/repositories/oracle.repository';
@@ -17,11 +17,11 @@ export class OracleService {
     protected configService: ConfigService;
 
     /// Oracle Part
-    private sweepstakeUmaAddress: string = '0xa3bc296E9d18DB4c15700f80849ec518cFdb99e6';
-    private umaClient: any;
-    private sweepstakeUmaContract: any;
-    private sweepstakeUmaIterface: any;
-    private rpcProvider = new ethers.JsonRpcProvider('https://polygon-amoy.blockpi.network/v1/rpc/public');
+    private readonly sweepstakeUmaAddress: string;
+    private readonly umaClient: Wallet;
+    private readonly sweepstakeUmaContract: Contract;
+    private readonly sweepstakeUmaIterface: Interface;
+    private readonly rpcProvider: JsonRpcProvider;
 
     constructor(
         protected loggerService: LoggerService,
@@ -37,11 +37,13 @@ export class OracleService {
         this.logger = this.loggerService.getLogger(OracleService.name);
         this.configService = configService;
 
-        this.umaClient = new ethers.Wallet(
-            this.configService.get(EEnvKey.ADMIN_PRIVATE_KEY_UMA),
-            new ethers.JsonRpcProvider('https://polygon-amoy.blockpi.network/v1/rpc/public'),
+        this.rpcProvider = new ethers.JsonRpcProvider(this.configService.get(EEnvKey.RPC_UMA_URL));
+        this.umaClient = new ethers.Wallet(this.configService.get(EEnvKey.ADMIN_PRIVATE_KEY_AMOY), this.rpcProvider);
+        this.sweepstakeUmaContract = new ethers.Contract(
+            this.configService.get(EEnvKey.SWEEPSTAKE_UMA_ADDRESS),
+            abi,
+            this.umaClient,
         );
-        this.sweepstakeUmaContract = new ethers.Contract(this.sweepstakeUmaAddress, abi, this.umaClient);
         this.sweepstakeUmaIterface = new ethers.Interface(abi);
     }
 
@@ -75,7 +77,7 @@ export class OracleService {
         const oracleEntity = await this.oracleRepository.findOneBy({ questionId });
         try {
             const tx = await this.sweepstakeUmaContract.settleRequest(questionId);
-            oracleEntity.settleHash = tx.hash;
+            await this.rpcProvider.waitForTransaction(tx.hash);
             oracleEntity.winner = await this.getSettledData(questionId);
             await this.oracleRepository.save(oracleEntity);
             await this.rewardService.syncReward(oracleEntity.marketId);
@@ -86,7 +88,7 @@ export class OracleService {
 
     public async getSettledData(questionId: string): Promise<boolean> {
         const settledData = await this.sweepstakeUmaContract.getSettledData(questionId);
-        return settledData == '1000000000000000000';
+        return settledData.toString() == '1000000000000000000';
     }
 
     public async getWinner(marketId: string) {
