@@ -37,10 +37,10 @@ export class OracleService {
         this.logger = this.loggerService.getLogger(OracleService.name);
         this.configService = configService;
 
-        this.rpcProvider = new ethers.JsonRpcProvider(this.configService.get(EEnvKey.RPC_UMA_URL));
-        this.umaClient = new ethers.Wallet(this.configService.get(EEnvKey.ADMIN_PRIVATE_KEY_AMOY), this.rpcProvider);
+        this.rpcProvider = new ethers.JsonRpcProvider(this.configService.get(EEnvKey.UMA_RPC_URL));
+        this.umaClient = new ethers.Wallet(this.configService.get(EEnvKey.UMA_ADMIN_PRIVATE_KEY), this.rpcProvider);
         this.sweepstakeUmaContract = new ethers.Contract(
-            this.configService.get(EEnvKey.SWEEPSTAKE_UMA_ADDRESS),
+            this.configService.get(EEnvKey.UMA_SWEEPSTAKE_ADDRESS),
             abi,
             this.umaClient,
         );
@@ -66,7 +66,11 @@ export class OracleService {
                 'checkMarketState',
                 { questionId },
                 // Todo: adjust the delay time
-                { delay: 60000 },
+                {
+                    delay: 60000,
+                    attempts: 5,
+                    backoff: 5000,
+                },
             );
         } catch (e) {
             console.error(e);
@@ -83,6 +87,7 @@ export class OracleService {
             await this.rewardService.syncReward(oracleEntity.marketId);
         } catch (e) {
             console.error(e);
+            throw e;
         }
     }
 

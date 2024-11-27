@@ -43,8 +43,6 @@ export class RewardService {
         if (!marketInfo || !oracleInfo) {
             throw new BadRequestException('Market not found');
         }
-        console.log('INFO', marketInfo.id);
-        console.log('INFO', marketInfo.onchainId);
         const winner = oracleInfo.winner.toString() === 'true';
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
             await this.transactionService.buildClaimRewardTransaction(marketInfo.id, marketInfo.onchainId, winner),

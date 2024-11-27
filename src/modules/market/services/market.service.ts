@@ -262,6 +262,8 @@ export class MarketService {
             },
             {
                 delay: dayjs(market.endTime * 1000).diff(dayjs()),
+                attempts: 5,
+                backoff: 5000,
             },
         );
         const { bytes, signature } = await this.transactionService.signAdminTransaction(
