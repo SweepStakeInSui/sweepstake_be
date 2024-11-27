@@ -273,8 +273,8 @@ export class TransactionService {
         tx.moveCall({
             arguments: [
                 tx.object(this.conditionalMarketAdminCap),
+                tx.object(market_id),
                 tx.pure.string(id),
-                tx.pure.string(market_id),
                 tx.pure.bool(winner),
             ],
             target: buildTransactionTarget(

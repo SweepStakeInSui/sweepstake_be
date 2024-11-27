@@ -182,10 +182,10 @@ export class EventService {
     }
 
     private async proccessNewMarketEvent(event: SuiEvent) {
-        console.log(event.parsedJson);
+        console.log('events', event.parsedJson);
 
         const marketInfo = await this.marketRepository.findOneBy({
-            id: (event.parsedJson as any).id,
+            id: (event.parsedJson as any).market_id,
         });
 
         if (marketInfo) {
