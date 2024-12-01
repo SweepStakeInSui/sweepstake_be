@@ -29,6 +29,7 @@ export class EventService {
 
     private sweepstakeContract: string;
     private conditionalMarketContract: string;
+    private decimal: string;
 
     constructor(
         protected loggerService: LoggerService,
@@ -49,6 +50,7 @@ export class EventService {
 
         this.sweepstakeContract = this.configService.get(EEnvKey.SWEEPSTAKE_CONTRACT);
         this.conditionalMarketContract = this.configService.get(EEnvKey.CONDITIONAL_MARKET_CONTRACT);
+        this.decimal = this.configService.get(EEnvKey.DECIMALS);
     }
 
     public async proccessEvent(events: SuiEvent[]) {
@@ -469,8 +471,6 @@ export class EventService {
     }
 
     private async proccessClaimEvent(event: SuiEvent) {
-        console.log(event.parsedJson);
-
         const { market_id: marketId } = event.parsedJson as any;
 
         const marketInfo = await this.marketRepository.findOneBy({
@@ -497,7 +497,7 @@ export class EventService {
 
         await Promise.all(
             usersRewarded.map(async holder => {
-                const newBalance = holder.user.balance + holder.balance;
+                const newBalance = holder.user.balance + holder.balance * BigInt(Math.pow(10, Number(this.decimal)));
                 await this.userRepository.update(holder.user.id, {
                     balance: newBalance,
                 });
@@ -512,6 +512,41 @@ export class EventService {
                                         userId: holder.user.id,
                                         type: NotificationType.ClaimedReward,
                                         message: `You have received ${holder.balance} as reward from market ${marketInfo.name}`,
+                                        data: {
+                                            amount: holder.balance,
+                                        },
+                                    },
+                                ],
+                            }),
+                        },
+                    ],
+                });
+                console.log(msgMetaData);
+            }),
+        );
+        const loseResult = oracleInfo.winner ? OutcomeType.No : OutcomeType.Yes;
+        const loseOutcome = await this.outcomeRepository.findOneBy({ marketId: marketId, type: loseResult });
+        if (!loseOutcome) {
+            throw new BadRequestException('Lose outcome not found');
+        }
+
+        const usersLost = await this.shareRepository.find({
+            where: { outcomeId: loseOutcome.id },
+            relations: ['user'],
+        });
+
+        await Promise.all(
+            usersLost.map(async holder => {
+                const msgMetaData = await this.kafkaProducer.produce({
+                    topic: KafkaTopic.CREATE_NOTIFICATION,
+                    messages: [
+                        {
+                            value: JSON.stringify({
+                                notifications: [
+                                    {
+                                        userId: holder.user.id,
+                                        type: NotificationType.ClaimedReward,
+                                        message: `You have lost ${holder.balance} from market ${marketInfo.name}`,
                                         data: {
                                             amount: holder.balance,
                                         },
