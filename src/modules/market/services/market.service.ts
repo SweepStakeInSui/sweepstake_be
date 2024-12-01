@@ -253,12 +253,13 @@ export class MarketService {
                 this.logger.error(err);
                 throw new BadRequestException();
             });
+        const marketDescriptionOnChain = `Market id: ${marketInfo.id.toString()} description: ${market.description}`;
         await this.marketQueue.add(
             'requestData',
             {
                 creator: userInfo.address,
                 marketId: marketInfo.id,
-                description: marketInfo.description,
+                description: marketDescriptionOnChain,
             },
             {
                 delay: dayjs(market.endTime * 1000).diff(dayjs()),
