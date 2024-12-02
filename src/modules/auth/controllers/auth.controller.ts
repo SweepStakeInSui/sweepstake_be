@@ -6,7 +6,7 @@ import { LoginRequestDto, LoginResponseDto, WalletLoginPayload } from '../dtos/l
 import { GetNonceRequestDto, GetNonceResponseDto } from '../dtos/get-nonce.dto';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { AuthService } from '../services/auth.service';
-import { RefreshResponseDto, RefreshRequestDto } from '../dtos/refresh.dto';
+import { RefreshResponseDto } from '../dtos/refresh.dto';
 import { LoginGuard } from '../guards/login.guard';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 
@@ -58,7 +58,7 @@ export class AuthController {
         description: '',
     })
     @ApiOkResponsePayload(RefreshResponseDto, EApiOkResponsePayload.OBJECT)
-    async refresh(@Body() body: RefreshRequestDto, @Request() req): Promise<RefreshResponseDto> {
+    async refresh(@Request() req): Promise<RefreshResponseDto> {
         return await this.authService.refresh(req.user.userId, req.user.fingerprint);
     }
 }
