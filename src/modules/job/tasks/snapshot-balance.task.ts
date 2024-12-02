@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { SnapshotPnlRepository } from '@models/repositories/snapshot-pnl.repository';
 import { Logger } from 'log4js';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
@@ -8,33 +7,34 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { UserRepository } from '@models/repositories/user.repository';
 import dayjs from 'dayjs';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { SnapshotBalanceRepository } from '@models/repositories/snapshot-balance.repository';
 
 @Injectable()
-export class SnapshotPnlTask {
+export class SnapshotBalanceTask {
     constructor(
         private loggerService: LoggerService,
         private kafkaProducer: KafkaProducerService,
-        private readonly snapshotPnlRepository: SnapshotPnlRepository,
+        private readonly snapshotBalanceRepository: SnapshotBalanceRepository,
         private readonly userRepository: UserRepository,
     ) {
-        this.logger = this.loggerService.getLogger(SnapshotPnlTask.name);
+        this.logger = this.loggerService.getLogger(SnapshotBalanceTask.name);
     }
 
     private logger: Logger;
     protected configService: ConfigService;
 
-    @Cron(CronExpression.EVERY_4_HOURS)
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     async snapshot() {
-        console.log('snapshotPnl');
+        console.log('snapshotBalance');
 
         const userInfos = await this.userRepository.find({
             select: ['id'],
         });
 
         const msgMetaData = await this.kafkaProducer.produce({
-            topic: KafkaTopic.SNAPSHOT_PNL,
+            topic: KafkaTopic.SNAPSHOT_BALANCE,
             messages: userInfos.map(userInfo => ({
-                value: JSON.stringify({ userId: userInfo.id, timestamp: dayjs().startOf('hour').unix() }),
+                value: JSON.stringify({ userId: userInfo.id, timestamp: dayjs().unix() }),
             })),
         });
 
