@@ -1,13 +1,14 @@
 import { Logger } from 'log4js';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { GetTopVolumeResponseDto } from '../dtos/get-top-volume.dto';
 import { PriceHistoryService } from '../services/price-history.service';
 import { SnapshotTime } from '../types/snapshot.type';
 import dayjs from 'dayjs';
 
+@ApiTags('price-history')
 @Controller('price-history')
 export class PriceHistoryController {
     private logger: Logger;

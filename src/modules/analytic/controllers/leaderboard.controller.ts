@@ -2,11 +2,12 @@ import { Logger } from 'log4js';
 import { LeaderboardService } from '../services/leaderboard.services.';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Controller, DefaultValuePipe, Get, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { GetTopVolumeResponseDto } from '../dtos/get-top-volume.dto';
 import { LeaderboardPeriod } from '../types/leaderboard.type';
 
+@ApiTags('leaderboard')
 @Controller('leaderboard')
 export class LeaderboardController {
     private logger: Logger;
