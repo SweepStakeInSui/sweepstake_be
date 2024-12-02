@@ -12,6 +12,7 @@ import { BalanceChangeRepository } from '@models/repositories/balance-change.rep
 import { BalanceChangeType } from '@modules/user/types/balance-change.type';
 import { KafkaProducerService } from '@shared/modules/kafka/services/kafka-producer.service';
 import { KafkaTopic } from '@modules/consumer/constants/consumer.constant';
+import { SnapshotBalanceRepository } from '@models/repositories/snapshot-balance.repository';
 
 @Injectable()
 export class SnapshotPnlService {
@@ -29,6 +30,7 @@ export class SnapshotPnlService {
         private readonly shareRepository: ShareRepository,
 
         private readonly snapshotPnlRepository: SnapshotPnlRepository,
+        private readonly snapshotBalanceRepository: SnapshotBalanceRepository,
         private readonly balanceChangeRepository: BalanceChangeRepository,
     ) {
         this.logger = this.loggerService.getLogger(SnapshotPnlService.name);
@@ -78,7 +80,17 @@ export class SnapshotPnlService {
             snapshotTime: SnapshotTime.FourHours,
         });
 
-        await this.snapshotPnlRepository.save(snapshotPnlInfo);
+        const snapshotBalanceInfo = this.snapshotBalanceRepository.create({
+            userId,
+            timestamp,
+            value: totalValue,
+            snapshotTime: SnapshotTime.FourHours,
+        });
+
+        await this.snapshotPnlRepository.manager.transaction(async manager => {
+            await manager.save(snapshotBalanceInfo);
+            await manager.save(snapshotPnlInfo);
+        });
 
         const msgMetaDataAnalytic = await this.kafkaProducer.produce({
             topic: KafkaTopic.CALCULATE_PNL_LEADERBOARD,

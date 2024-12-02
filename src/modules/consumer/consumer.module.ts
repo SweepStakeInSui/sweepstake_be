@@ -13,6 +13,8 @@ import { NotificationModule } from '@modules/notification/notification.module';
 import { SnapshotPriceConsumer } from './consumers/snapshot-price.consumer';
 import { AnalyticModule } from '@modules/analytic/analytic.module';
 import { AddVolumeLeaderboarConsumer } from './consumers/add-volume-leaderboard.consumer';
+import { UpdatePnlLeaderboarConsumer } from './consumers/update-pnl-leaderboard.consumer';
+import { SnapshotPnlConsumer } from './consumers/snapshot-pnl.consumer';
 
 const modules = [MatchingEngineModule, OrderModule, ChainModule, NotificationModule, AnalyticModule];
 const consumers = [
@@ -24,7 +26,10 @@ const consumers = [
     ProccessEventConsumer,
     CreateNotificationConsumer,
     SnapshotPriceConsumer,
+    SnapshotPnlConsumer,
+    SnapshotPriceConsumer,
     AddVolumeLeaderboarConsumer,
+    UpdatePnlLeaderboarConsumer,
 ];
 
 @Module({

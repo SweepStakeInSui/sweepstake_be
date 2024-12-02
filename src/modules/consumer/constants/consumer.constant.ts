@@ -8,7 +8,6 @@ export const KafkaTopic = {
     CREATE_NOTIFICATION: 'create-notification',
     SNAPSHOT_PRICE: 'snapshot-price',
     SNAPSHOT_PNL: 'snapshot-pnl',
-    SNAPSHOT_BALANCE: 'snapshot-balance',
     CALCULATE_PNL_LEADERBOARD: 'calculate-pnl-leaderboard',
     ANALYSE_TRADE: 'analyse-trade',
 };
