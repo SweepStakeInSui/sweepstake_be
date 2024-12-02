@@ -1,10 +1,11 @@
-import { UserEntity } from '@models/entities/user.entity';
 import { UserRepository } from '@models/repositories/user.repository';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
-import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
+import { LeaderboardPeriod } from '../types/leaderboard.type';
+import { In } from 'typeorm';
+import { PnlLeaderboardService } from './pnl-leaderboard.service';
 
 @Injectable()
 export class LeaderboardService {
@@ -16,29 +17,35 @@ export class LeaderboardService {
         configService: ConfigService,
 
         private readonly userRepository: UserRepository,
+        private readonly pnlLeaderboardServicce: PnlLeaderboardService,
     ) {
         this.logger = this.loggerService.getLogger(LeaderboardService.name);
         this.configService = configService;
     }
 
-    async getTopVolume(options: IPaginationOptions) {
-        const user = await paginate<UserEntity>(this.userRepository, options, {
-            order: {
-                volume: 'DESC',
-            },
+    async getVolumeLeaderboard(period: LeaderboardPeriod, limit: number) {
+        const leaderboard = await this.pnlLeaderboardServicce.get(period, limit);
+
+        const userIds = leaderboard.map(item => item.userId);
+        const users = await this.userRepository.findBy({
+            id: In(userIds),
         });
 
-        return user;
+        return users.map(user => {
+            return { ...user, volume: leaderboard.find(item => item.userId === user.id)?.volume };
+        });
     }
 
-    // TODO: Implement getTopProfit
-    async getTopProfit(options: IPaginationOptions) {
-        const user = await paginate<UserEntity>(this.userRepository, options, {
-            order: {
-                volume: 'DESC',
-            },
+    async getPnlLeaderboard(period: LeaderboardPeriod, limit: number) {
+        const leaderboard = await this.pnlLeaderboardServicce.get(period, limit);
+
+        const userIds = leaderboard.map(item => item.userId);
+        const users = await this.userRepository.findBy({
+            id: In(userIds),
         });
 
-        return user;
+        return users.map(user => {
+            return { ...user, pnl: leaderboard.find(item => item.userId === user.id)?.value };
+        });
     }
 }

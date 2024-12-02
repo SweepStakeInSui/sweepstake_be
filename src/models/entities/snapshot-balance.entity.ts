@@ -4,8 +4,8 @@ import { bigint, transformBigInt } from '@shared/decorators/transformers/big-int
 import { Transform } from 'class-transformer';
 import { SnapshotTime } from '@modules/analytic/types/snapshot.type';
 
-@Entity({ name: 'snapshot-pnl' })
-export class SnapshotPnlEntity extends BaseEntity {
+@Entity({ name: 'snapshot-balance' })
+export class SnapshotBalanceEntity extends BaseEntity {
     @Column({ type: 'varchar' })
     userId: string;
 

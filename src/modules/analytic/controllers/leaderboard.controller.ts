@@ -5,6 +5,7 @@ import { Controller, DefaultValuePipe, Get, ParseIntPipe, Query } from '@nestjs/
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApiOkResponsePayload, EApiOkResponsePayload } from '@shared/swagger';
 import { GetTopVolumeResponseDto } from '../dtos/get-top-volume.dto';
+import { LeaderboardPeriod } from '../types/leaderboard.type';
 
 @Controller('leaderboard')
 export class LeaderboardController {
@@ -24,11 +25,11 @@ export class LeaderboardController {
     @ApiQuery({ name: 'page', required: false, type: Number })
     @ApiQuery({ name: 'limit', required: false, type: Number })
     @ApiOkResponsePayload(GetTopVolumeResponseDto, EApiOkResponsePayload.OBJECT)
-    async getTopVolume(
-        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    async getVolumeLeaderboard(
+        @Query('period') period: LeaderboardPeriod = LeaderboardPeriod.All,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
     ) {
-        return await this.leaderboardService.getTopVolume({ page, limit });
+        return await this.leaderboardService.getVolumeLeaderboard(period, limit);
     }
 
     @Get('profit')
@@ -39,9 +40,9 @@ export class LeaderboardController {
     @ApiQuery({ name: 'limit', required: false, type: Number })
     @ApiOkResponsePayload(GetTopVolumeResponseDto, EApiOkResponsePayload.OBJECT)
     async getTopProfit(
-        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+        @Query('period') period: LeaderboardPeriod = LeaderboardPeriod.All,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
     ) {
-        return await this.leaderboardService.getTopVolume({ page, limit });
+        return await this.leaderboardService.getPnlLeaderboard(period, limit);
     }
 }

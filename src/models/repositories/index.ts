@@ -15,6 +15,8 @@ import { CategoryRepository } from '@models/repositories/category.repository';
 import { BalanceChangeRepository } from './balance-change.repository';
 import { OracleRepository } from '@models/repositories/oracle.repository';
 import { SnapshotPriceRepository } from './snapshot-price.repository';
+import { SnapshotPnlRepository } from './snapshot-pnl.repository';
+import { SnapshotBalanceRepository } from './snapshot-balance.repository';
 
 export const Repositories = [
     AuthRepository,
@@ -41,4 +43,6 @@ export const Repositories = [
     NotificationRepository,
 
     SnapshotPriceRepository,
+    SnapshotPnlRepository,
+    SnapshotBalanceRepository,
 ];

@@ -17,6 +17,8 @@ import { CategoryEntity } from '@models/entities/category.entity';
 import { BalanceChangeEntity } from './balance-change.entity';
 import { OracleEntity } from '@models/entities/oracle.entity';
 import { SnapshotPriceEntity } from './snapshot-price.entity';
+import { SnapshotPnlEntity } from './snapshot-pnl.entity';
+import { SnapshotBalanceEntity } from './snapshot-balance.entity';
 
 export const Entities = [
     AuthEntity,
@@ -44,4 +46,6 @@ export const Entities = [
     NotificationEntity,
 
     SnapshotPriceEntity,
+    SnapshotPnlEntity,
+    SnapshotBalanceEntity,
 ];

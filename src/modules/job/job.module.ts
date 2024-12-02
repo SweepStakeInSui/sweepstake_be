@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { SnapshotPriceTask } from './tasks/snapshot-price.task';
+import { ResetVolumeLeaderboardTask } from './tasks/reset-volume-leaderboard.task';
+import { AnalyticModule } from '@modules/analytic/analytic.module';
 
 const controllers = [];
 const services = [];
-const tasks = [SnapshotPriceTask];
+const tasks = [SnapshotPriceTask, ResetVolumeLeaderboardTask];
 
 @Module({
-    imports: [],
+    imports: [AnalyticModule],
     controllers: [...controllers],
     providers: [...services, ...tasks],
 })

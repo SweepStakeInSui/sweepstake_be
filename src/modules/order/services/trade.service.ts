@@ -91,6 +91,26 @@ export class TradeService {
                     maker.volume += matchedOrder.amount * matchedOrder.price;
                     taker.volume += matchedOrder.amount * matchedOrder.price;
 
+                    const msgMetaDataAnalytic = await this.kafkaProducer.produce({
+                        topic: KafkaTopic.ANALYSE_TRADE,
+                        messages: [
+                            {
+                                value: JSON.stringify({
+                                    userId: maker.id,
+                                    amount: matchedOrder.amount * matchedOrder.price,
+                                }),
+                            },
+                            {
+                                value: JSON.stringify({
+                                    userId: taker.id,
+                                    amount: matchedOrder.amount * matchedOrder.price,
+                                }),
+                            },
+                        ],
+                    });
+
+                    console.log(msgMetaDataAnalytic);
+
                     await manager.save([maker, taker]);
 
                     // TODO: improve this stupid switch case to generate trade transaction data

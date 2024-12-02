@@ -12,6 +12,7 @@ import { CreateNotificationConsumer } from './consumers/create-notification.cons
 import { NotificationModule } from '@modules/notification/notification.module';
 import { SnapshotPriceConsumer } from './consumers/snapshot-price.consumer';
 import { AnalyticModule } from '@modules/analytic/analytic.module';
+import { AddVolumeLeaderboarConsumer } from './consumers/add-volume-leaderboard.consumer';
 
 const modules = [MatchingEngineModule, OrderModule, ChainModule, NotificationModule, AnalyticModule];
 const consumers = [
@@ -23,6 +24,7 @@ const consumers = [
     ProccessEventConsumer,
     CreateNotificationConsumer,
     SnapshotPriceConsumer,
+    AddVolumeLeaderboarConsumer,
 ];
 
 @Module({
