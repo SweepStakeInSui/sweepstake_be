@@ -41,12 +41,13 @@ export class UserController {
     })
     @ApiOkResponsePayload(ProfileResponseDto, EApiOkResponsePayload.OBJECT)
     async getProfile(@CurrentUser() user: UserEntity): Promise<ProfileResponseDto> {
+        const { pnl } = await this.userService.getCurrentPnl(user.id);
+
         return {
             ...user,
-            pnl: 0,
+            pnl,
             positionsValue: 0,
             rank: 0,
-            volume: 0,
             winRate: 0,
         };
     }

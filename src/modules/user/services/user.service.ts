@@ -11,6 +11,9 @@ import { UserEntity } from '@models/entities/user.entity';
 import { UserError } from '../types/error.type';
 import { In } from 'typeorm';
 import { UpdateProfileRequestDto } from '../dtos/update-profile.dto';
+import { ShareRepository } from '@models/repositories/share.repository';
+import { BalanceChangeRepository } from '@models/repositories/balance-change.repository';
+import { BalanceChangeType } from '../types/balance-change.type';
 
 @Injectable()
 export class UserService {
@@ -23,6 +26,8 @@ export class UserService {
         configService: ConfigService,
         @InjectRedis() private readonly redis: Redis,
         private readonly userRepository: UserRepository,
+        private readonly shareRepository: ShareRepository,
+        private readonly balanceChangeRepository: BalanceChangeRepository,
     ) {
         this.logger = this.loggerService.getLogger(UserService.name);
         this.configService = configService;
@@ -52,5 +57,43 @@ export class UserService {
         if (!result.affected || result.affected === 0) {
             throw new Error(UserError.UserNotFound);
         }
+    }
+
+    async getCurrentPnl(userId: string) {
+        const user = await this.userRepository.findOneBy({
+            id: userId,
+        });
+        const shareInfos = await this.shareRepository.find({
+            where: {
+                userId: userId,
+            },
+            relations: ['outcome'],
+        });
+
+        const sharesValue = shareInfos.reduce((acc, share) => {
+            return (
+                acc + share.balance * ((share.outcome.askPrice - share.outcome.bidPrice) / 2n + share.outcome.bidPrice)
+            );
+        }, 0n);
+
+        const totalValue = user.balance + sharesValue;
+
+        const balanceHistoryInfos = await this.balanceChangeRepository.find({
+            where: {
+                userId: userId,
+            },
+        });
+
+        const withdrawValue = balanceHistoryInfos
+            .filter(balanceHistoryInfo => balanceHistoryInfo.type === BalanceChangeType.Withdraw)
+            .reduce((acc, balanceHistoryInfo) => acc + balanceHistoryInfo.amount, 0n);
+
+        const depositValue = balanceHistoryInfos
+            .filter(balanceHistoryInfo => balanceHistoryInfo.type === BalanceChangeType.Deposit)
+            .reduce((acc, balanceHistoryInfo) => acc + balanceHistoryInfo.amount, 0n);
+
+        const pnl = totalValue + withdrawValue - depositValue;
+
+        return { totalValue, pnl };
     }
 }

@@ -12,5 +12,6 @@ const services = [UserService, WalletService, ShareService];
     imports: [ChainModule],
     controllers: [...controllers],
     providers: [...services],
+    exports: [...services],
 })
 export class UserModule {}

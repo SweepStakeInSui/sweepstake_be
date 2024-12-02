@@ -7,6 +7,7 @@ import { PriceHistoryService } from './services/price-history.service';
 import { VolumeLeaderboardService } from './services/volume-leaderboard.service';
 import { SnapshotPnlService } from './services/snapshot-pnl.service';
 import { PnlLeaderboardService } from './services/pnl-leaderboard.service';
+import { UserModule } from '@modules/user/user.module';
 
 const controllers = [LeaderboardController, PriceHistoryController];
 const services = [
@@ -19,7 +20,7 @@ const services = [
 ];
 
 @Module({
-    imports: [],
+    imports: [UserModule],
     controllers: [...controllers],
     providers: [...services],
     exports: [...services],

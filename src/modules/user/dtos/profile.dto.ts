@@ -10,9 +10,9 @@ export class ProfileResponseDto {
     @ApiProperty()
     positionsValue?: number;
     @ApiProperty()
-    pnl?: number;
+    pnl?: bigint;
     @ApiProperty()
-    volume?: number;
+    volume?: bigint;
     @ApiProperty()
     winRate?: number;
     @ApiProperty()
