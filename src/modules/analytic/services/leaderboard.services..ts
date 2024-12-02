@@ -5,6 +5,7 @@ import { LoggerService } from '@shared/modules/loggers/logger.service';
 import { Logger } from 'log4js';
 import { LeaderboardPeriod } from '../types/leaderboard.type';
 import { In } from 'typeorm';
+import { VolumeLeaderboardService } from './volume-leaderboard.service';
 import { PnlLeaderboardService } from './pnl-leaderboard.service';
 
 @Injectable()
@@ -18,13 +19,14 @@ export class LeaderboardService {
 
         private readonly userRepository: UserRepository,
         private readonly pnlLeaderboardServicce: PnlLeaderboardService,
+        private readonly volumeLeaderboardServicce: VolumeLeaderboardService,
     ) {
         this.logger = this.loggerService.getLogger(LeaderboardService.name);
         this.configService = configService;
     }
 
     async getVolumeLeaderboard(period: LeaderboardPeriod, limit: number) {
-        const leaderboard = await this.pnlLeaderboardServicce.get(period, limit);
+        const leaderboard = await this.volumeLeaderboardServicce.get(period, limit);
 
         const userIds = leaderboard.map(item => item.userId);
         const users = await this.userRepository.findBy({
