@@ -271,7 +271,6 @@ export class MarketService {
                 marketInfo.id,
                 userInfo.address,
                 marketInfo.name,
-                marketInfo.description,
                 marketInfo.conditions_str,
                 marketInfo.startTime,
                 marketInfo.endTime,
