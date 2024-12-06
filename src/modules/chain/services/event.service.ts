@@ -29,7 +29,7 @@ export class EventService {
 
     private sweepstakeContract: string;
     private conditionalMarketContract: string;
-    private decimal: string;
+    private unit: bigint;
 
     constructor(
         protected loggerService: LoggerService,
@@ -50,7 +50,7 @@ export class EventService {
 
         this.sweepstakeContract = this.configService.get(EEnvKey.SWEEPSTAKE_CONTRACT);
         this.conditionalMarketContract = this.configService.get(EEnvKey.CONDITIONAL_MARKET_CONTRACT);
-        this.decimal = this.configService.get(EEnvKey.DECIMALS);
+        this.unit = 10n ** BigInt(this.configService.get(EEnvKey.DECIMALS));
     }
 
     public async proccessEvent(events: SuiEvent[]) {
@@ -497,7 +497,7 @@ export class EventService {
 
         await Promise.all(
             usersRewarded.map(async holder => {
-                const newBalance = holder.user.balance + holder.balance * BigInt(Math.pow(10, Number(this.decimal)));
+                const newBalance = holder.user.balance + holder.balance * this.unit;
                 await this.userRepository.update(holder.user.id, {
                     balance: newBalance,
                 });
