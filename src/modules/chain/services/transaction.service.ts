@@ -32,9 +32,11 @@ export class TransactionService {
     private sweepstakeContract: string;
     private conditionalMarketContract: string;
 
-    private sweepstakeSuiTreasury: string = '0xdcebb0ff5c3ed92acc59cefd47cf4097178c37036f147733d2bb09ad3e5e0605';
-    private sweepstakeAdminCap: string = '0xfb46c0a1cca17e6b0856ae64d9523e645675e7119e727c34df0ed158df0b2c33';
-    private conditionalMarketAdminCap: string = '0x4aae3c4cb8827d60f73a633d6c6ecb0256dfb4bc30dfbd80bbb404f3593aceca';
+    private sweepstakeSuiTreasury: string;
+    private sweepstakeAdminCap: string;
+    private conditionalMarketAdminCap: string;
+
+    private usdcContract: string;
 
     constructor(
         protected loggerService: LoggerService,
@@ -60,6 +62,7 @@ export class TransactionService {
         this.sweepstakeSuiTreasury = this.configService.get(EEnvKey.SWEEPSTAKE_SUI_TREASURY);
         this.sweepstakeAdminCap = this.configService.get(EEnvKey.SWEEPSTAKE_ADMIN_CAP);
         this.conditionalMarketAdminCap = this.configService.get(EEnvKey.CONDITIONAL_MARKET_ADMIN_CAP);
+        this.usdcContract = this.configService.get(EEnvKey.USDC_CONTRACT);
     }
 
     public getRpcClient() {
@@ -120,7 +123,7 @@ export class TransactionService {
     }
 
     public async buildDepositTransaction(sender: string, amount: bigint) {
-        const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
+        const coinType = buildTransactionTarget(this.usdcContract, 'USDC', 'USDC');
         const user_coins_id = await this.rpcClient.getCoins({
             owner: sender,
             coinType: coinType,
@@ -150,7 +153,7 @@ export class TransactionService {
     }
 
     public async buildWithdrawTransaction(user: string, withdrawId: string, amount: bigint) {
-        const coinType = buildTransactionTarget('0x2', 'sui', 'SUI');
+        const coinType = buildTransactionTarget(this.usdcContract, 'USDC', 'USDC');
 
         const tx = new Transaction();
         tx.moveCall({
