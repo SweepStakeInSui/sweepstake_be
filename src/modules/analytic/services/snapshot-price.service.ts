@@ -53,12 +53,16 @@ export class SnapshotPriceService {
                     timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce(
-                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
-                    0n,
-                );
+                if (snapshots.length === 0) {
+                    snapshotInfo.price = 0n;
+                } else {
+                    const price = snapshots.reduce(
+                        (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                        0n,
+                    );
 
-                snapshotInfo.price = price / BigInt(snapshots.length);
+                    snapshotInfo.price = price / BigInt(snapshots.filter(s => !s.price && s.price >= 0n).length);
+                }
                 await this.snapshotPriceRepository.save(snapshotInfo);
                 break;
             }
@@ -71,12 +75,16 @@ export class SnapshotPriceService {
                     timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce(
-                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
-                    0n,
-                );
+                if (snapshots.length === 0) {
+                    snapshotInfo.price = 0n;
+                } else {
+                    const price = snapshots.reduce(
+                        (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                        0n,
+                    );
 
-                snapshotInfo.price = price / BigInt(snapshots.length);
+                    snapshotInfo.price = price / BigInt(snapshots.filter(s => !s.price && s.price >= 0n).length);
+                }
                 await this.snapshotPriceRepository.save(snapshotInfo);
                 break;
             }
@@ -89,12 +97,17 @@ export class SnapshotPriceService {
                     timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce(
-                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
-                    0n,
-                );
+                if (snapshots.length === 0) {
+                    snapshotInfo.price = 0n;
+                } else {
+                    const price = snapshots.reduce(
+                        (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                        0n,
+                    );
 
-                snapshotInfo.price = price / BigInt(snapshots.length);
+                    snapshotInfo.price = price / BigInt(snapshots.filter(s => !s.price && s.price >= 0n).length);
+                }
+
                 await this.snapshotPriceRepository.save(snapshotInfo);
                 break;
             }
@@ -108,12 +121,17 @@ export class SnapshotPriceService {
                     timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce(
-                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
-                    0n,
-                );
+                if (snapshots.length === 0) {
+                    snapshotInfo.price = 0n;
+                } else {
+                    const price = snapshots.reduce(
+                        (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                        0n,
+                    );
 
-                snapshotInfo.price = price / BigInt(snapshots.length);
+                    snapshotInfo.price = price / BigInt(snapshots.filter(s => !s.price && s.price >= 0n).length);
+                }
+
                 await this.snapshotPriceRepository.save(snapshotInfo);
                 break;
             }
@@ -126,12 +144,17 @@ export class SnapshotPriceService {
                     timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce(
-                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
-                    0n,
-                );
+                if (snapshots.length === 0) {
+                    snapshotInfo.price = 0n;
+                } else {
+                    const price = snapshots.reduce(
+                        (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                        0n,
+                    );
 
-                snapshotInfo.price = price / BigInt(snapshots.length);
+                    snapshotInfo.price = price / BigInt(snapshots.length);
+                }
+
                 await this.snapshotPriceRepository.save(snapshotInfo);
                 break;
             }
@@ -145,12 +168,16 @@ export class SnapshotPriceService {
                     timestamp: Between(last, snapshotInfo.timestamp),
                 });
 
-                const price = snapshots.reduce(
-                    (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
-                    0n,
-                );
+                if (snapshots.length === 0) {
+                    snapshotInfo.price = 0n;
+                } else {
+                    const price = snapshots.reduce(
+                        (sum, snapshot) => sum + (snapshot.price ? BigInt(snapshot.price) : 0n),
+                        0n,
+                    );
 
-                snapshotInfo.price = price / BigInt(snapshots.length);
+                    snapshotInfo.price = price / BigInt(snapshots.filter(s => !s.price && s.price >= 0n).length);
+                }
                 await this.snapshotPriceRepository.save(snapshotInfo);
                 break;
             }

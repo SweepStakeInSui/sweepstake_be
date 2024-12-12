@@ -77,7 +77,7 @@ export class SnapshotPriceTask {
                 const snapshotPriceInfo = this.snapshotPriceRepository.create({
                     marketId: outcomeInfo.market.id,
                     snapshotTime,
-                    timestamp: dayjs().unix(),
+                    timestamp: this.snapshotTime(snapshotTime),
                 });
 
                 await this.snapshotPriceRepository.save(snapshotPriceInfo);
@@ -94,5 +94,24 @@ export class SnapshotPriceTask {
                 console.log(msgMetaData);
             }),
         );
+    }
+
+    private snapshotTime(snapshotTime: SnapshotTime) {
+        switch (snapshotTime) {
+            case SnapshotTime.OneMinute:
+                return dayjs().startOf('minute').unix();
+            case SnapshotTime.ThirtyMinutes:
+                return dayjs().startOf('minute').unix();
+            case SnapshotTime.OneHour:
+                return dayjs().startOf('hour').unix();
+            case SnapshotTime.FourHours:
+                return dayjs().startOf('hour').unix();
+            case SnapshotTime.OneDay:
+                return dayjs().startOf('day').unix();
+            case SnapshotTime.OneWeek:
+                return dayjs().startOf('week').unix();
+            case SnapshotTime.OneMonth:
+                return dayjs().startOf('month').unix();
+        }
     }
 }
