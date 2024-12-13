@@ -359,8 +359,8 @@ export class EventService {
         ]);
 
         // TODO: check if this is correct
-        userYesInfo.addBalance(amountYes * orderYesInfo.price);
-        userNoInfo.addBalance(amountNo * orderNoInfo.price);
+        userYesInfo.addBalance(BigInt(amountYes) * orderYesInfo.price);
+        userNoInfo.addBalance(BigInt(amountNo) * orderNoInfo.price);
 
         await this.userRepository.manager.transaction(async manager => {
             await manager.save(userYesInfo);
@@ -422,7 +422,7 @@ export class EventService {
             });
 
             // TODO: check if this is correct
-            makerUserInfo.addBalance(makerOrderInfo.amount * makerOrderInfo.price);
+            makerUserInfo.addBalance(amount * makerOrderInfo.price);
 
             const takerShareInfo = await this.shareRepository.findOneBy({
                 userId: takerOrderInfo.userId,

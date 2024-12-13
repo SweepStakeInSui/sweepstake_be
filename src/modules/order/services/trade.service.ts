@@ -44,8 +44,8 @@ export class TradeService {
 
             await Promise.all(
                 matches.matchedOrders.map(async matchedOrder => {
-                    let tradeType;
-                    let assetType;
+                    let tradeType: TradeType;
+                    let assetType: boolean;
                     if (matchedOrder.order.outcome.type == order.outcome.type) {
                         tradeType = TradeType.Transfer;
                         assetType = order.outcome.type == OutcomeType.Yes ? true : false;

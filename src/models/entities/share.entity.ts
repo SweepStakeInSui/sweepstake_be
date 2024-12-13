@@ -17,6 +17,10 @@ export class ShareEntity extends BaseEntity {
     @Transform(transformBigInt)
     public balance: bigint = 0n;
 
+    @Column({ type: 'bigint', transformer: bigint })
+    @Transform(transformBigInt)
+    public avgPrice: bigint = 0n;
+
     public reduceBalance(amount: bigint) {
         if (this.balance < amount) {
             throw new Error('Insufficient balance');
@@ -26,6 +30,10 @@ export class ShareEntity extends BaseEntity {
 
     public addBalance(amount: bigint) {
         this.balance += amount;
+    }
+
+    public updateAvgPrice(amount: bigint, quantity: bigint) {
+        this.avgPrice = (this.avgPrice * this.balance + amount * quantity) / (this.balance + quantity);
     }
 
     @ManyToOne(() => OutcomeEntity, { createForeignKeyConstraints: false })
